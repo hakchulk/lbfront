@@ -1,92 +1,30 @@
-import BtnComp from "./components/BtnComp";
-import FooterComp from "./components/FooterComp";
+import React from "react";
+import { Route, Routes } from "react-router-dom";
 import NavComp from "./components/NavComp";
-import PageNatation from "./components/PageNatation";
-import Chart from "./components/ChartComp";
-import {
-  getBarChartData1,
-  getBarChartData2,
-  getPieChartData,
-} from "./api/TestChartData";
-import { Doughnut } from "react-chartjs-2";
+import FooterComp from "./components/FooterComp";
+import Home from "./assets/page/home/Home";
+import Member from "./assets/member/Member";
+import About from "./assets/page/about/About";
+import Club from "./assets/page/club/Club";
+import EventComp from "./assets/page/event/EventComp";
+import MyPage from "./assets/page/mypage/MyPage";
 
 function App() {
-  const barData1 = getBarChartData1();
-  const barData2 = getBarChartData2();
-  const pieData = getPieChartData();
-
   return (
     <>
       <NavComp />
-      <div className="wrap">
-        <div className="containers">
-          <div className="bg-main-01">컬러</div>
-          <div className="bg-main-02">컬러</div>
-          <div className="bg-light-01">컬러</div>
-          <div className="bg-light-02">컬러</div>
-          <div className="bg-light-03">컬러</div>
-          <div className="bg-deep text-white">컬러</div>
-          <div className="bg-white text-black">컬러</div>
-          <div className="bg-black text-white">컬러</div>
-          <div className="bg-point text-white">컬러</div>
-          <div className="bg-gray-deep text-white">컬러</div>
-          <div className="bg-gray-mid text-white">컬러</div>
-          <div className="bg-gray-light text-black">컬러</div>
-
-          <h4 className="tit">
-            <span className="material-icons">star_outline</span>
-            타이틀 테스트
-          </h4>
-          <i className="fa-solid fa-tooth"></i>
-          <h1>계절이 지나가는 하늘에는</h1>
-          <h2>계절이 지나가는 하늘에는</h2>
-          <h3>계절이 지나가는 하늘에는</h3>
-          <h4>계절이 지나가는 하늘에는</h4>
-          <span>계절이 지나가는 하늘에는</span>
-          <p>계절이 지나가는 하늘에는</p>
-          <a>계절이 지나가는 하늘에는</a>
-          <span className="dummy block">계절이 지나가는 하늘에는</span>
-
-          <div className="w-full">
-            <PageNatation
-              storeKey="test-list"
-              totalElements={100}
-              pageSize={10}
-            />
-          </div>
-
-          <div className="w-full">
-            <PageNatation
-              storeKey="test-list2"
-              totalElements={100}
-              pageSize={10}
-            />
-          </div>
-
-          <div className="w-[50%] flex flex-col flex-wrap">
-            <BtnComp size="long" variant="primary">
-              long
-            </BtnComp>
-
-            <BtnComp size="mid" variant="line">
-              mid
-            </BtnComp>
-
-            <BtnComp size="short" variant="point">
-              short
-            </BtnComp>
-          </div>
-
-          <div className="w-full mt-8">
-            <Chart type="pie" data={pieData} />
-          </div>
-
-          <div className="w-full mt-8">
-            <Chart type="bar" data={barData2} />
-          </div>
-        </div>
+      {/* 네브가 fixed 이므로, 네브 높이(4rem) 만큼 위 여백을 줘서 내용이 가려지지 않도록 함 */}
+      <div className="pt-16">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/member/*" element={<Member />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/club/*" element={<Club />} />
+          <Route path="/event/*" element={<EventComp />} />
+          <Route path="/mypage/*" element={<MyPage />} />
+        </Routes>
       </div>
-      <FooterComp></FooterComp>
+      <FooterComp />
     </>
   );
 }
