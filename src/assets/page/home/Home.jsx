@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import BtnComp from "../../../components/BtnComp";
 
 function Home() {
@@ -19,6 +19,15 @@ function Home() {
       if (swiper) swiper.destroy();
     };
   }, []);
+
+  const clubs = Array.from({ length: 4 }).map((_, i) => ({
+    id: i + 1,
+    title: "경찰과 도둑 보라매 공원 모임",
+    desc: "매주 함께 운동하고 건강한 습관을 만들어가는 모임입니다.",
+    image:
+      "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image2.png",
+    tags: ["2030", "추억소환", "다이어트", "놀이", "경찰과도둑"],
+  }));
 
   return (
     <>
@@ -76,7 +85,7 @@ function Home() {
         <div className="containers justify-center items-center w-full">
           {/* sect1 */}
           <section className="sect1 w-full lg:w-[90%] lg:min-w-[1000px] xl:w-[80%]  2xl:w-[70%] flex flex-col lg:flex-row justify-between text-black my-[10%]">
-            <div className="w-full lg:w-[50%] h-[500px] overflow-hidden flex items-center justify-center bg-amber-200">
+            <div className="w-full lg:w-[50%] aspect-[4/3] lg:aspect-[16/9] overflow-hidden flex items-center justify-cente">
               <img
                 src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/sal.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9zYWwucG5nIiwiaWF0IjoxNzY5NzU2MjI0LCJleHAiOjE4MDEyOTIyMjR9.3TsRR1yE6Bncxz9AmLaxFi-6DQdqfu-0TE3lhtAvcdo"
                 alt="img"
@@ -150,8 +159,10 @@ function Home() {
         {/* sect3 */}
         <div className="containers">
           <section className="sect3 w-full flex flex-col justify-center items-center ">
-            <div className="cont_tit w-[40%] flex flex-col justify-center items-center">
-              <h3>금주에 신설된 헬스케어 커뮤니티</h3>
+            <div className="cont_tit w-[90%] sm:w-[70%] md:w-[60%] lg:w-[50%] xl:w-[40%] flex flex-col justify-center items-center my-[3%] sm:my-[4%] md:my-[5%]">
+              <h2 className="!text-base md:!text-lg lg:!text-xl xl:!text-3xl text-black">
+                금주에 신설된 커뮤니티
+              </h2>
               <span className="bg-main-02 h-[2px] w-[80%] mt-5"></span>
               <p className="dummy mt-5 text-center">
                 혼자서는 쉽게 흐트러질 수 있는 운동 계획과 식단 관리를 서로
@@ -162,6 +173,51 @@ function Home() {
               </p>
             </div>
           </section>
+
+          {/* 카드 섹션 */}
+          <div
+            className="w-[95%] sm:w-[90%] md:w-[100%] lg:w-full xl:w-[80%] lg:min-w-[940px] xl:min-w-0
+  mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 md:gap-x-8 md:gap-y-10 justify-items-stretch mb-[3%] sm:mb-[4%] md:mb-[5%]"
+          >
+            {clubs.map((club) => (
+              <Link
+                to={`detail/${club.id}`}
+                key={club.id}
+                className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform transform hover:-translate-y-1 "
+              >
+                {/* 이미지 */}
+                <div className="w-full h-[300px] overflow-hidden ">
+                  <img
+                    src={club.image}
+                    alt={club.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* 내용 */}
+                <div className="p-4 flex flex-col items-center text-center gap-2 text-light-03">
+                  <h4 className="text-lg font-semibold text-light-03">
+                    {club.title}
+                  </h4>
+                  <p className="text-sm text-light-03/90 line-clamp-2">
+                    {club.desc}
+                  </p>
+
+                  {/* 태그 */}
+                  <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mt-3">
+                    {club.tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 !text-[14px] !sm:text-xs !md:text-sm !lg:text-sm rounded-full border border-light-03 bg-light-03 text-deep"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </>
