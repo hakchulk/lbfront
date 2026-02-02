@@ -186,7 +186,7 @@ function Home() {
                 className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform transform hover:-translate-y-1 "
               >
                 {/* 이미지 */}
-                <div className="w-full h-[300px] overflow-hidden ">
+                <div className="w-full h-[200px] sm:h-[300px] overflow-hidden ">
                   <img
                     src={club.image}
                     alt={club.title}
