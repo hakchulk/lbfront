@@ -81,7 +81,7 @@ function Home() {
         </div>
       </div>
 
-      <div className="wrap">
+      <div className="wrap !mt-0">
         <div className="containers justify-center items-center w-full">
           {/* sect1 */}
           <section className="sect1 w-full lg:w-[90%] lg:min-w-[1000px] xl:w-[80%]  2xl:w-[70%] flex flex-col lg:flex-row justify-between text-black my-[10%]">
@@ -132,7 +132,7 @@ function Home() {
 
         {/* sect2 */}
         <section
-          className="sect2 flex flex-col justify-center items-center py-[10%]"
+          className="sect2 flex flex-col justify-center items-center py-[10%] mt-[5%]"
           style={{
             backgroundImage:
               'url("https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/sect2_bg.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9zZWN0Ml9iZy5wbmciLCJpYXQiOjE3Njk3NjI0MzksImV4cCI6MTgwMTI5ODQzOX0.hsUqxsdlkEmMmSMBMgLRxEptO1x3DKeZZewa_OPTpZo")',
@@ -157,7 +157,7 @@ function Home() {
         </section>
 
         {/* sect3 */}
-        <div className="containers">
+        <div className="containers my-[10%]">
           <section className="sect3 w-full flex flex-col justify-center items-center ">
             <div className="cont_tit w-[90%] sm:w-[70%] md:w-[60%] lg:w-[50%] xl:w-[40%] flex flex-col justify-center items-center my-[3%] sm:my-[4%] md:my-[5%]">
               <h2 className="!text-base md:!text-lg lg:!text-xl xl:!text-3xl text-black">
@@ -177,7 +177,7 @@ function Home() {
           {/* 카드 섹션 */}
           <div
             className="w-[95%] sm:w-[90%] md:w-[100%] lg:w-full xl:w-[80%] lg:min-w-[940px] xl:min-w-0
-  mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 md:gap-x-8 md:gap-y-10 justify-items-stretch mb-[3%] sm:mb-[4%] md:mb-[5%]"
+  mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 md:gap-x-8 md:gap-y-10 justify-items-stretch mb-[3%] sm:mb-[4%] md:mb-[%] "
           >
             {clubs.map((club) => (
               <Link
