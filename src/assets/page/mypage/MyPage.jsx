@@ -2,7 +2,6 @@ import React from "react";
 import { Route, Routes, Link } from "react-router-dom";
 import FoodHistory from "./FoodHistory";
 import HealthHistory from "./HealthHistory";
-import HealthHistoryWrite from "./HealthHistoryWrite";
 import FoodManagement from "./FoodManagement";
 import MyInfo from "./MyInfo";
 import WeekHistory from "./WeekHistory";
@@ -30,8 +29,7 @@ function MyPage() {
     <Routes>
       <Route path="/" element={<MyPageMain />} />
       <Route path="foodhistory" element={<FoodHistory />} />
-      <Route path="healthhistory" element={<HealthHistory />} />
-      <Route path="healthhistory/write" element={<HealthHistoryWrite />} />
+      <Route path="healthhistory/*" element={<HealthHistory />} />
       <Route path="foodmanagement" element={<FoodManagement />} />
       <Route path="myinfo" element={<MyInfo />} />
       <Route path="weekhistory" element={<WeekHistory />} />

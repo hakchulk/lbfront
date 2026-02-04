@@ -1,13 +1,14 @@
 // import React from "react";
 import BtnComp from "../../../components/BtnComp";
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, Routes, Route } from "react-router-dom";
 import PageNatation from "./../../../components/PageNatation";
 import { getExerciseRecords } from "../../../api/TestHealthData";
 import usePaginationStore from "../../../stores/paginationStore";
 import Chart from "../../../components/ChartComp";
+import HealthHistoryWrite from "./HealthHistoryWrite";
 
-function HealthHistory() {
+function HealthHistoryMain() {
   // 정렬 상태 (UI용, 실제 정렬은 하지 않음)
   const [sort, setSort] = useState("latest");
 
@@ -225,13 +226,15 @@ function HealthHistory() {
               ))}
             </div>
           </section>
-          <Link to="healthhistory/write">
+
+          <Link to="../healthhistoywrite">
             <div className="w-full sm:w-[50%] mx-auto flex items-center justify-center mb-[5%]  ">
               <BtnComp size="mid" variant="primary">
                 오늘의 운동 입력하기
               </BtnComp>
             </div>
           </Link>
+
           {/* sect02 */}
           <div className=" bg-light-02 myBg py-[10%]">
             <section className="containers sect02 flex items-center flex-col justify-center text-gray-deep ">
@@ -364,6 +367,15 @@ function HealthHistory() {
         </div>
       </div>
     </>
+  );
+}
+
+function HealthHistory() {
+  return (
+    <Routes>
+      <Route path="/" element={<HealthHistoryMain />} />
+      <Route path="healthhistoywrite" element={<HealthHistoryWrite />} />
+    </Routes>
   );
 }
 
