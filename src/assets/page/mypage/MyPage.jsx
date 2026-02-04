@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Routes, Link } from 'react-router-dom';
+import { Route, Routes, Link, Outlet } from 'react-router-dom';
 import FoodHistory from './FoodHistory';
 import HealthHistory from './HealthHistory';
 import FoodManagement from './FoodManagement';
