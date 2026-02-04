@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import PageNatation from "./../../../components/PageNatation";
 import { getExerciseRecords } from "../../../api/TestHealthData";
 import usePaginationStore from "../../../stores/paginationStore";
+import Chart from "../../../components/ChartComp";
 
 function HealthHistory() {
   // 정렬 상태 (UI용, 실제 정렬은 하지 않음)
@@ -54,6 +55,112 @@ function HealthHistory() {
 
   // 운동 기록 데이터 (추후 API로 받아올 예정이고 가짜 데이이이-타)
   const exerciseRecords = getExerciseRecords();
+
+  // 차트 데이터 생성 (요일별 총 소모 칼로리 - 이번주 vs 지난주)
+  const weeklyCalorieData = useMemo(() => {
+    const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+
+    // 현재 날짜 기준으로 이번주와 지난주 범위 계산
+    const today = new Date();
+    const currentDay = today.getDay(); // 0(일요일) ~ 6(토요일)
+
+    // 이번주 월요일 계산 (월요일 = 1)
+    const thisWeekMonday = new Date(today);
+    thisWeekMonday.setDate(
+      today.getDate() - (currentDay === 0 ? 6 : currentDay - 1),
+    );
+    thisWeekMonday.setHours(0, 0, 0, 0);
+
+    // 이번주 일요일 계산
+    const thisWeekSunday = new Date(thisWeekMonday);
+    thisWeekSunday.setDate(thisWeekMonday.getDate() + 6);
+    thisWeekSunday.setHours(23, 59, 59, 999);
+
+    // 지난주 월요일 계산
+    const lastWeekMonday = new Date(thisWeekMonday);
+    lastWeekMonday.setDate(thisWeekMonday.getDate() - 7);
+
+    // 지난주 일요일 계산
+    const lastWeekSunday = new Date(thisWeekMonday);
+    lastWeekSunday.setDate(thisWeekMonday.getDate() - 1);
+    lastWeekSunday.setHours(23, 59, 59, 999);
+
+    // 이번주와 지난주 칼로리 초기화
+    const thisWeekCalories = {
+      일: 0,
+      월: 0,
+      화: 0,
+      수: 0,
+      목: 0,
+      금: 0,
+      토: 0,
+    };
+
+    const lastWeekCalories = {
+      일: 0,
+      월: 0,
+      화: 0,
+      수: 0,
+      목: 0,
+      금: 0,
+      토: 0,
+    };
+
+    // 각 운동 기록을 순회하며 이번주/지난주 구분하여 요일별 칼로리 합산
+    exerciseRecords.forEach((record) => {
+      const recordDate = new Date(record.date);
+      recordDate.setHours(0, 0, 0, 0);
+
+      // 이번주 범위 확인
+      if (recordDate >= thisWeekMonday && recordDate <= thisWeekSunday) {
+        const dayIndex = recordDate.getDay();
+        const dayName = weekDays[dayIndex];
+        thisWeekCalories[dayName] += record.totalCalories;
+      }
+      // 지난주 범위 확인
+      else if (recordDate >= lastWeekMonday && recordDate <= lastWeekSunday) {
+        const dayIndex = recordDate.getDay();
+        const dayName = weekDays[dayIndex];
+        lastWeekCalories[dayName] += record.totalCalories;
+      }
+    });
+
+    return {
+      labels: ["월", "화", "수", "목", "금", "토", "일"],
+      datasets: [
+        {
+          label: "지난주",
+          data: [
+            lastWeekCalories.월,
+            lastWeekCalories.화,
+            lastWeekCalories.수,
+            lastWeekCalories.목,
+            lastWeekCalories.금,
+            lastWeekCalories.토,
+            lastWeekCalories.일,
+          ],
+          backgroundColor: "#DFF0FF",
+          borderColor: "#A7D6FF",
+          borderWidth: 1,
+        },
+        {
+          label: "이번주",
+          data: [
+            thisWeekCalories.월,
+            thisWeekCalories.화,
+            thisWeekCalories.수,
+            thisWeekCalories.목,
+            thisWeekCalories.금,
+            thisWeekCalories.토,
+            thisWeekCalories.일,
+          ],
+          backgroundColor: "#D9FFD5",
+          borderColor: "#AFE1AA",
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [exerciseRecords]);
 
   // 페이지네이션된 데이터 (정렬하지 않음)
   const paginatedRecords = useMemo(() => {
@@ -119,7 +226,7 @@ function HealthHistory() {
           </div>
 
           {/* sect02 */}
-          <div className=" bg-light-02 myBg py-[5%]">
+          <div className=" bg-light-02 myBg py-[10%]">
             <section className="containers sect02 flex items-center flex-col justify-center text-gray-deep ">
               <h4 className="tit">
                 <span class="material-icons ">directions_run</span>
@@ -225,6 +332,13 @@ function HealthHistory() {
               </div>
             </section>
           </div>
+
+          {/* sect03 */}
+          <section className="sect03">
+            <div className="w-full mt-8">
+              <Chart type="bar" data={weeklyCalorieData} />
+            </div>
+          </section>
         </div>
       </div>
     </>
