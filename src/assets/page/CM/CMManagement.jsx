@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Link } from "react-router-dom";
 import CMopen from "./CMopen";
 import CMjoinlist from "./CMjoinlist";
 import Noticemanagement from "./Noticemanagement";
@@ -7,10 +7,10 @@ import Noticemanagement from "./Noticemanagement";
 function CMManagementMain() {
   return (
     <>
-      <div className="wrap !bg-light-02 !mt-0">
+      <div className="wrap !bg-light-02 !mt-0 pt-[50px]">
         <div className="containers">
           {/* 프로필 */}
-          <section className="profile w-full md:w-[50%] mx-auto flex items-center justify-center p-4 rounded-[20px]">
+          <section className="profile mt-[5%] w-full md:w-[50%] mx-auto flex items-center justify-center p-4 rounded-[20px]">
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
               {/* 프로필 이미지 */}
               <div className="pf_img w-[64px] h-[64px] bg-gray-deep rounded-full overflow-hidden flex-shrink-0">
@@ -45,7 +45,54 @@ function CMManagementMain() {
           </section>
 
           {/* 나머지 */}
-          <section className="helpme"></section>
+          <section className="helpme mt-[5%] pb-[10%]">
+            <ul className="w-full flex flex-col md:flex-row md:justify-between items-center gap-4 md:gap-0">
+              <li className="w-full md:w-[30%]">
+                <Link
+                  to="cmopen"
+                  className="flex flex-col justify-center items-center"
+                >
+                  <h4 className="text-deep">커뮤니티 개설하기</h4>
+                  <div className="border border-main-02 overflow-hidden rounded-[20px]">
+                    <img
+                      src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/cm_01.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9jbV8wMS5wbmciLCJpYXQiOjE3NzAxOTUyMzYsImV4cCI6MTgwMTczMTIzNn0.2OuxThJnhAcEjRmM0uYrpS2lesTfJhTM1YjLNxaJezc"
+                      alt="img"
+                    />
+                  </div>
+                </Link>
+              </li>
+
+              <li className="w-full md:w-[30%]">
+                <Link
+                  to="cmjoinlist"
+                  className="flex flex-col justify-center items-center"
+                >
+                  <h4 className="text-deep">커뮤니티 개설하기</h4>
+                  <div className="border border-main-02 overflow-hidden rounded-[20px]">
+                    <img
+                      src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/cm_02.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9jbV8wMi5wbmciLCJpYXQiOjE3NzAxOTU3MzksImV4cCI6MTgwMTczMTczOX0.bKsf-9IonbfvVxFuvc47tc5vja03HLVo6SlQqE83qFk"
+                      alt="img"
+                    />
+                  </div>
+                </Link>
+              </li>
+
+              <li className="w-full md:w-[30%]">
+                <Link
+                  to="noticemanagement"
+                  className="flex flex-col justify-center items-center"
+                >
+                  <h4 className="text-deep">커뮤니티 개설하기</h4>
+                  <div className="border border-main-02 overflow-hidden rounded-[20px]">
+                    <img
+                      src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/cm_03.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9jbV8wMy5wbmciLCJpYXQiOjE3NzAxOTU3NTIsImV4cCI6MTgwMTczMTc1Mn0.OOiiJ4PpEUVfA_wRKJh-VvRS6Iy3Kg2awptk2JFj-eE"
+                      alt="img"
+                    />
+                  </div>
+                </Link>
+              </li>
+            </ul>
+          </section>
         </div>
       </div>
     </>
