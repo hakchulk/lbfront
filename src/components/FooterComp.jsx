@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 
 function FooterComp() {
   return (
-    <footer className="bg-deep text-white py-8 md:py-12 mt-10">
+    <footer className="bg-deep text-white py-8 md:py-12 ">
       <div className="containers">
         <div className="flex flex-col md:justify-between gap-4">
           {/* 로고 */}
