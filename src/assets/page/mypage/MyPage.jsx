@@ -1,14 +1,14 @@
-import React from 'react';
-import { Route, Routes, Link, Outlet } from 'react-router-dom';
-import FoodHistory from './FoodHistory';
-import HealthHistory from './HealthHistory';
-import FoodManagement from './FoodManagement';
-import MyInfo from './MyInfo';
-import WeekHistory from './WeekHistory';
-import CMHistory from './CMHistory';
-import Food_HistoryWrite from './Food_HistoryWrite';
-import Chart from '../../../components/ChartComp';
-import { getPieChartData2 } from '../../../api/TestChartData';
+import React from "react";
+import { Route, Routes, Link, Outlet } from "react-router-dom";
+import FoodHistory from "./FoodHistory";
+import HealthHistory from "./HealthHistory";
+import FoodManagement from "./FoodManagement";
+import MyInfo from "./MyInfo";
+import WeekHistory from "./WeekHistory";
+import CMHistory from "./CMHistory";
+import Food_HistoryWrite from "./Food_HistoryWrite";
+import Chart from "../../../components/ChartComp";
+import { getPieChartData2 } from "../../../api/TestChartData";
 
 // 마이페이지 메인 화면 컴포넌트
 function MyPageMain() {
@@ -58,26 +58,6 @@ function MyPageMain() {
     </div>
   );
 }
-// function MyPageMain() {
-//   return (
-//     <>
-//       <div className="flex flex-col">
-//         <Link
-//           to="foodhistory"
-//           className="p-4 bg-white shadow rounded hover:bg-gray-50 text-center"
-//         >
-//           오늘 식사 기록
-//         </Link>
-//         <Link to="healthhistory">health history</Link>
-//         <Link to="foodmanagement">food management</Link>
-//         <Link to="myinfo">my info</Link>
-//         <Link to="weekhistory">week history</Link>
-//         <Link to="cmhistory">community History</Link>
-//       </div>
-//       <h3 className="text-main-02">MyPage</h3>
-//     </>
-//   );
-// }
 
 function MyPage() {
   return (
