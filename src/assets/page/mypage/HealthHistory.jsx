@@ -1,6 +1,7 @@
 // import React from "react";
 import BtnComp from "../../../components/BtnComp";
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import PageNatation from "./../../../components/PageNatation";
 import { getExerciseRecords } from "../../../api/TestHealthData";
 import usePaginationStore from "../../../stores/paginationStore";
@@ -42,6 +43,7 @@ function HealthHistory() {
   useEffect(() => {
     setPageSizeStore(storeKey, pageSize);
   }, [pageSize, storeKey, setPageSizeStore]);
+
   // 오운완
   const days = [
     { label: "월", done: true },
@@ -55,6 +57,13 @@ function HealthHistory() {
 
   // 운동 기록 데이터 (추후 API로 받아올 예정이고 가짜 데이이이-타)
   const exerciseRecords = getExerciseRecords();
+
+  // 차트 옵션 (Chart.js v2)
+  const chartOptions = {
+    title: {
+      display: false,
+    },
+  };
 
   // 차트 데이터 생성 (요일별 총 소모 칼로리 - 이번주 vs 지난주)
   const weeklyCalorieData = useMemo(() => {
@@ -216,15 +225,13 @@ function HealthHistory() {
               ))}
             </div>
           </section>
-
-          {/* 나중에 라우터 운동라이트로! */}
-
-          <div className="w-full sm:w-[50%] mx-auto flex items-center justify-center mb-[5%]  ">
-            <BtnComp size="mid" variant="primary">
-              오늘의 운동 입력하기
-            </BtnComp>
-          </div>
-
+          <Link to="healthhistory/write">
+            <div className="w-full sm:w-[50%] mx-auto flex items-center justify-center mb-[5%]  ">
+              <BtnComp size="mid" variant="primary">
+                오늘의 운동 입력하기
+              </BtnComp>
+            </div>
+          </Link>
           {/* sect02 */}
           <div className=" bg-light-02 myBg py-[10%]">
             <section className="containers sect02 flex items-center flex-col justify-center text-gray-deep ">
@@ -335,8 +342,23 @@ function HealthHistory() {
 
           {/* sect03 */}
           <section className="sect03">
-            <div className="w-full mt-8">
-              <Chart type="bar" data={weeklyCalorieData} />
+            <div className="min-tit flex flex-row justify-center items-center bg-main-02 w-[200px] mx-auto text-white py-[5px] border rounded-[20px] mt-[5%]">
+              <span className="material-icons mr-1.5">calendar_today</span>
+              <span>주간 운동 기록 비교</span>
+            </div>
+
+            <div className="w-full mt-8 xl:w-[70%] flex  justify-center items-center mx-auto ">
+              <Chart
+                type="bar"
+                data={weeklyCalorieData}
+                options={{
+                  plugins: {
+                    title: {
+                      display: false,
+                    },
+                  },
+                }}
+              />
             </div>
           </section>
         </div>
