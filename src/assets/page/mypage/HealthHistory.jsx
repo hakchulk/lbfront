@@ -1,21 +1,21 @@
 // import React from "react";
-import BtnComp from "../../../components/BtnComp";
-import { useState, useEffect, useMemo } from "react";
-import { Link, Routes, Route } from "react-router-dom";
-import PageNatation from "./../../../components/PageNatation";
-import { getExerciseRecords } from "../../../api/TestHealthData";
-import usePaginationStore from "../../../stores/paginationStore";
-import Chart from "../../../components/ChartComp";
-import HealthHistoryWrite from "./HealthHistoryWrite";
+import BtnComp from '../../../components/BtnComp';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, Routes, Route } from 'react-router-dom';
+import PageNatation from './../../../components/PageNatation';
+import { getExerciseRecords } from '../../../api/TestHealthData';
+import usePaginationStore from '../../../stores/paginationStore';
+import Chart from '../../../components/ChartComp';
+import HealthHistoryWrite from './HealthHistoryWrite';
 
 function HealthHistoryMain() {
   // 정렬 상태 (UI용, 실제 정렬은 하지 않음)
-  const [sort, setSort] = useState("latest");
+  const [sort, setSort] = useState('latest');
 
   // 반응형 pageSize 상태
   const [pageSize, setPageSize] = useState(4);
 
-  const storeKey = "test-list2";
+  const storeKey = 'test-list2';
 
   // paginationStore에서 현재 페이지 가져오기
   const pagination = usePaginationStore((state) => state.paginations[storeKey]);
@@ -33,10 +33,10 @@ function HealthHistoryMain() {
     handleResize();
 
     // 리사이즈 이벤트 리스너 추가
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -47,13 +47,13 @@ function HealthHistoryMain() {
 
   // 오운완
   const days = [
-    { label: "월", done: true },
-    { label: "화", done: true },
-    { label: "수", done: true },
-    { label: "목", done: false },
-    { label: "금", done: false },
-    { label: "토", done: false },
-    { label: "일", done: false },
+    { label: '월', done: true },
+    { label: '화', done: true },
+    { label: '수', done: true },
+    { label: '목', done: false },
+    { label: '금', done: false },
+    { label: '토', done: false },
+    { label: '일', done: false },
   ];
 
   // 운동 기록 데이터 (추후 API로 받아올 예정이고 가짜 데이이이-타)
@@ -68,7 +68,7 @@ function HealthHistoryMain() {
 
   // 차트 데이터 생성 (요일별 총 소모 칼로리 - 이번주 vs 지난주)
   const weeklyCalorieData = useMemo(() => {
-    const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+    const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
     // 현재 날짜 기준으로 이번주와 지난주 범위 계산
     const today = new Date();
@@ -136,10 +136,10 @@ function HealthHistoryMain() {
     });
 
     return {
-      labels: ["월", "화", "수", "목", "금", "토", "일"],
+      labels: ['월', '화', '수', '목', '금', '토', '일'],
       datasets: [
         {
-          label: "지난주",
+          label: '지난주',
           data: [
             lastWeekCalories.월,
             lastWeekCalories.화,
@@ -149,12 +149,12 @@ function HealthHistoryMain() {
             lastWeekCalories.토,
             lastWeekCalories.일,
           ],
-          backgroundColor: "#DFF0FF",
-          borderColor: "#A7D6FF",
+          backgroundColor: '#DFF0FF',
+          borderColor: '#A7D6FF',
           borderWidth: 1,
         },
         {
-          label: "이번주",
+          label: '이번주',
           data: [
             thisWeekCalories.월,
             thisWeekCalories.화,
@@ -164,8 +164,8 @@ function HealthHistoryMain() {
             thisWeekCalories.토,
             thisWeekCalories.일,
           ],
-          backgroundColor: "#D9FFD5",
-          borderColor: "#AFE1AA",
+          backgroundColor: '#D9FFD5',
+          borderColor: '#AFE1AA',
           borderWidth: 1,
         },
       ],
@@ -216,8 +216,8 @@ function HealthHistoryMain() {
                   <img
                     src={
                       day.done
-                        ? "https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ex_s.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9leF9zLnBuZyIsImlhdCI6MTc3MDEwNDM1NSwiZXhwIjoxODAxNjQwMzU1fQ.qhhg6-X00dSR8Her0jEXPmeRWSIqjEcywfS1qfmcuuo"
-                        : "https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ex_f.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9leF9mLnBuZyIsImlhdCI6MTc3MDEwNDI4MSwiZXhwIjoxODAxNjQwMjgxfQ.jGc2SXJBtCtNqLfdYSF8yy-bj08VgcPmgmZVqm9S_50"
+                        ? 'https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ex_s.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9leF9zLnBuZyIsImlhdCI6MTc3MDEwNDM1NSwiZXhwIjoxODAxNjQwMzU1fQ.qhhg6-X00dSR8Her0jEXPmeRWSIqjEcywfS1qfmcuuo'
+                        : 'https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ex_f.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9leF9mLnBuZyIsImlhdCI6MTc3MDEwNDI4MSwiZXhwIjoxODAxNjQwMjgxfQ.jGc2SXJBtCtNqLfdYSF8yy-bj08VgcPmgmZVqm9S_50'
                     }
                     alt="stamp"
                     className="w-[30px] aspect-square sm:w-[60px] "
@@ -248,8 +248,8 @@ function HealthHistoryMain() {
                 {/* 최신순 */}
                 <button
                   type="button"
-                  onClick={() => setSort("latest")}
-                  className={`border rounded-[4px] transition-colors ${sort === "latest" ? "bg-deep text-white border-1 border-deep" : "bg-white hover:bg-light-01"}`}
+                  onClick={() => setSort('latest')}
+                  className={`border rounded-[4px] transition-colors ${sort === 'latest' ? 'bg-deep text-white border-1 border-deep' : 'bg-white hover:bg-light-01'}`}
                 >
                   <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">
                     최신순
@@ -259,8 +259,8 @@ function HealthHistoryMain() {
                 {/* 오래된 순 */}
                 <button
                   type="button"
-                  onClick={() => setSort("oldest")}
-                  className={`border rounded-[4px] transition-colors ${sort === "oldest" ? "bg-deep text-white border-1  border-deep" : "bg-white hover:bg-light-01"}`}
+                  onClick={() => setSort('oldest')}
+                  className={`border rounded-[4px] transition-colors ${sort === 'oldest' ? 'bg-deep text-white border-1  border-deep' : 'bg-white hover:bg-light-01'}`}
                 >
                   <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">
                     오래된 순
