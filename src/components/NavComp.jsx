@@ -6,18 +6,41 @@ function NavComp() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
+  // ROLE_CM 권한 확인 함수
+  // const isRoleCM = () => {
+  //   try {
+  //     const userInfo = localStorage.getItem("user");
+  //     if (userInfo) {
+  //       const user = JSON.parse(userInfo);
+  //       return user.member_name === "ROLE_CM";
+  //     }
+  //     return false;
+  //   } catch (error) {
+  //     return false;
+  //   }
+  // };
+
+  // requireRole: "ROLE_CM"
+
   const allNavLinks = [
     {
       // 로그인 여부와 관계없이 항상 마이페이지로 이동
       name: "밸런스 체크",
       to: "/mypage",
     },
+    { name: "커뮤니티 관리", to: "/CMmanagement" },
     { name: "라스트밸런스", to: "/about" },
     { name: "커뮤니티", to: "/club" },
     { name: "이벤트", to: "/event" },
   ];
 
-  const navLinks = allNavLinks;
+  // 권한에 따라 링크 필터링
+  const navLinks = allNavLinks.filter((link) => {
+    if (link.requireRole === "ROLE_CM") {
+      return isRoleCM();
+    }
+    return true;
+  });
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
