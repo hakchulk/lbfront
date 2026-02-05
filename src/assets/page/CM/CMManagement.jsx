@@ -45,7 +45,7 @@ function CMManagementMain() {
           </section>
 
           {/* 나머지 */}
-          <section className="helpme mt-[5%] pb-[10%]">
+          <section className="helpme mt-[3%] pb-[10%]">
             <ul className="w-full flex flex-col md:flex-row md:justify-between items-center gap-4 md:gap-0">
               <li className="w-full md:w-[30%]">
                 <Link
@@ -67,7 +67,7 @@ function CMManagementMain() {
                   to="cmjoinlist"
                   className="flex flex-col justify-center items-center"
                 >
-                  <h4 className="text-deep">커뮤니티 개설하기</h4>
+                  <h4 className="text-deep">가입 신청 리스트</h4>
                   <div className="border border-main-02 overflow-hidden rounded-[20px]">
                     <img
                       src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/cm_02.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9jbV8wMi5wbmciLCJpYXQiOjE3NzAxOTU3MzksImV4cCI6MTgwMTczMTczOX0.bKsf-9IonbfvVxFuvc47tc5vja03HLVo6SlQqE83qFk"
