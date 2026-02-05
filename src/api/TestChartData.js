@@ -97,3 +97,49 @@ export const getBarChartData2 = () => {
     ],
   };
 };
+
+export const getDonutChartData1 = () => {
+  return {
+    labels: ['단백질', '지방', '나트륨', '식이섬유', '탄수화물'],
+    datasets: [
+      {
+        data: [20, 35, 15, 45, 30, 25],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.6)',
+          'rgba(255, 99, 132, 0.6)',
+          'rgba(54, 162, 235, 0.6)',
+          'rgba(255, 206, 86, 0.6)',
+          'rgba(75, 192, 192, 0.6)',
+        ],
+        borderColor: 'rgba(0, 0, 0, 0)',
+        borderWidth: 1,
+      },
+    ],
+  };
+};
+
+export const WeightChart = () => {
+  return {
+    labels: [
+      '12월 1주',
+      '12월 2주',
+      '12월 3주',
+      '12월 4주',
+      '1월 1주',
+      '1월 2주',
+      '1월 3주',
+    ],
+    datasets: [
+      {
+        label: '체중 변화',
+        data: [62.4, 63.2, 63.0, 63.1, 63.3, 63.4, 64.0],
+        borderColor: '#a3dc00',
+        backgroundColor: '#a3dc00',
+        pointBackgroundColor: '#a3dc00',
+        pointBorderColor: '#a3dc00',
+        tension: 0.3,
+        fill: false,
+      },
+    ],
+  };
+};

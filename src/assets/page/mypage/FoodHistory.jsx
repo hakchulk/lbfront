@@ -21,11 +21,11 @@ function FoodHistory() {
       <section className="wrap bg-white py-10">
         <div className="containers mx-auto text-center">
           <h3 className="text-deep text-base md:text-lg lg:text-xl xl:text-2xl">
-            <i className="fa-solid fa-utensils mr-2" />
+            <i className="fa-solid fa-utensils mr-5" />
             나의 식사 기록
           </h3>
 
-          <hr className=" mt-[4%] border-t-20 border-main-02 my-4" />
+          <hr className=" mt-[4%] border-t-10 border-main-02 my-4" />
 
           <h3 className="mt-[5%] text-deep text-base md:text-lg lg:text-xl xl:text-2xl">
             오늘의 섭취 : {intake} kcal / 목표 : {total_calories} kcal
@@ -61,10 +61,10 @@ function FoodHistory() {
         <div className="containers mx-auto px-4">
           <header className="text-center mb-8">
             <h3 className="text-main-02 flex justify-center items-center gap-2">
-              <i className="fa-solid fa-utensils" />
+              <i className="fa-solid fa-utensils mr-3" />
               일별 식사 기록 리스트
             </h3>
-            <span className="inline-block bg-green-500 text-white text-xs px-3 py-1 rounded-full mt-2">
+            <span className="inline-block bg-green-500 text-white text-[11px] px-3 py-1 rounded-full mt-2">
               2026-01-01
             </span>
           </header>
@@ -133,7 +133,17 @@ function FoodHistory() {
       {/* ===== 주간 기록 ===== */}
       <section className="wrap bg-white py-10">
         <div className="w-full max-w-[1040px] mx-auto rounded-xl p-6 shadow-sm">
-          <Chart type="bar" data={getBarChartData1()} />
+          <Chart
+            type="bar"
+            data={getBarChartData1()}
+            options={{
+              plugins: {
+                title: {
+                  display: false,
+                },
+              },
+            }}
+          />
         </div>
       </section>
     </>
