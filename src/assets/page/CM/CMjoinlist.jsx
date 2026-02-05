@@ -60,8 +60,10 @@ function CMjoinlist() {
     { id: 8, userName: "김미영" },
     { id: 9, userName: "박준호" },
     { id: 10, userName: "김하늘" },
-    { id: 11, userName: "강성진" },
+    { id: 11, userName: "강유진" },
     { id: 12, userName: "임윤섭" },
+    { id: 13, userName: "이윤섭" },
+    { id: 14, userName: "삼윤섭" },
   ];
 
   // 페이지네이션된 데이터
