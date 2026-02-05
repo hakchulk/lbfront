@@ -7,7 +7,7 @@ import Noticemanagement from "./Noticemanagement";
 function CMManagementMain() {
   return (
     <>
-      <div className="wrap !bg-light-02 !mt-0 pt-[50px]">
+      <div className="wrap !bg-light-02 !mt-0 pt-[50px] md:min-h-[calc(100vh-180px)] flex justify-center items-center">
         <div className="containers">
           {/* 프로필 */}
           <section className="profile mt-[5%] w-full md:w-[50%] mx-auto flex items-center justify-center p-4 rounded-[20px]">

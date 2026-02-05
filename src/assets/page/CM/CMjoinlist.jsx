@@ -73,7 +73,7 @@ function CMjoinlist() {
 
   return (
     <>
-      <div className="wrap !mt-0 !bg-light-02">
+      <div className="wrap !mt-0 !bg-light-02 min-h-[calc(100vh-240px)] md:min-h-[calc(100vh-180px)]">
         <div className="containers">
           {/* sect_tit */}
           <section className="sect_tit flex items-center justify-center mx-0 mt-[50px] border-b-[5px] border-main-02 ">
