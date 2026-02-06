@@ -112,7 +112,7 @@ function Club() {
   return (
     <Routes>
       <Route path="/" element={<ClubMain />} />
-      <Route path="detail/*" element={<ClubDetail />} />
+      <Route path="detail/:id/*" element={<ClubDetail />} /> {/* 이거 라우터 건들여야됨 내일와서말해 */}
     </Routes>
   );
 }
