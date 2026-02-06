@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import BtnComp from "../../../components/BtnComp";
+import { useNavigate } from "react-router-dom";
 
 function CMopen() {
   // 샘플 데이터 - 실제로는 API에서 받아올 데이터
@@ -16,6 +17,13 @@ function CMopen() {
   const [keywordInput, setKeywordInput] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const fileInputRef = useRef(null);
+  const navigate = useNavigate();
+
+  //이동
+  const handleSave = () => {
+    navigate("/CMmanagement");
+  };
 
   /* 키워드 처리 */
   const handleKeywordChange = (e) => {
@@ -48,10 +56,14 @@ function CMopen() {
     setPreview(URL.createObjectURL(file));
   };
 
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <>
       <div className="wrap !mt-0 !bg-light-02">
-        <div className="containers">
+        <div className="containers w-full sm:!w-[70%]">
           {/* write title */}
           <section className="wr_tit text-black py-[10px] mt-[50px] border-b border-b-[1px] border-b-deep">
             <div className="flex flex-row  items-center text-deep">
@@ -62,11 +74,11 @@ function CMopen() {
           </section>
 
           {/* 입력 폼 */}
-          <section className=" p-8 rounded-lg">
+          <section className=" w-full py-8">
             {/* 제목 */}
             <div className="mb-6">
               <label className="block mb-2 font-semibold">제목</label>
-              <input className="w-full border rounded px-3 h-[35px] bg-white" />
+              <input className="w-full border  border-deep rounded px-3 h-[35px] bg-white" />
             </div>
 
             {/* 작성일자 */}
@@ -78,11 +90,36 @@ function CMopen() {
             {/* 배경 이미지 */}
             <div className="mb-6">
               <label className="block mb-2 font-semibold">배경이미지</label>
-              <input
-                type="file"
-                accept="image/png, image/jpeg"
-                onChange={handleImageChange}
-              />
+              <div className="flex gap-2 items-center">
+                {/* 선택된 파일 표시 인풋박스 */}
+                <input
+                  type="text"
+                  readOnly
+                  value={imageFile ? imageFile.name : "선택된 파일 없음"}
+                  className={`flex-1 border border-deep rounded px-3 h-[35px] min-w-[255px] bg-white ${
+                    !imageFile ? "text-gray-deep" : ""
+                  }`}
+                />
+
+                {/* 파일 선택 버튼 */}
+                <div className="w-[200px] min-w-[80px] flex items-center justify-center">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png, image/jpeg"
+                    onChange={handleImageChange}
+                    className="hidden "
+                  />
+                  <BtnComp
+                    size="mid"
+                    variant="primary"
+                    className="mt-0 !h-[35px] w-full "
+                    onClick={handleFileButtonClick}
+                  >
+                    파일 선택
+                  </BtnComp>
+                </div>
+              </div>
 
               {preview && (
                 <img
@@ -102,17 +139,17 @@ function CMopen() {
                   value={keywordInput}
                   onChange={handleKeywordChange}
                   placeholder="키워드를 , 로 구분하여 입력해주세요"
-                  className="flex-1 border rounded px-3 h-[35px] bg-white"
+                  className="flex-1 border  border-deep rounded px-3 h-[35px] bg-white min-w-[255px]"
                 />
 
                 <div
-                  className=" w-[200px] flex items-center justify-center"
+                  className=" w-[200px] min-w-[80px] flex items-center justify-center"
                   onClick={addKeywords}
                 >
                   <BtnComp
                     size="mid"
                     variant="primary"
-                    className="mt-0 !h-[35px] w-full"
+                    className="mt-0 !h-[35px] w-full "
                   >
                     추가
                   </BtnComp>
@@ -120,11 +157,11 @@ function CMopen() {
               </div>
 
               {/* 키워드 표시 */}
-              <div className="flex gap-2 flex-wrap mt-3">
+              <div className="flex gap-2 flex-wrap my-5">
                 {keywords.map((keyword, index) => (
                   <span
                     key={index}
-                    className="flex items-center gap-1 bg-green-600 text-white px-3 py-1 rounded-full text-sm"
+                    className="flex items-center gap-1 bg-green-600 text-white px-3 py-1  rounded-full !text-sm"
                   >
                     {keyword}
                     <button
@@ -145,17 +182,27 @@ function CMopen() {
             {/* 소개글 */}
             <div className="mb-8">
               <label className="block mb-2 font-semibold">소개글</label>
-              <textarea className="w-full h-40 border rounded p-3 bg-white" />
+              <textarea className="w-full h-40 border  border-deep rounded p-3 bg-white" />
             </div>
 
             {/* 버튼 */}
-            <div className="flex justify-center gap-4">
-              <button className="px-6 py-2 bg-green-600 text-white rounded">
-                개설
-              </button>
-              <button className="px-6 py-2 bg-gray-400 text-white rounded">
+            <div className="flex gap-2 mt-2 w-[50%] mx-auto py-[5%]">
+              <BtnComp
+                variant="primary"
+                size="short"
+                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
+                onClick={handleSave}
+              >
+                저장
+              </BtnComp>
+
+              <BtnComp
+                variant="point"
+                size="short"
+                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+              >
                 취소
-              </button>
+              </BtnComp>
             </div>
           </section>
         </div>
