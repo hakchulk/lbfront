@@ -59,111 +59,55 @@ function HealthHistoryMain() {
   // 운동 기록 데이터 (추후 API로 받아올 예정이고 가짜 데이이이-타)
   const exerciseRecords = getExerciseRecords();
 
-  // 차트 옵션 (Chart.js v2)
-  const chartOptions = {
-    title: {
-      display: false,
-    },
-  };
-
   // 차트 데이터 생성 (요일별 총 소모 칼로리 - 이번주 vs 지난주)
   const weeklyCalorieData = useMemo(() => {
-    const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+    const weekDayLabels = ["월", "화", "수", "목", "금", "토", "일"];
 
-    // 현재 날짜 기준으로 이번주와 지난주 범위 계산
+    // 이번주/지난주 월요일 계산
     const today = new Date();
-    const currentDay = today.getDay(); // 0(일요일) ~ 6(토요일)
-
-    // 이번주 월요일 계산 (월요일 = 1)
+    const daysFromMonday = (today.getDay() || 7) - 1; // 일요일을 7로 처리
     const thisWeekMonday = new Date(today);
-    thisWeekMonday.setDate(
-      today.getDate() - (currentDay === 0 ? 6 : currentDay - 1),
-    );
+    thisWeekMonday.setDate(today.getDate() - daysFromMonday);
     thisWeekMonday.setHours(0, 0, 0, 0);
 
-    // 이번주 일요일 계산
-    const thisWeekSunday = new Date(thisWeekMonday);
-    thisWeekSunday.setDate(thisWeekMonday.getDate() + 6);
-    thisWeekSunday.setHours(23, 59, 59, 999);
+    // 요일별 칼로리 합산 헬퍼
+    const sumCaloriesByWeek = (startDate) => {
+      const weekCalories = new Array(7).fill(0);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      endDate.setHours(23, 59, 59, 999);
 
-    // 지난주 월요일 계산
-    const lastWeekMonday = new Date(thisWeekMonday);
-    lastWeekMonday.setDate(thisWeekMonday.getDate() - 7);
+      exerciseRecords
+        .filter((record) => {
+          const recordDate = new Date(record.date);
+          return recordDate >= startDate && recordDate <= endDate;
+        })
+        .forEach((record) => {
+          const dayIndex = (new Date(record.date).getDay() || 7) - 1;
+          weekCalories[dayIndex] += record.totalCalories;
+        });
 
-    // 지난주 일요일 계산
-    const lastWeekSunday = new Date(thisWeekMonday);
-    lastWeekSunday.setDate(thisWeekMonday.getDate() - 1);
-    lastWeekSunday.setHours(23, 59, 59, 999);
-
-    // 이번주와 지난주 칼로리 초기화
-    const thisWeekCalories = {
-      일: 0,
-      월: 0,
-      화: 0,
-      수: 0,
-      목: 0,
-      금: 0,
-      토: 0,
+      return weekCalories;
     };
 
-    const lastWeekCalories = {
-      일: 0,
-      월: 0,
-      화: 0,
-      수: 0,
-      목: 0,
-      금: 0,
-      토: 0,
-    };
-
-    // 각 운동 기록을 순회하며 이번주/지난주 구분하여 요일별 칼로리 합산
-    exerciseRecords.forEach((record) => {
-      const recordDate = new Date(record.date);
-      recordDate.setHours(0, 0, 0, 0);
-
-      // 이번주 범위 확인
-      if (recordDate >= thisWeekMonday && recordDate <= thisWeekSunday) {
-        const dayIndex = recordDate.getDay();
-        const dayName = weekDays[dayIndex];
-        thisWeekCalories[dayName] += record.totalCalories;
-      }
-      // 지난주 범위 확인
-      else if (recordDate >= lastWeekMonday && recordDate <= lastWeekSunday) {
-        const dayIndex = recordDate.getDay();
-        const dayName = weekDays[dayIndex];
-        lastWeekCalories[dayName] += record.totalCalories;
-      }
-    });
+    const thisWeek = sumCaloriesByWeek(thisWeekMonday);
+    const lastWeek = sumCaloriesByWeek(
+      new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000),
+    );
 
     return {
-      labels: ["월", "화", "수", "목", "금", "토", "일"],
+      labels: weekDayLabels,
       datasets: [
         {
           label: "지난주",
-          data: [
-            lastWeekCalories.월,
-            lastWeekCalories.화,
-            lastWeekCalories.수,
-            lastWeekCalories.목,
-            lastWeekCalories.금,
-            lastWeekCalories.토,
-            lastWeekCalories.일,
-          ],
+          data: lastWeek,
           backgroundColor: "#DFF0FF",
           borderColor: "#A7D6FF",
           borderWidth: 1,
         },
         {
           label: "이번주",
-          data: [
-            thisWeekCalories.월,
-            thisWeekCalories.화,
-            thisWeekCalories.수,
-            thisWeekCalories.목,
-            thisWeekCalories.금,
-            thisWeekCalories.토,
-            thisWeekCalories.일,
-          ],
+          data: thisWeek,
           backgroundColor: "#D9FFD5",
           borderColor: "#AFE1AA",
           borderWidth: 1,
