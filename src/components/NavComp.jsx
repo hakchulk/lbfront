@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
 
 function NavComp() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const setLogout = useAuthStore((state) => state.setLogout);
+  const isLoggedIn = !!user;
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -25,7 +29,7 @@ function NavComp() {
   const allNavLinks = [
     {
       // 로그인 여부와 관계없이 항상 마이페이지로 이동
-      name: "밸런스 체크",
+      name: `${isLoggedIn ? user?.name + "님의" : ""} 밸런스 체크`,
       to: "/mypage",
     },
     { name: "커뮤니티 관리", to: "/CMmanagement" },
@@ -74,7 +78,7 @@ function NavComp() {
 
   // 로그아웃 핸들러
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    setLogout();
     setIsOpen(false);
   };
 
@@ -192,7 +196,7 @@ function NavComp() {
               onClick={() => setIsOpen(false)}
             >
               {index === 0 && isLoggedIn ? (
-                <>사용자 님의 마이페이지</>
+                <>{user?.name + "님의 밸런스 체크"}</>
               ) : (
                 link.name
               )}

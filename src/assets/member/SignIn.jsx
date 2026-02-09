@@ -1,26 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { callSignIn } from "../../api/auth";
+import { useAuthStore } from "../../stores/authStore";
 import BtnComp from "../../components/BtnComp";
 
 function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-
-  // Zustand 스토어 액션
-  // const setLogin = useAuthStore((state) => state.setLogin);
+  const setLogin = useAuthStore((state) => state.setLogin);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
     try {
-      // 변경된 엔드포인트: /auth/login
       const response = await callSignIn({ email, password });
-
-      // Zustand에 AuthUserDto 저장 (accessToken 포함)
-      // setLogin(response.data);
-
-      alert("로그인에 성공했습니다.");
+      setLogin(response);
       navigate("/");
     } catch (error) {
       console.error("SignIn 실패:", { email, password });
@@ -44,14 +38,14 @@ function SignIn() {
       </div>
 
       {/* 로그인 폼 */}
-      <form onSubmit={handleSignIn} className="w-full max-w-[400px]">
+      <form onSubmit={handleSignIn} className="w-full max-w-100">
         <div className="space-y-4">
           <input
             type="email"
             placeholder="아이디"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full h-[50px] px-4 rounded-md border border-gray-200 bg-[#FFEFEF] focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
+            className="w-full h-[50px] px-4 rounded-md border border-main-02 bg-[#FFEFEF] focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
             required
           />
           <input
@@ -59,7 +53,7 @@ function SignIn() {
             placeholder="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full h-[50px] px-4 rounded-md border border-gray-200 bg-[#FFEFEF] focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
+            className="w-full h-[50px] px-4 rounded-md border border-main-02 bg-[#FFEFEF] focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
             required
           />
         </div>

@@ -1,4 +1,5 @@
 import apiClient from "./config"; // 위에서 만든 파일 경로
+import { useAuthStore } from "../stores/authStore";
 
 export const checkEmailAvailability = async (email) => {
   try {
@@ -26,6 +27,11 @@ export const callSignUp = async (requestData) => {
 };
 
 export const callSignIn = async (requestData) => {
-  const response = await apiClient.post("/auth/login", requestData);
-  return response.data;
+  try {
+    const response = await apiClient.post("/auth/login", requestData);
+    return response.data;
+  } catch (error) {
+    console.error("callSignIn() 오류 발생:", error);
+    throw error;
+  }
 };

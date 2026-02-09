@@ -107,7 +107,7 @@ function SignUp() {
   };
 
   return (
-    <div className="wrap bg-light-03 min-h-screen">
+    <div className="wrap !bg-light-03 min-h-screen !mt-0">
       <div className="containers">
         <form
           onSubmit={handleSubmit}
@@ -129,7 +129,7 @@ function SignUp() {
             name="name"
             placeholder="이름"
             onChange={handleChange}
-            className="w-full p-3 border border-light-01 rounded-md bg-white text-black"
+            className="w-full p-3 border  border-main-02 rounded-md bg-white text-black"
             required
           />
 
@@ -139,7 +139,7 @@ function SignUp() {
               name="email"
               placeholder="이메일"
               onChange={handleChange}
-              className="flex-1 p-3 border border-light-01 rounded-md bg-white text-black"
+              className="flex-1 p-3 border  border-main-02 rounded-md bg-white text-black"
               required
             />
             <BtnComp
@@ -158,7 +158,7 @@ function SignUp() {
             name="password"
             placeholder="비밀번호"
             onChange={handleChange}
-            className="w-full p-3 border border-light-01 rounded-md bg-white text-black"
+            className="w-full p-3 border  border-main-02 rounded-md bg-white text-black"
             required
           />
           <input
@@ -166,7 +166,7 @@ function SignUp() {
             name="passwordConfirm"
             placeholder="비밀번호 확인"
             onChange={handleChange}
-            className="w-full p-3 border border-light-01 rounded-md bg-white text-black"
+            className="w-full p-3 border border-main-02 rounded-md bg-white text-black"
             required
           />
 
@@ -176,21 +176,21 @@ function SignUp() {
               name="birthYear"
               placeholder="년(4자)"
               onChange={handleChange}
-              className="flex-1 p-3 border border-light-01 rounded-md bg-white"
+              className="flex-1 p-3 border  border-main-02 rounded-md bg-white"
             />
             <input
               type="text"
               name="birthMonth"
               placeholder="월"
               onChange={handleChange}
-              className="w-24 p-3 border border-light-01 rounded-md bg-white"
+              className="w-24 p-3 border  border-main-02 rounded-md bg-white"
             />
             <input
               type="text"
               name="birthDay"
               placeholder="일"
               onChange={handleChange}
-              className="w-24 p-3 border border-light-01 rounded-md bg-white"
+              className="w-24 p-3 border  border-main-02 rounded-md bg-white"
             />
           </div>
 
@@ -199,7 +199,7 @@ function SignUp() {
             name="phone"
             placeholder="휴대폰번호"
             onChange={handleChange}
-            className="w-full p-3 border border-light-01 rounded-md bg-white"
+            className="w-full p-3 border  border-main-02 rounded-md bg-white"
           />
 
           {/* 성별 선택 */}
@@ -235,21 +235,21 @@ function SignUp() {
               name="height"
               placeholder="키(cm)"
               onChange={handleChange}
-              className="p-3 border border-light-01 rounded-md bg-white"
+              className="p-3 border  border-main-02 rounded-md bg-white"
             />
             <input
               type="number"
               name="weight"
               placeholder="몸무게(kg)"
               onChange={handleChange}
-              className="p-3 border border-light-01 rounded-md bg-white"
+              className="p-3 border border-main-02 rounded-md bg-white"
             />
             <input
               type="number"
               name="goal_weight"
               placeholder="목표(kg)"
               onChange={handleChange}
-              className="p-3 border border-light-01 rounded-md bg-white"
+              className="p-3 border border-main-02 rounded-md bg-white"
             />
           </div>
 
@@ -258,17 +258,17 @@ function SignUp() {
             <p className="font-bold text-deep mb-3 flex items-center gap-1">
               가입 목적 ✓
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 flex-wrap">
               {GOAL_OPTIONS.map((g) => (
                 <BtnComp
                   key={g}
                   type="button"
                   size="short"
                   variant={formData.goal === g ? "primary" : "line"}
-                  className={`mt-0 h-[36px] w-auto px-4 border-none ${
+                  className={`mt-0 h-[36px] w-auto px-2 sm:px-4 border-none text-xs sm:text-sm ${
                     formData.goal === g
-                      ? "bg-main-02"
-                      : "bg-light-02 opacity-80"
+                      ? "bg-deep"
+                      : "bg-main-02 text-white  hover:bg-main-01"
                   }`}
                   onClick={() => setFormData((p) => ({ ...p, goal: g }))}
                 >
@@ -290,7 +290,7 @@ function SignUp() {
               name="target_date"
               placeholder="목표 기간을 입력해 주세요 (일)"
               onChange={handleChange}
-              className="w-full p-3 border border-light-01 rounded-md bg-white"
+              className="w-full p-3 border border-main-02 rounded-md bg-white"
             />
           </div>
 
@@ -310,8 +310,8 @@ function SignUp() {
                   }
                   className={`mt-0 h-[36px] w-full border-none ${
                     formData.selectedAllergies.includes(a)
-                      ? "bg-main-02"
-                      : "bg-light-02 opacity-80"
+                      ? "bg-deep"
+                      : "bg-main-02 text-white  hover:bg-main-01"
                   }`}
                   onClick={() => handleAllergyClick(a)}
                 >
@@ -325,17 +325,17 @@ function SignUp() {
             name="special_notes"
             placeholder="특이사항"
             onChange={handleChange}
-            className="w-full p-3 border border-light-01 rounded-md h-24 bg-white"
+            className="w-full p-3 border border-main-02 rounded-md h-24 bg-white"
           />
 
           {/* 최종 가입 버튼 */}
-          <div className="pt-4">
+          <div className="pt-1 sm:pt-4">
             <BtnComp size="long" variant="primary" type="submit">
               회원가입
             </BtnComp>
           </div>
 
-          <div className="text-center">
+          <div className="text-center ">
             <Link
               to="/member/signin"
               className="text-gray-mid text-sm hover:underline"
