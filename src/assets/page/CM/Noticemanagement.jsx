@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import BtnComp from "../../../components/BtnComp";
 import PageNatation from "./../../../components/PageNatation";
 import usePaginationStore from "../../../stores/paginationStore";
+import { Link, Routes, Route } from "react-router-dom";
+import NoticeWrite from "./NoticeWrite";
 
 function Noticemanagement() {
   // 반응형 pageSize 상태
@@ -88,70 +90,91 @@ function Noticemanagement() {
 
   return (
     <>
-      <div className="wrap !mt-0  !bg-light-02 ">
-        <div className="containers">
-          {/* sect_tit */}
-          <section className="sect_tit flex items-center justify-center mx-0 mt-[50px] border-b-[5px] border-main-02 ">
-            <h3 className=" !text-main-02 mb-[20px] !text-[20px] lg:!text-[30px] flex items-center justify-center ">
-              <span className="material-icons mr-[5px] !text-[30px] lg:!text-[40px] ">
-                campaign
-              </span>
-              {clubName} 모임의 공지사항
-            </h3>
-          </section>
+      <Routes>
+        <Route
+          path=""
+          element={
+            <div className="wrap !mt-0  !bg-light-02 ">
+              <div className="containers">
+                {/* sect_tit */}
+                <section className="sect_tit flex items-center justify-center mx-0 mt-[50px] border-b-[5px] border-main-02 ">
+                  <h3 className=" !text-main-02 mb-[20px] !text-[20px] lg:!text-[30px] flex items-center justify-center ">
+                    <span className="material-icons mr-[5px] !text-[30px] lg:!text-[40px] ">
+                      campaign
+                    </span>
+                    {clubName} 모임의 공지사항
+                  </h3>
+                </section>
 
-          {/* list */}
-          <section className="ac_list w-[80%] mx-auto my-[5%] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedNotices.map((notice) => (
-              <div
-                key={notice.id}
-                className="bg-white rounded-xl shadow-sm border border-[#E0F2C9] p-6 flex flex-col items-start justify-s "
-              >
-                <p className="text-center text-gray-deep leading-relaxed">
-                  · 공지사항 {notice.noticeNumber}
-                </p>
-                <h4 className="!text-base md:!text-lg lg:!text-xl line-clamp-2 text-deep my-[10px]">
-                  {notice.title}
-                </h4>
+                {/* list */}
+                <section className="ac_list w-[80%] mx-auto my-[5%] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {paginatedNotices.map((notice) => (
+                    <div
+                      key={notice.id}
+                      className="bg-white rounded-xl shadow-sm border border-[#E0F2C9] p-6 flex flex-col items-start justify-s "
+                    >
+                      <p className="text-center text-gray-deep leading-relaxed">
+                        · 공지사항 {notice.noticeNumber}
+                      </p>
+                      <h4 className="!text-base md:!text-lg lg:!text-xl line-clamp-2 text-deep my-[10px]">
+                        {notice.title}
+                      </h4>
 
-                <p className="text-center text-gray-deep leading-relaxed">
-                  · 작성자 : {notice.userName}
-                </p>
-                <p className="text-center text-gray-deep leading-relaxed">
-                  · 작성일자 : {todayString}
-                </p>
+                      <p className="text-center text-gray-deep leading-relaxed">
+                        · 작성자 : {notice.userName}
+                      </p>
+                      <p className="text-center text-gray-deep leading-relaxed">
+                        · 작성일자 : {todayString}
+                      </p>
 
-                <div className="flex gap-2 w-[50%] min-w-[180px] mx-auto mt-[10px]">
-                  <BtnComp
-                    variant="primary"
-                    size="short"
-                    className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
-                  >
-                    수정
-                  </BtnComp>
+                      <div className="flex gap-2 w-[50%] min-w-[180px] mx-auto mt-[10px]">
+                        <BtnComp
+                          variant="primary"
+                          size="short"
+                          className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
+                        >
+                          수정
+                        </BtnComp>
 
-                  <BtnComp
-                    variant="primary"
-                    size="short"
-                    className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
-                  >
-                    삭제
-                  </BtnComp>
+                        <BtnComp
+                          variant="primary"
+                          size="short"
+                          className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+                        >
+                          삭제
+                        </BtnComp>
+                      </div>
+                    </div>
+                  ))}
+                </section>
+
+                {/* 작성버튼 */}
+                <Link to="noticewrite">
+                  <div className="w-[80%] mx-auto flex items-center justify-end mb-[5%]">
+                    <BtnComp
+                      size="short"
+                      variant="primary"
+                      className="mt-0 w-full sm:w-[200px]"
+                    >
+                      공지사항 작성
+                    </BtnComp>
+                  </div>
+                </Link>
+
+                {/* 페이지네이션 */}
+                <div className="w-full mb-[50px]">
+                  <PageNatation
+                    storeKey={storeKey}
+                    totalElements={notices.length}
+                    pageSize={pageSize}
+                  />
                 </div>
               </div>
-            ))}
-          </section>
-
-          {/* 페이지네이션 */}
-          <div className="w-full mb-[50px]">
-            <PageNatation
-              storeKey={storeKey}
-              totalElements={notices.length}
-              pageSize={pageSize}
-            />
-          </div>
-        </div>
-      </div>
+            </div>
+          }
+        />
+        <Route path="noticewrite" element={<NoticeWrite />} />
+      </Routes>
     </>
   );
 }
