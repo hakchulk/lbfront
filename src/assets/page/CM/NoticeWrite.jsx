@@ -24,6 +24,13 @@ function NoticeWrite() {
 
   //이동
   const handleSave = () => {
+    alert("작성이 완료되었습니다.");
+    navigate("/CMManagement/Noticemanagement");
+  };
+
+  //취소
+  const handleCsl = () => {
+    alert("작성이 취소되었습니다.");
     navigate("/CMManagement/Noticemanagement");
   };
 
@@ -131,6 +138,7 @@ function NoticeWrite() {
                 variant="point"
                 size="short"
                 className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+                onClick={handleCsl}
               >
                 취소
               </BtnComp>
