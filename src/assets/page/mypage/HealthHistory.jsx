@@ -91,9 +91,7 @@ function HealthHistoryMain() {
     };
 
     const thisWeek = sumCaloriesByWeek(thisWeekMonday);
-    const lastWeek = sumCaloriesByWeek(
-      new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000),
-    );
+    const lastWeek = sumCaloriesByWeek(new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000));
 
     return {
       labels: weekDayLabels,
@@ -152,9 +150,7 @@ function HealthHistoryMain() {
                   className="flex flex-col items-center justify-center py-6 border-r last:border-r-0  border-gray-mid"
                 >
                   {/* 요일 */}
-                  <span className="text-sm font-semibold text-green-700 mb-[10px]">
-                    {day.label}
-                  </span>
+                  <span className="text-sm font-semibold text-green-700 mb-[10px]">{day.label}</span>
 
                   {/* 스탬프 */}
                   <img
@@ -195,9 +191,7 @@ function HealthHistoryMain() {
                   onClick={() => setSort("latest")}
                   className={`border rounded-[4px] transition-colors ${sort === "latest" ? "bg-deep text-white border-1 border-deep" : "bg-white hover:bg-light-01"}`}
                 >
-                  <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">
-                    최신순
-                  </p>
+                  <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">최신순</p>
                 </button>
 
                 {/* 오래된 순 */}
@@ -206,9 +200,7 @@ function HealthHistoryMain() {
                   onClick={() => setSort("oldest")}
                   className={`border rounded-[4px] transition-colors ${sort === "oldest" ? "bg-deep text-white border-1  border-deep" : "bg-white hover:bg-light-01"}`}
                 >
-                  <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">
-                    오래된 순
-                  </p>
+                  <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">오래된 순</p>
                 </button>
               </div>
               {/* 리스트 */}
@@ -226,28 +218,21 @@ function HealthHistoryMain() {
 
                       {/* 운동 종류별 그룹 */}
                       <div className="flex flex-col gap-3 grow">
-                        {Object.entries(record.exercises).map(
-                          ([category, exercises]) => (
-                            <div key={category} className="flex flex-col gap-1">
-                              <div className="text-lg md:text-xlg font-semibold text-deep">
-                                {category}
-                              </div>
-                              <div className="flex flex-col gap-1 ml-2">
-                                {exercises.map((exercise, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="text-xs md:text-sm text-gray-deep flex items-center"
-                                  >
-                                    <span className="mr-1">·</span>
-                                    <span>
-                                      {exercise.name} : {exercise.value}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
+                        {Object.entries(record.exercises).map(([category, exercises]) => (
+                          <div key={category} className="flex flex-col gap-1">
+                            <div className="text-lg md:text-xlg font-semibold text-deep">{category}</div>
+                            <div className="flex flex-col gap-1 ml-2">
+                              {exercises.map((exercise, idx) => (
+                                <div key={idx} className="text-xs md:text-sm text-gray-deep flex items-center">
+                                  <span className="mr-1">·</span>
+                                  <span>
+                                    {exercise.name} : {exercise.value}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ),
-                        )}
+                          </div>
+                        ))}
                       </div>
 
                       {/* 총 소모 칼로리 */}
@@ -278,11 +263,7 @@ function HealthHistoryMain() {
               </div>
 
               <div className="w-full mt-[50px]">
-                <PageNatation
-                  storeKey={storeKey}
-                  totalElements={exerciseRecords.length}
-                  pageSize={pageSize}
-                />
+                <PageNatation storeKey={storeKey} totalElements={exerciseRecords.length} pageSize={pageSize} />
               </div>
             </section>
           </div>
