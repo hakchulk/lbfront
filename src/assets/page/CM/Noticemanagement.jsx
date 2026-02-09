@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import BtnComp from "../../../components/BtnComp";
 import PageNatation from "./../../../components/PageNatation";
 import usePaginationStore from "../../../stores/paginationStore";
-import { Link, Routes, Route } from "react-router-dom";
+import { Link, Routes, Route, useNavigate } from "react-router-dom";
 import NoticeWrite from "./NoticeWrite";
 
 function Noticemanagement() {
+  const navigate = useNavigate();
+  
   // 반응형 pageSize 상태
   const [pageSize, setPageSize] = useState(4);
 
@@ -88,6 +90,11 @@ function Noticemanagement() {
     return notices.slice(startIndex, endIndex);
   }, [notices, currentPage, pageSize]);
 
+  //이동
+  const handleEdit = () => {
+    navigate("noticewrite");
+  };
+
   return (
     <>
       <Routes>
@@ -132,6 +139,7 @@ function Noticemanagement() {
                           variant="primary"
                           size="short"
                           className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
+                          onClick={handleEdit}
                         >
                           수정
                         </BtnComp>
