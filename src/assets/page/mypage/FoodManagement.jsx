@@ -41,7 +41,7 @@ function FoodManagement() {
         </h3>
         <hr className="border-t-10 border-main-02 my-6" />
         <h2 className="mb-8 text-lg font-semibold">오늘의 식단</h2>
-        <div className=" bg-light-02">
+        <div className=" myBg bg-light-02">
           {/* 날짜 배지 */}
           <div className="  flex justify-center mb-10">
             <span className=" mt-[5%] inline-flex items-center gap-2 bg-green-600 text-white text-sm px-4 py-1 rounded-full">
@@ -62,7 +62,7 @@ function FoodManagement() {
                 </h3>
 
                 {/* 카드 */}
-                <article className="w-full bg-pink-50 rounded-xl border border-main-02 p-6 shadow-sm">
+                <article className="w-full bg-white rounded-xl border border-main-02 p-6 shadow-sm">
                   <div className="flex justify-between gap-2">
                     {meal.items.map((item, idx) => (
                       <div
@@ -117,7 +117,7 @@ function FoodManagement() {
           </article>
         </section>
 
-        <section className="mt-[5%] max-h-[600px] bg-light-02">
+        <section className="myBg mt-[5%] max-h-[600px] bg-light-02">
           <h3 className="mt-[2%] text-base md:text-lg lg:text-xl xl:text-2xl">
             <i className="fa-solid fa-utensils mr-2" />
             오늘의 식단 성분 분석

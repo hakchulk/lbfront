@@ -1,8 +1,10 @@
 import { useState, useRef } from "react";
 import BtnComp from "../../../components/BtnComp";
 import { useNavigate } from "react-router-dom";
+import Noticemanagement from "./Noticemanagement";
+import CMManagement from "./CMManagement";
 
-function ClubPostWrite() {
+function NoticeWrite() {
   // 샘플 데이터 - 실제로는 API에서 받아올 데이터
   const clubName = "고기고기"; // 클럽 이름
 
@@ -19,6 +21,18 @@ function ClubPostWrite() {
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+
+  //이동
+  const handleSave = () => {
+    alert("작성이 완료되었습니다.");
+    navigate("/CMManagement/Noticemanagement");
+  };
+
+  //취소
+  const handleCsl = () => {
+    alert("작성이 취소되었습니다.");
+    navigate("/CMManagement/Noticemanagement");
+  };
 
   /* 이미지 처리 */
   const handleImageChange = (e) => {
@@ -43,7 +57,7 @@ function ClubPostWrite() {
               <i class="fa-solid fa-file-pen"></i>
               <span>{clubName} 모임</span>
             </div>
-            <h3>게시글 작성</h3>
+            <h3>공지사항 작성</h3>
           </section>
 
           {/* 입력 폼 */}
@@ -94,7 +108,13 @@ function ClubPostWrite() {
                 </div>
               </div>
 
-              {preview && <img src={preview} alt="preview" className="mt-4 w-32 h-32 object-cover rounded border" />}
+              {preview && (
+                <img
+                  src={preview}
+                  alt="preview"
+                  className="mt-4 w-32 h-32 object-cover rounded border"
+                />
+              )}
             </div>
 
             {/* 내용 */}
@@ -109,11 +129,17 @@ function ClubPostWrite() {
                 variant="primary"
                 size="short"
                 className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
+                onClick={handleSave}
               >
                 저장
               </BtnComp>
 
-              <BtnComp variant="point" size="short" className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can">
+              <BtnComp
+                variant="point"
+                size="short"
+                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+                onClick={handleCsl}
+              >
                 취소
               </BtnComp>
             </div>
@@ -124,4 +150,4 @@ function ClubPostWrite() {
   );
 }
 
-export default ClubPostWrite;
+export default NoticeWrite;

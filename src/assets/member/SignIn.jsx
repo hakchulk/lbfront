@@ -49,11 +49,11 @@ function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5E6D3] flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-light-02 flex flex-col items-center justify-center p-6">
       {/* 로고 영역 */}
       <div className="mb-12 flex flex-col items-center">
         <div className="flex items-center gap-3">
-          <div className="w-40 h-40">
+          <div className="w-40">
             <img
               src="https://fvdyqzogufeurojwjqwt.supabase.co/storage/v1/object/sign/logo/logoColor2.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMDY3OTY1My1jNzIxLTRlMGMtYmY2Yy1iZWUwZjBhM2EyMWQiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJsb2dvL2xvZ29Db2xvcjIucG5nIiwiaWF0IjoxNzY5NDEyMzkwLCJleHAiOjE4MDA5NDgzOTB9.3Pz3GYQV0_tskdhOBd95hscuZAA8yao5D6hkHAGGvpQ"
               alt="Logo"
@@ -78,7 +78,7 @@ function SignIn() {
             placeholder="아이디"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full h-[50px] px-4 rounded-md border border-main-02 bg-[#FFEFEF] focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
+            className="w-full h-[50px] px-4 rounded-md border border-main-02 bg-white focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
             required
             disabled={loading}
           />
@@ -87,7 +87,7 @@ function SignIn() {
             placeholder="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full h-[50px] px-4 rounded-md border border-main-02 bg-[#FFEFEF] focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
+            className="w-full h-[50px] px-4 rounded-md border border-main-02 bg-white focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
             required
             disabled={loading}
           />

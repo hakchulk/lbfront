@@ -2,7 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Chart from '../../../components/ChartComp';
 import BtnComp from '../../../components/BtnComp';
-import { getBarChartData1, getPieChartData2 } from '../../../api/TestChartData';
+import {
+  getBarChartData2,
+  getPieChartData2,
+  barChartOptions,
+} from '../../../api/TestChartData';
 import { meals } from '../../../api/FoodHistory';
 
 function FoodHistory() {
@@ -18,7 +22,7 @@ function FoodHistory() {
   return (
     <>
       {/* ===== 상단 요약 ===== */}
-      <section className="wrap bg-white py-10">
+      <section className="wrap bg-white pt-[2%] py-10">
         <div className="containers mx-auto text-center">
           <h3 className="text-deep text-base md:text-lg lg:text-xl xl:text-2xl">
             <i className="fa-solid fa-utensils mr-5" />
@@ -57,7 +61,7 @@ function FoodHistory() {
       </section>
 
       {/* ===== 일별 식사 기록 리스트 ===== */}
-      <section className="wrap !bg-point   py-10">
+      <section className="wrap !bg-light-02   py-10">
         <div className="containers mx-auto px-4">
           <header className="text-center mb-8">
             <h3 className="text-main-02 flex justify-center items-center gap-2">
@@ -76,13 +80,10 @@ function FoodHistory() {
                   {meal.label}
                 </h3>
 
-                <article className="max-w-[340px] w-full bg-pink-50 rounded-xl border border-main-02 p-4 flex flex-col items-center shadow">
+                <article className="max-w-[340px] w-full bg-white rounded-xl border border-main-02 p-4 flex flex-col items-center shadow">
                   <div
                     className="
-                      w-[200px] h-[200px]
-                      sm:w-[220px] sm:h-[220px]
-                      md:w-[260px] md:h-[260px]
-                      lg:w-[300px] lg:h-[300px]
+                      w-[90%] aspect-square 
                       rounded-full overflow-hidden border my-8
                     "
                   >
@@ -131,18 +132,29 @@ function FoodHistory() {
       </section>
 
       {/* ===== 주간 기록 ===== */}
-      <section className="wrap bg-white py-10">
+      <section className="wrap bg-white mb-[10%] py-10">
         <div className="w-full max-w-[1040px] mx-auto rounded-xl p-6 shadow-sm">
+          {/* 👇 여기! 내용은 전부 JSX */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+              <span className="w-12 h-5  bg-main-01" />
+              <span>주간 섭취 칼로리</span>
+            </div>
+
+            <h2 className="text-xl font-bold text-green-600">
+              주간 평균 1570 kcal
+            </h2>
+
+            <p className="text-xs text-gray-500 mt-1">
+              성공일수: 4일 · 초과일수: 2일 · 미기록: 1일
+            </p>
+          </div>
+
+          {/* 👇 Chart는 그래프만 */}
           <Chart
             type="bar"
-            data={getBarChartData1()}
-            options={{
-              plugins: {
-                title: {
-                  display: false,
-                },
-              },
-            }}
+            data={getBarChartData2()}
+            options={barChartOptions}
           />
         </div>
       </section>
