@@ -3,8 +3,16 @@ import { useAuthStore } from "../stores/authStore";
 
 export const BASE_URL = "http://localhost:8080/api/lastlayer";
 
-const apiClient = axios.create({
+// 1. 일반적인 데이터 요청용 (쿠키 X)
+export const apiClient = axios.create({
   baseURL: BASE_URL,
+  withCredentials: false,
+});
+
+// 2. 토큰 재발급(Refresh) 전용 (쿠키 O)
+export const authClient = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
 });
 
 export default apiClient;
@@ -25,11 +33,7 @@ const tokenManager = {
     this.promise = (async () => {
       try {
         console.log("Refreshing access token...");
-        const res = await apiClient.post(
-          "/auth/refresh",
-          {},
-          { withCredentials: true },
-        );
+        const res = await authClient.post("/auth/refresh");
 
         setLogin(res.data);
         console.log("Token refreshed successfully");

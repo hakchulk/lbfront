@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import { callLogout } from "../api/auth";
 
 function NavComp() {
   const user = useAuthStore((state) => state.user);
@@ -10,29 +11,13 @@ function NavComp() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  // ROLE_CM 권한 확인 함수
-  // const isRoleCM = () => {
-  //   try {
-  //     const userInfo = localStorage.getItem("user");
-  //     if (userInfo) {
-  //       const user = JSON.parse(userInfo);
-  //       return user.member_name === "ROLE_CM";
-  //     }
-  //     return false;
-  //   } catch (error) {
-  //     return false;
-  //   }
-  // };
-
-  // requireRole: "ROLE_CM"
-
   const allNavLinks = [
     {
       // 로그인 여부와 관계없이 항상 마이페이지로 이동
       name: `${isLoggedIn ? user?.name + "님의" : ""} 밸런스 체크`,
       to: "/mypage",
     },
-    { name: "커뮤니티 관리", to: "/CMmanagement" },
+    { name: "커뮤니티 관리", to: "/CMmanagement", requireRole: "CLUBMANAGER" },
     { name: "라스트밸런스", to: "/about" },
     { name: "커뮤니티", to: "/club" },
     { name: "이벤트", to: "/event" },
@@ -40,10 +25,11 @@ function NavComp() {
 
   // 권한에 따라 링크 필터링
   const navLinks = allNavLinks.filter((link) => {
-    if (link.requireRole === "ROLE_CM") {
-      return isRoleCM();
-    }
-    return true;
+    // 요구하는 권한이 없는 링크는 통과
+    if (!link.requireRole) return true;
+
+    // 요구하는 권한이 있는 경우, 사용자의 roles에 포함되어 있는지 확인
+    return user?.roles?.includes(link.requireRole);
   });
 
   const toggleMenu = () => {
@@ -78,6 +64,7 @@ function NavComp() {
 
   // 로그아웃 핸들러
   const handleLogout = () => {
+    callLogout();
     setLogout();
     setIsOpen(false);
   };

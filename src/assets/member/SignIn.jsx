@@ -7,18 +7,44 @@ import BtnComp from "../../components/BtnComp";
 function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const setLogin = useAuthStore((state) => state.setLogin);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
+      if (!email || !password) {
+        setError("아이디와 비밀번호를 입력해주세요.");
+        setLoading(false);
+        return;
+      }
+
       const response = await callSignIn({ email, password });
+
+      if (!response) {
+        setError("로그인에 실패했습니다.");
+        setLoading(false);
+        return;
+      }
+
+      if (response.error) {
+        setError(response.error || "로그인에 실패했습니다.");
+        setLoading(false);
+        return;
+      }
+
       setLogin(response);
       navigate("/");
-    } catch (error) {
-      console.error("SignIn 실패:", { email, password });
-      alert("아이디 또는 비밀번호를 확인해주세요.");
+    } catch (err) {
+      setError(err.response.data.message || "로그인 중 오류가 발생했습니다.");
+      console.log("callSignIn() err.response.data:", err.response.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,6 +65,13 @@ function SignIn() {
 
       {/* 로그인 폼 */}
       <form onSubmit={handleSignIn} className="w-full max-w-100">
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-4">
           <input
             type="email"
@@ -47,6 +80,7 @@ function SignIn() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full h-[50px] px-4 rounded-md border border-main-02 bg-[#FFEFEF] focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
             required
+            disabled={loading}
           />
           <input
             type="password"
@@ -55,13 +89,19 @@ function SignIn() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full h-[50px] px-4 rounded-md border border-main-02 bg-[#FFEFEF] focus:outline-none focus:ring-1 focus:ring-main-02 placeholder:text-gray-400"
             required
+            disabled={loading}
           />
         </div>
 
         {/* BtnComp 사용 */}
         <div className="flex flex-col">
-          <BtnComp type="submit" size="long" variant="primary">
-            로그인
+          <BtnComp
+            type="submit"
+            size="long"
+            variant="primary"
+            disabled={loading}
+          >
+            {loading ? "로그인 중..." : "로그인"}
           </BtnComp>
 
           <Link to="/member/signup" className="w-full">

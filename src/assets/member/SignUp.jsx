@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BtnComp from "../../components/BtnComp";
 import { checkEmailAvailability, callSignUp } from "../../api/auth";
@@ -23,6 +23,7 @@ const ALLERGY_OPTIONS = [
 
 function SignUp() {
   const navigate = useNavigate();
+  const emailCheckBtnRef = useRef(null); // 중복 체크 버튼 ref
   const [isEmailChecked, setIsEmailChecked] = useState(false); // 중복 체크 여부 상태
   const [formData, setFormData] = useState({
     email: "",
@@ -80,6 +81,14 @@ function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 이메일 중복 체크 확인
+    if (!isEmailChecked) {
+      alert("이메일 중복 체크를 완료해주세요.");
+      emailCheckBtnRef.current?.focus();
+      return;
+    }
+
     if (formData.password !== formData.passwordConfirm) {
       alert("비밀번호가 일치하지 않습니다.");
       return;
@@ -143,6 +152,7 @@ function SignUp() {
               required
             />
             <BtnComp
+              ref={emailCheckBtnRef}
               size="short"
               variant="primary"
               type="button"

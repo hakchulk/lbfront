@@ -1,4 +1,4 @@
-import apiClient from "./config"; // 위에서 만든 파일 경로
+import apiClient, { authClient } from "./config"; // 위에서 만든 파일 경로
 import { useAuthStore } from "../stores/authStore";
 
 export const checkEmailAvailability = async (email) => {
@@ -17,7 +17,7 @@ export const checkEmailAvailability = async (email) => {
 
 export const callSignUp = async (requestData) => {
   try {
-    const response = await apiClient.post("/auth/signup", requestData);
+    const response = await authClient.post("/auth/signup", requestData);
 
     return response.data;
   } catch (error) {
@@ -27,11 +27,16 @@ export const callSignUp = async (requestData) => {
 };
 
 export const callSignIn = async (requestData) => {
-  try {
-    const response = await apiClient.post("/auth/login", requestData);
-    return response.data;
-  } catch (error) {
-    console.error("callSignIn() 오류 발생:", error);
-    throw error;
-  }
+  const response = await authClient.post("/auth/login", requestData);
+  return response.data;
+};
+
+export const callRefresh = async () => {
+  const response = await authClient.post("/auth/refresh");
+  return response.data;
+};
+
+export const callLogout = async () => {
+  const response = await apiClient.post("/auth/logout");
+  return response.data;
 };
