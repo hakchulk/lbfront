@@ -1,8 +1,8 @@
-import React from "react";
-import { Route, Routes, Link } from "react-router-dom";
-import CMopen from "./CMopen";
-import CMjoinlist from "./CMjoinlist";
-import Noticemanagement from "./Noticemanagement";
+import React from 'react';
+import { Route, Routes, Link } from 'react-router-dom';
+import CMopen from './CMopen';
+import CMjoinlist from './CMjoinlist';
+import Noticemanagement from './Noticemanagement';
 
 function CMManagementMain() {
   return (

@@ -85,17 +85,43 @@ export const getPieChartData = () => {
 // 두 번째 바 차트 데이터
 export const getBarChartData2 = () => {
   return {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: [
+      '월요일',
+      '화요일',
+      '수요일',
+      '목요일',
+      '금요일',
+      '토요일',
+      '일요일',
+    ],
     datasets: [
       {
-        label: 'Monthly Revenue',
-        data: [20, 35, 15, 45, 30, 25],
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-        borderColor: 'rgba(255, 99, 132, 1)',
+        data: [1020, 935, 915, 945, , 1025, 1015],
+        backgroundColor: 'rgba(177, 239, 102, 0.6)', // #b1ef66
+        borderColor: '#b1ef66',
         borderWidth: 1,
       },
     ],
   };
+};
+export const barChartOptions = {
+  plugins: {
+    title: {
+      display: false, // 👈 "Bar Chart" 제거
+    },
+    legend: {
+      display: false, // 👈 undefined 제거
+    },
+  },
+  scales: {
+    y: {
+      min: 0,
+      max: 1500,
+      ticks: {
+        stepSize: 500,
+      },
+    },
+  },
 };
 
 export const getDonutChartData1 = () => {
@@ -142,4 +168,76 @@ export const WeightChart = () => {
       },
     ],
   };
+};
+
+export const CmChart = () => ({
+  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+  datasets: [
+    {
+      label: '고기 모델',
+      data: [5, 35, 28, 20, 15, 10, 30],
+      borderColor: '#ff8a9a',
+      backgroundColor: '#ff8a9a',
+      tension: 0.4,
+      pointRadius: 7,
+      pointHoverRadius: 9,
+      pointBorderWidth: 0,
+    },
+    {
+      label: '건강한 도둑',
+      data: [4, 12, 6, 10, 14, 8, 18],
+      borderColor: '#a3d65c',
+      backgroundColor: '#a3d65c',
+      tension: 0.4,
+      pointRadius: 7,
+      pointHoverRadius: 9,
+      pointBorderWidth: 0,
+    },
+  ],
+});
+export const cmChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+
+  plugins: {
+    // ✅ 제목 제거 (Line Chart 삭제)
+    title: {
+      display: false,
+    },
+
+    // ✅ 범례는 유지
+    legend: {
+      position: 'top',
+      align: 'center',
+      labels: {
+        usePointStyle: true,
+        pointStyle: 'rect',
+        padding: 20,
+        font: {
+          size: 12,
+        },
+      },
+    },
+  },
+
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        stepSize: 10,
+        color: '#999',
+      },
+      grid: {
+        color: 'rgba(0,0,0,0.1)',
+      },
+    },
+    x: {
+      ticks: {
+        color: '#999',
+      },
+      grid: {
+        display: false,
+      },
+    },
+  },
 };
