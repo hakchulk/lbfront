@@ -82,7 +82,7 @@ function CMManagementMain() {
                   to="noticemanagement"
                   className="flex flex-col justify-center items-center"
                 >
-                  <h4 className="text-deep">커뮤니티 개설하기</h4>
+                  <h4 className="text-deep">공지사항 관리</h4>
                   <div className="border border-main-02 overflow-hidden rounded-[20px]">
                     <img
                       src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/cm_03.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9jbV8wMy5wbmciLCJpYXQiOjE3NzAxOTU3NTIsImV4cCI6MTgwMTczMTc1Mn0.OOiiJ4PpEUVfA_wRKJh-VvRS6Iy3Kg2awptk2JFj-eE"
