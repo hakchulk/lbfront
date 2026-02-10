@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes, useParams } from "react-router-dom";
+import { Link, Route, Routes, useParams } from "react-router-dom";
 import ClubPostList from "./ClubPostList";
 import BtnComp from "../../../components/BtnComp";
 
@@ -188,12 +188,13 @@ function ClubDetailMain() {
             게시물 더보기
           </button>
         </div> */}
-
-        <div className="w-[50%] flex flex-col flex-wrap mt-16 mb-30 mx-auto">
-          <BtnComp size="long" variant="primary">
-            게시물 더보기
-          </BtnComp>
-        </div>
+        <Link to="../postlist">
+          <div className="w-[50%] flex flex-col flex-wrap mt-16 mb-30 mx-auto">
+            <BtnComp size="long" variant="primary">
+              게시물 더보기
+            </BtnComp>
+          </div>
+        </Link>
       </div>
     </div>
   );
