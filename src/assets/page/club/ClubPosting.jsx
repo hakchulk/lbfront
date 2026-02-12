@@ -26,11 +26,14 @@ function ClubPosting() {
           {/* 작성자 / 날짜 */}
           <div className="flex justify-between items-end pb-1 border-b border-gray-200 mb-6">
             <div className="flex items-center gap-3">
-              <img
-                src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
-                alt="profile"
-                className="w-9 h-9 rounded-full object-cover"
-              />
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <img
+                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
+                  className="w-full h-full object-cover scale-125"
+                  alt="profile"
+                />
+              </div>
+
               <span className="text-sm text-gray-600 font-medium">홍지승</span>
             </div>
             <span className="!text-sm text-gray-400">2026.02.10</span>
@@ -87,11 +90,14 @@ function ClubPosting() {
           {/* 댓글 리스트 */}
           <ul className="mb-6">
             <li className="flex gap-3 py-4 border-b border-gray-500">
-              <img
-                src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
-                className="w-10 h-10 rounded-full"
-                alt="profile"
-              />
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <img
+                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
+                  className="w-full h-full object-cover scale-125"
+                  alt="profile"
+                />
+              </div>
+
               <div className="flex-1">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">유저1</span>
@@ -102,11 +108,14 @@ function ClubPosting() {
             </li>
 
             <li className="flex gap-3 py-4 border-b border-gray-500">
-              <img
-                src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
-                className="w-10 h-10 rounded-full"
-                alt="profile"
-              />
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <img
+                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
+                  className="w-full h-full object-cover scale-125"
+                  alt="profile"
+                />
+              </div>
+
               <div className="flex-1">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">유저2</span>
@@ -117,11 +126,14 @@ function ClubPosting() {
             </li>
 
             <li className="flex gap-3 py-4">
-              <img
-                src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
-                className="w-10 h-10 rounded-full"
-                alt="profile"
-              />
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <img
+                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
+                  className="w-full h-full object-cover scale-125"
+                  alt="profile"
+                />
+              </div>
+
               <div className="flex-1">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">유저3</span>
