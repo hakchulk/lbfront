@@ -39,7 +39,7 @@ const tokenManager = {
         console.log("Token refreshed successfully");
         return res.data.accessToken;
       } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
+        console.log("Token refresh failed:", refreshError);
         setLogout();
         throw refreshError; // 에러를 던져서 대기 중인 다른 요청들도 실패 처리되게 함
       } finally {
@@ -61,7 +61,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("Request interceptor error:", error);
+    console.log("Request interceptor error:", error);
     return Promise.reject(error);
   },
 );

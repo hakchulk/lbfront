@@ -2,29 +2,13 @@ import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BtnComp from "../../components/BtnComp";
 import { checkEmailAvailability, callSignUp } from "../../api/auth";
-
-const GOAL_OPTIONS = [
-  "체중감량",
-  "건강유지",
-  "근육량증가",
-  "혈당관리",
-  "콜레스테롤",
-];
-const ALLERGY_OPTIONS = [
-  "우유",
-  "달걀",
-  "생선",
-  "갑각류",
-  "견과류",
-  "땅콩",
-  "밀",
-  "기타",
-];
+import { GOAL_OPTIONS, ALLERGY_OPTIONS } from "../../constants/member";
 
 function SignUp() {
   const navigate = useNavigate();
   const emailCheckBtnRef = useRef(null); // 중복 체크 버튼 ref
   const [isEmailChecked, setIsEmailChecked] = useState(false); // 중복 체크 여부 상태
+  const [errors, setErrors] = useState({}); // 에러 메시지 상태 추가
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -37,7 +21,7 @@ function SignUp() {
     birthDay: "",
     height: "",
     weight: "",
-    target_date: "30",
+    target_date: "",
     goal: "체중감량",
     goal_weight: "",
     selectedAllergies: [],
@@ -67,6 +51,12 @@ function SignUp() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // 입력 시 해당 필드의 에러 메시지 초기화
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+
     if (name === "email") setIsEmailChecked(false); // 이메일 수정 시 중복체크 다시 하도록 초기화
   };
 
@@ -81,38 +71,108 @@ function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const newErrors = {};
 
-    // 이메일 중복 체크 확인
+    // 1. 이메일 중복 체크 확인
     if (!isEmailChecked) {
-      alert("이메일 중복 체크를 완료해주세요.");
-      emailCheckBtnRef.current?.focus();
-      return;
+      newErrors.email = "이메일 중복 체크를 완료해주세요.";
     }
 
+    // 2. 비밀번호 일치 확인
     if (formData.password !== formData.passwordConfirm) {
-      alert("비밀번호가 일치하지 않습니다.");
+      newErrors.passwordConfirm = "비밀번호가 일치하지 않습니다.";
+    }
+
+    // 3. 필수 입력 항목 검사
+    const {
+      name,
+      phone,
+      height,
+      weight,
+      goal_weight,
+      target_date,
+      birthYear,
+      birthMonth,
+      birthDay,
+    } = formData;
+
+    if (!name.trim()) newErrors.name = "이름을 입력해주세요.";
+
+    // 4. 생년월일 유효성 검사 (순서 조정: 이름 다음)
+    if (!birthYear) {
+      newErrors.birthYear = "생년월일을 모두 입력해주세요.";
+    } else if (!birthMonth) {
+      newErrors.birthMonth = "생년월일을 모두 입력해주세요.";
+    } else if (!birthDay) {
+      newErrors.birthDay = "생년월일을 모두 입력해주세요.";
+    } else {
+      const y = parseInt(birthYear);
+      const m = parseInt(birthMonth);
+      const d = parseInt(birthDay);
+      const dateCheck = new Date(y, m - 1, d);
+      const isValidDate =
+        dateCheck.getFullYear() === y &&
+        dateCheck.getMonth() === m - 1 &&
+        dateCheck.getDate() === d;
+
+      if (!isValidDate) {
+        newErrors.birthYear = "유효하지 않은 날짜입니다.";
+      } else if (dateCheck > new Date()) {
+        newErrors.birthYear = "미래 날짜는 선택할 수 없습니다.";
+      }
+    }
+
+    if (!phone.trim()) newErrors.phone = "휴대폰 번호를 입력해주세요.";
+    if (!height) newErrors.height = "키를 입력해주세요.";
+    if (!weight) newErrors.weight = "몸무게를 입력해주세요.";
+    if (!goal_weight) newErrors.goal_weight = "목표 몸무게를 입력해주세요.";
+    if (!target_date) newErrors.target_date = "목표 기간을 입력해주세요.";
+
+    // 5. 목표 기간 유효성 검사 (30일 ~ 180일)
+    if (target_date) {
+      const targetDateNum = parseInt(target_date);
+      if (isNaN(targetDateNum) || targetDateNum < 30 || targetDateNum > 180) {
+        newErrors.target_date =
+          "목표 기간은 30일에서 180일 사이로 입력해주세요.";
+      }
+    }
+
+    // 에러가 있으면 중단
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      // 첫 번째 에러 필드로 스크롤 (선택 사항)
+      const firstErrorField = Object.keys(newErrors)[0];
+      const element = document.getElementsByName(firstErrorField)[0];
+      element?.focus();
       return;
     }
 
-    const requestData = {
-      email: formData.email,
-      password: formData.password,
-      name: formData.name,
-      phone: formData.phone,
-      gender: formData.gender,
-      birthday: `${formData.birthYear}-${formData.birthMonth.padStart(2, "0")}-${formData.birthDay.padStart(2, "0")}`,
-      height: parseFloat(formData.height),
-      weight: parseFloat(formData.weight),
-      target_date: parseInt(formData.target_date),
-      goal: formData.goal,
-      goal_weight: parseFloat(formData.goal_weight),
-      allergies: formData.selectedAllergies.join(","),
-      special_notes: formData.special_notes,
-    };
+    try {
+      const requestData = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        gender: formData.gender,
+        birthday: `${formData.birthYear}-${formData.birthMonth.padStart(2, "0")}-${formData.birthDay.padStart(2, "0")}`,
+        height: parseFloat(formData.height),
+        weight: parseFloat(formData.weight),
+        target_date: parseInt(formData.target_date),
+        goal: formData.goal,
+        goal_weight: parseFloat(formData.goal_weight),
+        allergies: formData.selectedAllergies.join(","),
+        special_notes: formData.special_notes,
+      };
 
-    await callSignUp(requestData);
-    alert("회원가입이 완료되었습니다.");
-    navigate("/member/signin");
+      await callSignUp(requestData);
+      alert("회원가입이 완료되었습니다.");
+      navigate("/member/signin");
+    } catch (error) {
+      console.error("회원가입 오류:", error);
+      alert(
+        error.response?.data?.message || "회원가입 중 오류가 발생했습니다.",
+      );
+    }
   };
 
   return (
@@ -120,6 +180,7 @@ function SignUp() {
       <div className="containers">
         <form
           onSubmit={handleSubmit}
+          noValidate
           className="w-full max-w-lg mx-auto py-10 space-y-5"
         >
           {/* 타이틀 및 아이콘 한 줄 정렬 (가운데 정렬) */}
@@ -133,84 +194,141 @@ function SignUp() {
           </div>
 
           {/* 기본 입력 정보 */}
-          <input
-            type="text"
-            name="name"
-            placeholder="이름"
-            onChange={handleChange}
-            className="w-full p-3 border  border-main-02 rounded-md bg-white text-black"
-            required
-          />
-
-          <div className="flex gap-2 items-end">
+          <div className="space-y-1">
             <input
-              type="email"
-              name="email"
-              placeholder="이메일"
+              type="text"
+              name="name"
+              placeholder="이름"
               onChange={handleChange}
-              className="flex-1 p-3 border  border-main-02 rounded-md bg-white text-black"
+              className={`w-full p-3 border rounded-md bg-white text-black ${
+                errors.name ? "border-red-500" : "border-main-02"
+              }`}
               required
             />
-            <BtnComp
-              ref={emailCheckBtnRef}
-              size="short"
-              variant="primary"
-              type="button"
-              className="mt-0 h-[48px]"
-              onClick={handleEmailCheck}
-            >
-              중복확인
-            </BtnComp>
+            {errors.name && (
+              <p className="text-red-500 text-xs px-1">{errors.name}</p>
+            )}
           </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="비밀번호"
-            onChange={handleChange}
-            className="w-full p-3 border  border-main-02 rounded-md bg-white text-black"
-            required
-          />
-          <input
-            type="password"
-            name="passwordConfirm"
-            placeholder="비밀번호 확인"
-            onChange={handleChange}
-            className="w-full p-3 border border-main-02 rounded-md bg-white text-black"
-            required
-          />
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              name="birthYear"
-              placeholder="년(4자)"
-              onChange={handleChange}
-              className="flex-1 p-3 border  border-main-02 rounded-md bg-white"
-            />
-            <input
-              type="text"
-              name="birthMonth"
-              placeholder="월"
-              onChange={handleChange}
-              className="w-24 p-3 border  border-main-02 rounded-md bg-white"
-            />
-            <input
-              type="text"
-              name="birthDay"
-              placeholder="일"
-              onChange={handleChange}
-              className="w-24 p-3 border  border-main-02 rounded-md bg-white"
-            />
+          <div className="space-y-1">
+            <div className="flex gap-2 items-end">
+              <input
+                type="email"
+                name="email"
+                placeholder="이메일"
+                onChange={handleChange}
+                className={`flex-1 p-3 border rounded-md bg-white text-black ${
+                  errors.email ? "border-red-500" : "border-main-02"
+                }`}
+                required
+              />
+              <BtnComp
+                ref={emailCheckBtnRef}
+                size="short"
+                variant="primary"
+                type="button"
+                className="mt-0 h-[48px]"
+                onClick={handleEmailCheck}
+              >
+                중복확인
+              </BtnComp>
+            </div>
+            {errors.email && (
+              <p className="text-red-500 text-xs px-1">{errors.email}</p>
+            )}
           </div>
 
-          <input
-            type="text"
-            name="phone"
-            placeholder="휴대폰번호"
-            onChange={handleChange}
-            className="w-full p-3 border  border-main-02 rounded-md bg-white"
-          />
+          <div className="space-y-1">
+            <input
+              type="password"
+              name="password"
+              placeholder="비밀번호"
+              onChange={handleChange}
+              className={`w-full p-3 border rounded-md bg-white text-black ${
+                errors.password ? "border-red-500" : "border-main-02"
+              }`}
+              required
+            />
+            {errors.password && (
+              <p className="text-red-500 text-xs px-1">{errors.password}</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <input
+              type="password"
+              name="passwordConfirm"
+              placeholder="비밀번호 확인"
+              onChange={handleChange}
+              className={`w-full p-3 border rounded-md bg-white text-black ${
+                errors.passwordConfirm ? "border-red-500" : "border-main-02"
+              }`}
+              required
+            />
+            {errors.passwordConfirm && (
+              <p className="text-red-500 text-xs px-1">
+                {errors.passwordConfirm}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                name="birthYear"
+                placeholder="년(4자)"
+                onChange={handleChange}
+                className={`flex-1 p-3 border rounded-md bg-white ${
+                  errors.birthYear || errors.birthMonth || errors.birthDay
+                    ? "border-red-500"
+                    : "border-main-02"
+                }`}
+              />
+              <input
+                type="text"
+                name="birthMonth"
+                placeholder="월"
+                onChange={handleChange}
+                className={`w-24 p-3 border rounded-md bg-white ${
+                  errors.birthYear || errors.birthMonth || errors.birthDay
+                    ? "border-red-500"
+                    : "border-main-02"
+                }`}
+              />
+              <input
+                type="text"
+                name="birthDay"
+                placeholder="일"
+                onChange={handleChange}
+                className={`w-24 p-3 border rounded-md bg-white ${
+                  errors.birthYear || errors.birthMonth || errors.birthDay
+                    ? "border-red-500"
+                    : "border-main-02"
+                }`}
+              />
+            </div>
+            {(errors.birthYear || errors.birthMonth || errors.birthDay) && (
+              <p className="text-red-500 text-xs px-1">
+                {errors.birthYear || errors.birthMonth || errors.birthDay}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <input
+              type="text"
+              name="phone"
+              placeholder="휴대폰번호"
+              onChange={handleChange}
+              className={`w-full p-3 border rounded-md bg-white ${
+                errors.phone ? "border-red-500" : "border-main-02"
+              }`}
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-xs px-1">{errors.phone}</p>
+            )}
+          </div>
 
           {/* 성별 선택 */}
           <div className="flex items-center gap-6 py-2 text-deep font-bold">
@@ -229,8 +347,8 @@ function SignUp() {
               <input
                 type="radio"
                 name="gender"
-                value="W"
-                checked={formData.gender === "W"}
+                value="F"
+                checked={formData.gender === "F"}
                 onChange={handleChange}
                 className="accent-main-02"
               />{" "}
@@ -239,28 +357,41 @@ function SignUp() {
           </div>
 
           {/* 신체 스펙 */}
-          <div className="grid grid-cols-3 gap-2">
-            <input
-              type="number"
-              name="height"
-              placeholder="키(cm)"
-              onChange={handleChange}
-              className="p-3 border  border-main-02 rounded-md bg-white"
-            />
-            <input
-              type="number"
-              name="weight"
-              placeholder="몸무게(kg)"
-              onChange={handleChange}
-              className="p-3 border border-main-02 rounded-md bg-white"
-            />
-            <input
-              type="number"
-              name="goal_weight"
-              placeholder="목표(kg)"
-              onChange={handleChange}
-              className="p-3 border border-main-02 rounded-md bg-white"
-            />
+          <div className="space-y-1">
+            <div className="grid grid-cols-3 gap-2">
+              <input
+                type="number"
+                name="height"
+                placeholder="키(cm)"
+                onChange={handleChange}
+                className={`p-3 border rounded-md bg-white ${
+                  errors.height ? "border-red-500" : "border-main-02"
+                }`}
+              />
+              <input
+                type="number"
+                name="weight"
+                placeholder="몸무게(kg)"
+                onChange={handleChange}
+                className={`p-3 border rounded-md bg-white ${
+                  errors.weight ? "border-red-500" : "border-main-02"
+                }`}
+              />
+              <input
+                type="number"
+                name="goal_weight"
+                placeholder="목표(kg)"
+                onChange={handleChange}
+                className={`p-3 border rounded-md bg-white ${
+                  errors.goal_weight ? "border-red-500" : "border-main-02"
+                }`}
+              />
+            </div>
+            {(errors.height || errors.weight || errors.goal_weight) && (
+              <p className="text-red-500 text-xs px-1">
+                {errors.height || errors.weight || errors.goal_weight}
+              </p>
+            )}
           </div>
 
           {/* 가입 목적 (BtnComp로 교체) */}
@@ -289,19 +420,26 @@ function SignUp() {
           </div>
 
           {/* 목표 기간 */}
-          <div>
+          <div className="space-y-1">
             <p className="font-bold text-deep mb-2 flex items-center gap-1">
               목표 기간{" "}
               <span className="material-icons text-sm">calendar_today</span>
             </p>
             <input
               min="30"
+              max="180"
               type="number"
               name="target_date"
-              placeholder="목표 기간을 입력해 주세요 (일)"
+              value={formData.target_date}
+              placeholder="목표 기간을 입력해 주세요 (30~180일)"
               onChange={handleChange}
-              className="w-full p-3 border border-main-02 rounded-md bg-white"
+              className={`w-full p-3 border rounded-md bg-white ${
+                errors.target_date ? "border-red-500" : "border-main-02"
+              }`}
             />
+            {errors.target_date && (
+              <p className="text-red-500 text-xs px-1">{errors.target_date}</p>
+            )}
           </div>
 
           {/* 알러지 여부 체크 (BtnComp로 교체) */}
