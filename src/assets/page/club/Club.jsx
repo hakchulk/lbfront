@@ -1,20 +1,91 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Route, Routes, Link } from "react-router-dom";
 import ClubDetail from "./ClubDetail";
 import PageNatation from "../../../components/PageNatation";
-
-const clubs = Array.from({ length: 6 }).map((_, i) => ({
-  id: i + 1,
-  title: "경찰과 도둑 보라매 공원 모임",
-  desc: "매주 함께 운동하고 건강한 습관을 만들어가는 모임입니다.",
-  image: "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image2.png",
-  tags: ["2030", "추억소환", "다이어트", "놀이", "경찰과도둑"],
-  memberCount: 20 - i,
-  postCount: 50 - i * 3,
-}));
+import { useClubStore } from "../../../api/ClubData";
+import usePaginationStore from "../../../stores/paginationStore";
 
 function ClubMain() {
   const [sort, setSort] = useState("latest");
+  const { clubs, fetchClubs, loading, error } = useClubStore();
+
+  // 데이터 로드 하긔긕
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        await fetchClubs();
+      } catch (err) {
+        console.error("클럽 데이터 로드 실패:", err);
+      }
+    };
+    loadClubs();
+  }, []);
+
+  // 반응형 pageSize 상태
+  const [pageSize, setPageSize] = useState(4);
+
+  const storeKey = "test-list2";
+
+  // paginationStore에서 현재 페이지 가져오기
+  const pagination = usePaginationStore((state) => state.paginations[storeKey]);
+  const currentPage = pagination?.currentPage ?? 0;
+  const setPageSizeStore = usePaginationStore((state) => state.setPageSize);
+
+  // 화면 크기에 따라 pageSize 설정 (최대 크기: 6개, 태블릿 이하: 4개)
+  useEffect(() => {
+    const handleResize = () => {
+      const newPageSize = window.innerWidth >= 1024 ? 6 : 4;
+      setPageSize(newPageSize);
+    };
+
+    // 초기 설정
+    handleResize();
+
+    // 리사이즈 이벤트 리스너 추가
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  // pageSize 변경 시 paginationStore 업데이트
+  useEffect(() => {
+    setPageSizeStore(storeKey, pageSize);
+  }, [pageSize, storeKey, setPageSizeStore]);
+
+  // 정렬 변경 시 첫 페이지로 리셋
+  const resetPagination = usePaginationStore((state) => state.resetPagination);
+  useEffect(() => {
+    resetPagination(storeKey);
+  }, [sort, storeKey, resetPagination]);
+
+  // 정렬된 클럽 리스트
+  const sortedClubs = useMemo(() => {
+    if (!clubs || clubs.length === 0) return [];
+
+    const sorted = [...clubs];
+    switch (sort) {
+      case "latest":
+        return sorted.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+      case "members":
+        return sorted.sort(
+          (a, b) => (b.memberCount || 0) - (a.memberCount || 0),
+        );
+      case "posts":
+        return sorted.sort((a, b) => (b.postCount || 0) - (a.postCount || 0));
+      default:
+        return sorted;
+    }
+  }, [clubs, sort]);
+
+  // 현재 페이지에 보여줄 클럽만 슬라이스
+  const currentPageClubs = useMemo(() => {
+    const start = currentPage * pageSize;
+    return sortedClubs.slice(start, start + pageSize);
+  }, [currentPage, pageSize, sortedClubs]);
 
   return (
     <div className="myBg bg-light-03">
@@ -27,19 +98,23 @@ function ClubMain() {
         />
 
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-4">
-          <h2 className="text-3xl font-bold mb-3">함께 이야기하고, 함께 성장하는 커뮤니티</h2>
+          <h2 className="text-3xl font-bold mb-3">
+            함께 이야기하고, 함께 성장하는 커뮤니티
+          </h2>
 
           <div className="w-[600px] max-w-[92vw] h-1 bg-main-02 rounded-full mb-4" />
 
           <p className="text-sm opacity-90 max-w-[720px] leading-relaxed">
-            혼자서는 쉽게 흐트러질 수 있는 운동 계획과 식단 관리를 서로 공유하고 응 원하며, 꾸준히 실천할 수 있도록 돕는
-            것을 목표로 합니다. 매일의 운동 기 록, 식단 사진 운동 루틴, 건강 관련 정보까지 자유롭게 나눠보세요!
+            혼자서는 쉽게 흐트러질 수 있는 운동 계획과 식단 관리를 서로 공유하고
+            응 원하며, 꾸준히 실천할 수 있도록 돕는 것을 목표로 합니다. 매일의
+            운동 기 록, 식단 사진 운동 루틴, 건강 관련 정보까지 자유롭게
+            나눠보세요!
           </p>
         </div>
       </div>
 
       {/* ================= 검색 + 정렬 ================= */}
-      <div className="mt-[10%]">
+      <div className="mt-[10%] sm:mt-[5%]">
         <div className="containers">
           <div className="bg-white rounded-2xl shadow-lg px-2 py-8 flex flex-col items-center gap-6">
             {/* 검색창 */}
@@ -82,30 +157,42 @@ function ClubMain() {
                 type="button"
                 onClick={() => setSort("latest")}
                 className={`border rounded-md transition-colors ${
-                  sort === "latest" ? "bg-deep text-white border-deep" : "bg-white hover:bg-light-01"
+                  sort === "latest"
+                    ? "bg-deep text-white border-deep"
+                    : "bg-white hover:bg-light-01"
                 }`}
               >
-                <p className="!px-2 !sm:px-3 !py-1 !sm:py-1.5 !text-xs !sm:text-sm">최신순</p>
+                <p className="!px-2 !sm:px-3 !py-1 !sm:py-1.5 !text-xs !sm:text-sm">
+                  최신순
+                </p>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSort("members")}
                 className={`border rounded-md transition-colors ${
-                  sort === "members" ? "bg-deep text-white border-deep" : "bg-white hover:bg-light-01"
+                  sort === "members"
+                    ? "bg-deep text-white border-deep"
+                    : "bg-white hover:bg-light-01"
                 }`}
               >
-                <p className="!px-2 !sm:px-3 !py-1 !sm:py-1.5 !text-xs !sm:text-sm">회원 많은 순</p>
+                <p className="!px-2 !sm:px-3 !py-1 !sm:py-1.5 !text-xs !sm:text-sm">
+                  회원 많은 순
+                </p>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSort("posts")}
                 className={`border rounded-md transition-colors ${
-                  sort === "posts" ? "bg-deep text-white border-deep" : "bg-white hover:bg-light-01"
+                  sort === "posts"
+                    ? "bg-deep text-white border-deep"
+                    : "bg-white hover:bg-light-01"
                 }`}
               >
-                <p className="!px-2 !sm:px-3 !py-1 !sm:py-1.5 !text-xs !sm:text-sm">게시글 많은 순</p>
+                <p className="!px-2 !sm:px-3 !py-1 !sm:py-1.5 !text-xs !sm:text-sm">
+                  게시글 많은 순
+                </p>
               </button>
             </div>
           </div>
@@ -113,40 +200,67 @@ function ClubMain() {
       </div>
 
       {/* ================= 카드 리스트 ================= */}
-      <div className="w-full mt-[5%] py-16">
+      <div className="w-full mt-[0%] sm:mt-[3%] py-16">
         <div className="containers">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            {clubs.map((club) => (
-              <Link
-                key={club.id}
-                to={`detail/${club.id}`}
-                className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform hover:-translate-y-1"
-              >
-                <div className="w-full h-[200px] overflow-hidden">
-                  <img src={club.image} alt={club.title} className="w-full h-full object-cover" />
-                </div>
-
-                <div className="p-4 flex flex-col items-center text-center gap-2 text-light-03">
-                  <h4 className="text-lg font-semibold">{club.title}</h4>
-                  <p className="text-sm opacity-90 line-clamp-2">{club.desc}</p>
-
-                  <div className="flex flex-wrap justify-center gap-2 mt-3">
-                    {club.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 !text-[14px] !sm:text-xs !md:text-sm !lg:text-sm rounded-full bg-light-03 text-deep"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <p className="text-lg">로딩 중...</p>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center py-20">
+              <p className="text-lg text-red-500">
+                데이터를 불러오는 중 오류가 발생했습니다.
+              </p>
+            </div>
+          ) : clubs && Array.isArray(clubs) && clubs.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+              {currentPageClubs.map((club) => (
+                <Link
+                  key={club.id}
+                  to={`detail/${club.id}`}
+                  className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform hover:-translate-y-1"
+                >
+                  <div className="w-full h-[200px] overflow-hidden">
+                    <img
+                      src={club.image}
+                      alt={club.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+
+                  <div className="p-4 flex flex-col items-center text-center gap-2 text-light-03">
+                    <h4 className="text-lg font-semibold">{club.name}</h4>
+                    <p className="text-sm opacity-90 line-clamp-2">
+                      {club.desc}
+                    </p>
+
+                    <div className="flex flex-wrap justify-center gap-2 mt-3">
+                      {club.tags &&
+                        club.tags.map((tag, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1 !text-[14px] !sm:text-xs !md:text-sm !lg:text-sm rounded-full bg-light-03 text-deep"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-center items-center py-20">
+              <p className="text-lg">클럽 데이터가 없습니다.</p>
+            </div>
+          )}
 
           <div className="w-full flex justify-center mt-12">
-            <PageNatation storeKey="test-list" totalElements={100} pageSize={10} />
+            <PageNatation
+              storeKey={storeKey}
+              totalElements={sortedClubs.length}
+              pageSize={pageSize}
+            />
           </div>
         </div>
       </div>
