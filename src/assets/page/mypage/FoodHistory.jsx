@@ -69,6 +69,7 @@ function FoodHistory() {
               일별 식사 기록 리스트
             </h3>
             <span className="inline-block bg-green-500 text-white text-[11px] px-3 py-1 rounded-full mt-2">
+              <i className="fa-solid fa-calendar-days mr-2"></i>
               2026-01-01
             </span>
           </header>
