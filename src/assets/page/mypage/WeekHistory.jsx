@@ -186,7 +186,7 @@ function WeekHistory() {
             {/* 정렬 컨트롤: 최신순 / 오래된순 */}
             <div className="flex flex-wrap items-center justify-end gap-2 mt-6 mb-6">
               <span className="text-sm font-medium text-deep">정렬</span>
-              <i className="fa-solid fa-bars text-main-02" aria-hidden />
+              <span class="material-icons !text-[30px]">sort</span>
               {SORT_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -204,7 +204,7 @@ function WeekHistory() {
             </div>
 
             {/* 카드 그리드: 모바일 1개, 태블릿 2개, PC 4개 */}
-            <div className="wrap !mt-0 ">
+            <div className="wrap !mt-0 mb-[5%]">
               <div className="flex w-full flex-wrap justify-evenly max-w-[1600px]   mx-auto">
                 {currentPageItems.map((item) => (
                   <article
@@ -248,7 +248,7 @@ function WeekHistory() {
               </div>
             </div>
             {/* 페이지네이션 */}
-            <div className="flex justify-center pb-10">
+            <div className="flex justify-center pb-[10%]">
               <PageNatation
                 storeKey={STORE_KEY}
                 totalElements={totalElements}
