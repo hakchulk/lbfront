@@ -88,9 +88,12 @@ function FoodManagement() {
           </p>
 
           {/* CTA 버튼 */}
-          <div className=" mb-[2%] flex justify-center">
+          <div className=" mb-[2%] flex flex-col  gap-3 items-center ">
             <BtnComp size="mid" variant="primary">
               오늘의 식단 새로 받기
+            </BtnComp>
+            <BtnComp size="mid" variant="primary">
+              저장하기
             </BtnComp>
           </div>
         </div>
@@ -117,7 +120,7 @@ function FoodManagement() {
           </article>
         </section>
 
-        <section className="myBg mt-[5%] max-h-[600px] bg-light-02">
+        <section className="myBg my-[5%] pb-[5%] max-h-[600px] bg-light-02">
           <h3 className="mt-[2%] text-base md:text-lg lg:text-xl xl:text-2xl">
             <i className="fa-solid fa-utensils mr-2" />
             오늘의 식단 성분 분석
