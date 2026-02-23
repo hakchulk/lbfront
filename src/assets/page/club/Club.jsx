@@ -7,19 +7,19 @@ import usePaginationStore from "../../../stores/paginationStore";
 
 function ClubMain() {
   const [sort, setSort] = useState("latest");
-  const { clubs, fetchClubs, loading, error } = useClubStore();
+  const { clubs, fetchClubs, fetchClubsBySort, loading, error } = useClubStore();
 
-  // 데이터 로드 하긔긕
+  // 정렬에 따라 데이터 로드
   useEffect(() => {
     const loadClubs = async () => {
       try {
-        await fetchClubs();
+        await fetchClubsBySort(sort);
       } catch (err) {
         console.error("클럽 데이터 로드 실패:", err);
       }
     };
     loadClubs();
-  }, []);
+  }, [sort]);
 
   // 반응형 pageSize 상태
   const [pageSize, setPageSize] = useState(4);
@@ -60,32 +60,12 @@ function ClubMain() {
     resetPagination(storeKey);
   }, [sort, storeKey, resetPagination]);
 
-  // 정렬된 클럽 리스트
-  const sortedClubs = useMemo(() => {
-    if (!clubs || clubs.length === 0) return [];
-
-    const sorted = [...clubs];
-    switch (sort) {
-      case "latest":
-        return sorted.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-        );
-      case "members":
-        return sorted.sort(
-          (a, b) => (b.memberCount || 0) - (a.memberCount || 0),
-        );
-      case "posts":
-        return sorted.sort((a, b) => (b.postCount || 0) - (a.postCount || 0));
-      default:
-        return sorted;
-    }
-  }, [clubs, sort]);
-
   // 현재 페이지에 보여줄 클럽만 슬라이스
   const currentPageClubs = useMemo(() => {
+    if (!clubs || clubs.length === 0) return [];
     const start = currentPage * pageSize;
-    return sortedClubs.slice(start, start + pageSize);
-  }, [currentPage, pageSize, sortedClubs]);
+    return clubs.slice(start, start + pageSize);
+  }, [currentPage, pageSize, clubs]);
 
   return (
     <div className="myBg bg-light-03">
@@ -258,7 +238,7 @@ function ClubMain() {
           <div className="w-full flex justify-center mt-12">
             <PageNatation
               storeKey={storeKey}
-              totalElements={sortedClubs.length}
+              totalElements={clubs.length}
               pageSize={pageSize}
             />
           </div>
