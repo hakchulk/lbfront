@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BtnComp from "../../../components/BtnComp";
+import MealAnal from "./MealAnal";
 
 function Home() {
   const navigate = useNavigate();
@@ -141,19 +142,7 @@ function Home() {
             backgroundRepeat: "no-repeat",
           }}
         >
-          <div className="sect2_cont w-[50%] flex flex-col justify-center items-center">
-            <h2 className="!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white">
-              오늘 먹은 음식은 몇 칼로리일까요?
-            </h2>
-
-            <div className="w-[250px] h-[250px] border border-white/50 bg-gray-200 rounded-[20px] mt-5"></div>
-
-            <div className="w-full md:w-1/2">
-              <BtnComp variant="line" size="long">
-                클릭해서 음식 사진 업로드
-              </BtnComp>
-            </div>
-          </div>
+          <MealAnal />
         </section>
 
         {/* sect3 */}

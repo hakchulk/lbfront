@@ -1,32 +1,41 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { callRefresh } from "../../api/auth";
 import { useAuthStore } from "../../stores/authStore";
 
 const AuthProvider = ({ children }) => {
   const { setLogin, setLogout } = useAuthStore();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // 1. 서버에 인증 확인 요청 (쿠키가 자동으로 전송됨)
-        const response = await callRefresh();
-        console.log("AuthProvider() response:", response);
-
-        // 2. 서버 응답이 성공(authentication: true)이면 스토어 복구
-        if (response) {
-          setLogin(response);
-          console.log("AuthProvider() response.data", response.data);
+        const data = await callRefresh();
+        if (data) {
+          setLogin(data);
         } else {
           setLogout();
         }
       } catch (error) {
-        // 401 에러 등이 발생하면 로그아웃 상태로 초기화
-        console.error("AuthProvider() 인증 복구 실패", error.response.data);
+        console.log(
+          "AuthProvider 인증 복구 실패:",
+          error.response?.data ?? error.message,
+        );
         setLogout();
+      } finally {
+        setIsInitialized(true);
       }
     };
     initAuth();
-  }, [setLogin, setLogout]);
+  }, []);
+
+  // Ctrl+F5 등 새로고침 시 토큰 복구가 끝날 때까지 로딩만 표시 (잘못된 로그아웃 UI 방지)
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-light-03">
+        <p className="text-deep">로딩 중...</p>
+      </div>
+    );
+  }
 
   return children;
 };

@@ -1,5 +1,9 @@
-import apiClient, { authClient } from "./config"; // 위에서 만든 파일 경로
-import { useAuthStore } from "../stores/authStore";
+import apiClient, { authClient } from "./config";
+
+export const callSignIn = async (requestData) => {
+  const response = await authClient.post("/auth/login", requestData);
+  return response.data;
+};
 
 export const checkEmailAvailability = async (email) => {
   try {
@@ -10,7 +14,7 @@ export const checkEmailAvailability = async (email) => {
 
     return response.data.isExist;
   } catch (error) {
-    console.error("이메일 중복 체크 중 오류 발생:", error);
+    console.log("이메일 중복 체크 중 오류 발생:", error);
     throw error;
   }
 };
@@ -21,14 +25,9 @@ export const callSignUp = async (requestData) => {
 
     return response.data;
   } catch (error) {
-    console.error("callSignUp() 오류 발생:", error);
+    console.log("callSignUp() 오류 발생:", error);
     throw error;
   }
-};
-
-export const callSignIn = async (requestData) => {
-  const response = await authClient.post("/auth/login", requestData);
-  return response.data;
 };
 
 export const callRefresh = async () => {
@@ -37,6 +36,6 @@ export const callRefresh = async () => {
 };
 
 export const callLogout = async () => {
-  const response = await apiClient.post("/auth/logout");
+  const response = await authClient.post("/auth/logout");
   return response.data;
 };

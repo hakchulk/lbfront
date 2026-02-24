@@ -41,8 +41,7 @@ function SignIn() {
       setLogin(response);
       navigate("/");
     } catch (err) {
-      setError(err.response.data.message || "로그인 중 오류가 발생했습니다.");
-      console.log("callSignIn() err.response.data:", err.response.data.message);
+      setError(err.response?.data?.message || "로그인 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
