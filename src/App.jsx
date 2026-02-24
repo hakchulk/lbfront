@@ -8,6 +8,7 @@ import About from "./assets/page/about/About";
 import Club from "./assets/page/club/Club";
 import Event from "./assets/page/event/Event";
 import MyPage from "./assets/page/mypage/MyPage";
+import CMManagement from "./assets/page/CM/CMManagement";
 
 function App() {
   return (
@@ -22,6 +23,9 @@ function App() {
           <Route path="/club/*" element={<Club />} />
           <Route path="/event/*" element={<Event />} />
           <Route path="/mypage/*" element={<MyPage />} />
+
+          {/* CM 라우터 */}
+          <Route path="/CMmanagement/*" element={<CMManagement />} />
         </Routes>
       </div>
       <FooterComp />

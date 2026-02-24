@@ -1,23 +1,36 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
+import { callLogout } from "../api/auth";
 
 function NavComp() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const setLogout = useAuthStore((state) => state.setLogout);
+  const isLoggedIn = !!user;
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
   const allNavLinks = [
     {
       // 로그인 여부와 관계없이 항상 마이페이지로 이동
-      name: "밸런스 체크",
+      name: `${isLoggedIn ? user?.name + "님의" : ""} 밸런스 체크`,
       to: "/mypage",
     },
+    { name: "커뮤니티 관리", to: "/CMmanagement", requireRole: "CLUBMANAGER" },
     { name: "라스트밸런스", to: "/about" },
     { name: "커뮤니티", to: "/club" },
     { name: "이벤트", to: "/event" },
   ];
 
-  const navLinks = allNavLinks;
+  // 권한에 따라 링크 필터링
+  const navLinks = allNavLinks.filter((link) => {
+    // 요구하는 권한이 없는 링크는 통과
+    if (!link.requireRole) return true;
+
+    // 요구하는 권한이 있는 경우, 사용자의 roles에 포함되어 있는지 확인
+    return user?.roles?.includes(link.requireRole);
+  });
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -51,7 +64,8 @@ function NavComp() {
 
   // 로그아웃 핸들러
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    callLogout();
+    setLogout();
     setIsOpen(false);
   };
 
@@ -169,7 +183,7 @@ function NavComp() {
               onClick={() => setIsOpen(false)}
             >
               {index === 0 && isLoggedIn ? (
-                <>사용자 님의 마이페이지</>
+                <>{user?.name + "님의 밸런스 체크"}</>
               ) : (
                 link.name
               )}

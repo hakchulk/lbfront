@@ -18,8 +18,8 @@ ChartJS.register(
   Legend
 );
 
-function BarChart({ data }) {
-  const options = {
+function BarChart({ data, options: externalOptions }) {
+  const defaultOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -32,6 +32,18 @@ function BarChart({ data }) {
       },
     },
   };
+
+  // 외부 옵션이 있으면 기본 옵션과 병합 (plugins는 깊은 병합)
+  const options = externalOptions
+    ? {
+        ...defaultOptions,
+        ...externalOptions,
+        plugins: {
+          ...defaultOptions.plugins,
+          ...externalOptions.plugins,
+        },
+      }
+    : defaultOptions;
 
   return (
     <div className="w-full h-[400px]">
