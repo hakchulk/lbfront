@@ -6,7 +6,7 @@ import Home from "./assets/page/home/Home";
 import Member from "./assets/member/Member";
 import About from "./assets/page/about/About";
 import Club from "./assets/page/club/Club";
-import EventComp from "./assets/page/event/EventComp";
+import Event from "./assets/page/event/Event";
 import MyPage from "./assets/page/mypage/MyPage";
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
           <Route path="/member/*" element={<Member />} />
           <Route path="/about" element={<About />} />
           <Route path="/club/*" element={<Club />} />
-          <Route path="/event/*" element={<EventComp />} />
+          <Route path="/event/*" element={<Event />} />
           <Route path="/mypage/*" element={<MyPage />} />
         </Routes>
       </div>
