@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import BtnComp from "../../../components/BtnComp";
 import { apiClient, BASE_URL } from "../../../api/config";
 import { GOAL_OPTIONS, ALLERGY_OPTIONS } from "../../../constants/member";
+import ChangePassword from "./ChangePassword";
 
 /** 내 정보 조회 (GET /me) */
 const getMe = async () => {
@@ -163,7 +164,8 @@ function MyInfo() {
       console.error("프로필 이미지 삭제 실패:", err);
       setErrors((prev) => ({
         ...prev,
-        submit: err.response?.data?.message || "프로필 이미지 삭제에 실패했습니다.",
+        submit:
+          err.response?.data?.message || "프로필 이미지 삭제에 실패했습니다.",
       }));
     } finally {
       setProfileImageDeleting(false);
@@ -195,7 +197,8 @@ function MyInfo() {
       console.error("프로필 이미지 업로드 실패:", err);
       setErrors((prev) => ({
         ...prev,
-        submit: err.response?.data?.message || "프로필 이미지 변경에 실패했습니다.",
+        submit:
+          err.response?.data?.message || "프로필 이미지 변경에 실패했습니다.",
       }));
     } finally {
       setProfileImageUploading(false);
@@ -322,7 +325,10 @@ function MyInfo() {
               onChange={handleProfileImageChange}
               disabled={profileImageUploading}
             />
-            <div className="relative flex flex-col items-center" ref={profileImageMenuRef}>
+            <div
+              className="relative flex flex-col items-center"
+              ref={profileImageMenuRef}
+            >
               <button
                 type="button"
                 onClick={handleProfileImageAreaClick}
@@ -600,7 +606,7 @@ function MyInfo() {
             className="w-full p-3 border border-main-02 rounded-md h-24 bg-white"
           />
 
-          <div className="pt-1 sm:pt-4 flex gap-2">
+          <div className="mt-1!important flex gap-2">
             <BtnComp
               type="button"
               size="long"
@@ -620,6 +626,10 @@ function MyInfo() {
             </BtnComp>
           </div>
         </form>
+
+        <div className="w-full max-w-lg mx-auto pt-4 mb-10">
+          <ChangePassword />
+        </div>
       </div>
     </div>
   );

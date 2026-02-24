@@ -36,6 +36,6 @@ export const callRefresh = async () => {
 };
 
 export const callLogout = async () => {
-  const response = await apiClient.post("/auth/logout");
+  const response = await authClient.post("/auth/logout");
   return response.data;
 };

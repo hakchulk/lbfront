@@ -1,0 +1,109 @@
+import React, { useState, useRef } from "react";
+import BtnComp from "../../../components/BtnComp";
+import { apiClient } from "../../../api/config";
+
+function MealAnal() {
+  const fileInputRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("이미지 파일만 선택해 주세요.");
+      return;
+    }
+
+    setError(null);
+    setResult(null);
+
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const { data } = await apiClient.post(
+        "/services/dietanalyzer/analyze",
+        formData,
+      );
+      setResult(data);
+    } catch (err) {
+      setError(err.response?.data?.message || "분석에 실패했습니다.");
+    } finally {
+      setLoading(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div className="sect2_cont w-[50%] flex flex-col justify-center items-center">
+      <h2 className="!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white">
+        오늘 먹은 음식은 몇 칼로리일까요?
+      </h2>
+
+      <div className="w-[250px] h-[250px] border border-white/50 bg-gray-200 rounded-[20px] mt-5 overflow-hidden flex items-center justify-center">
+        {imagePreview ? (
+          <img
+            src={imagePreview}
+            alt="식단 미리보기"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-gray-400 text-sm">이미지를 선택해 주세요</span>
+        )}
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={loading}
+      />
+
+      <div className="w-full md:w-1/2 mt-2">
+        <BtnComp
+          variant="line"
+          size="long"
+          type="button"
+          onClick={handleButtonClick}
+          disabled={loading}
+        >
+          {loading ? "분석 중..." : "클릭해서 음식 사진 업로드"}
+        </BtnComp>
+      </div>
+
+      {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
+
+      {result && result.status === "SUCCESS" && (
+        <div className="mt-4 text-white text-center">
+          <p className="text-lg font-semibold">
+            총 칼로리:{" "}
+            <span className="text-main-02">{result.calories ?? 0}</span> kcal
+          </p>
+          {result.food_name && (
+            <p className="text-sm mt-1 opacity-90">{result.food_name}</p>
+          )}
+          {result.evaluation && (
+            <p className="text-sm mt-2 opacity-80 max-w-md">
+              {result.evaluation}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MealAnal;
