@@ -1,38 +1,48 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, Route, Routes, useParams } from "react-router-dom";
 import ClubPostList from "./ClubPostList";
 import BtnComp from "../../../components/BtnComp";
-
-const clubs = [
-  {
-    id: 1,
-    title: "고기 기고기 모임",
-    desc: "고기로 단백질을 채우고 근육을 증량시키는 사람들의 모임입니다.\n목살, 삼겹살 등 가리지 않으며 고기를 주식으로 하고 있는 육식인들",
-    banner: "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Rectangle%20263.png",
-    tags: ["직장인 식단", "점심&저녁 관리", "배달 줄이기", "야식방지", "식단루틴"],
-    createdAt: "2026-01-01",
-    membersCount: 42,
-    clubManager: "김훈규",
-  },
-  {
-    id: 2,
-    title: "경찰과 도둑 보라매 공원 모임",
-    desc: "매주 함께 운동하고 건강한 습관을 만들어가는 모임입니다.",
-    banner: "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Rectangle%20263.png",
-    tags: ["2030", "추억소환", "다이어트", "놀이", "경찰과도둑"],
-    createdAt: "2026-01-01",
-    membersCount: 42,
-    clubManager: "김훈규",
-  },
-];
+import { useClubStore } from "../../../api/ClubData";
 
 function ClubDetailMain() {
   const { id } = useParams();
+  const { clubs, fetchClubs, loading, error } = useClubStore();
+
+  // 클럽 데이터 로드
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        await fetchClubs();
+      } catch (err) {
+        console.error("클럽 데이터 로드 실패:", err);
+      }
+    };
+    loadClubs();
+  }, [fetchClubs]);
+
   const club = clubs.find((c) => c.id === Number(id));
+
+  if (loading) {
+    return (
+      <div className="w-full flex justify-center items-center h-[400px] text-gray-500">
+        로딩 중...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full flex justify-center items-center h-[400px] text-red-500">
+        데이터를 불러오는 중 오류가 발생했습니다.
+      </div>
+    );
+  }
 
   if (!club) {
     return (
-      <div className="w-full flex justify-center items-center h-[400px] text-gray-500">존재하지 않는 클럽입니다.</div>
+      <div className="w-full flex justify-center items-center h-[400px] text-gray-500">
+        존재하지 않는 클럽입니다.
+      </div>
     );
   }
 
@@ -40,37 +50,55 @@ function ClubDetailMain() {
     <div className="w-full flex flex-col ">
       {/* 상단 배너 */}
       <section className="relative w-full h-[450px] overflow-hidden">
-        <img src={club.banner} alt="club banner" className="absolute inset-0 w-full h-full object-cover" />
+        <img
+          src={club.image}
+          alt="club banner"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
         <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center px-4">
           {/* 클럽 타이틀 */}
           <div className="bg-white rounded-full px-10 py-2 mb-3">
-            <h1 className="text-3xl font-bold text-main-02">{club.title}</h1>
+            <h1 className="text-3xl font-bold text-main-02">{club.name}</h1>
           </div>
 
           {/* 클럽 기본 정보: 개설일, 회원수, CM */}
           <div className="flex flex-wrap justify-center gap-4 text-white mb-4">
-            <span className="!text-sm">개설일: {club.createdAt}</span>
-            <span className="!text-sm">회원수: {club.membersCount}명</span>
-            <span className="!text-sm">운영자 {club.clubManager}</span>
+            <span className="!text-sm">
+              개설일:{" "}
+              {club.createdAt ? club.createdAt.substring(0, 10) : "정보 없음"}
+            </span>
+            <span className="!text-sm">
+              회원수:{" "}
+              {club.memberCount !== null && club.memberCount !== undefined
+                ? `${club.memberCount}명`
+                : "정보 없음"}
+            </span>
+            <span className="!text-sm">
+              운영자: {club.managerId || "정보 없음"}
+            </span>
           </div>
 
           {/* 구분선 */}
           <div className="w-[600px] max-w-[92vw] h-1 bg-main-02 rounded-full mb-4" />
 
           {/* 클럽 설명 */}
-          <p className="text-sm mb-4 max-w-[700px] text-white whitespace-pre-line mb-10">{club.desc}</p>
+          <p className="text-sm mb-4 max-w-[700px] text-white whitespace-pre-line mb-5">
+            {club.desc}
+          </p>
 
           {/* 태그 */}
-          <div className="flex flex-wrap justify-center gap-2 mt-2 mb-10">
-            {club.tags.map((tag, idx) => (
-              <span
-                key={idx}
-                className="px-3 py-1 !text-[14px] !sm:text-xs !md:text-sm !lg:text-sm rounded-full bg-light-03 text-deep"
-              >
-                #{tag}
-              </span>
-            ))}
+          <div className="flex flex-wrap justify-center gap-2 mt-0 mb-5">
+            {club.tags && club.tags.length > 0
+              ? club.tags.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 !text-[14px] !sm:text-xs !md:text-sm !lg:text-sm rounded-full bg-light-03 text-deep"
+                  >
+                    #{tag}
+                  </span>
+                ))
+              : null}
           </div>
 
           {/* 모임 참여 버튼 */}
@@ -83,34 +111,65 @@ function ClubDetailMain() {
       {/* 대표 공지사항 섹션 */}
       <div className="w-full mt-30 px-4 sm:px-8 lg:px-16">
         <h3 className=" !text-main-02 mb-[20px] !text-[20px] lg:!text-[30px] flex items-center justify-center ">
-          <span className="material-icons mr-[5px] !text-[30px] lg:!text-[40px] ">campaign</span>
-          {club.title} 대표 공지사항
+          <span className="material-icons mr-[5px] !text-[30px] lg:!text-[40px] ">
+            campaign
+          </span>
+          {club.name} 대표 공지사항
         </h3>
 
         <div className="w-full lg:w-[70%] mx-auto border rounded-lg border-gray-200 overflow-hidden">
           {/* 헤더 */}
           <div className="grid grid-cols-12 bg-gray-100 px-4 py-2 text-center font-semibold text-gray-600">
-            <span className="col-span-1 text-left sm:text-center !text-sm !sm:text-md !md:text-lg ">번호</span>
-            <span className="col-span-5 text-left sm:text-center !text-sm !sm:text-md !md:text-lg ">제목</span>
-            <span className="col-span-3 !text-sm !sm:text-md !md:text-lg ">작성자</span>
-            <span className="col-span-3 !text-sm !sm:text-md !md:text-lg ">작성일</span>
+            <span className="col-span-1 text-left sm:text-center !text-sm !sm:text-md !md:text-lg ">
+              번호
+            </span>
+            <span className="col-span-5 text-left sm:text-center !text-sm !sm:text-md !md:text-lg ">
+              제목
+            </span>
+            <span className="col-span-3 !text-sm !sm:text-md !md:text-lg ">
+              작성자
+            </span>
+            <span className="col-span-3 !text-sm !sm:text-md !md:text-lg ">
+              작성일
+            </span>
           </div>
           {/* 공지사항 리스트 */}
           {[
-            { id: 1, title: "이번 주 모임 일정 공지", author: "김훈규(CM)", date: "2026-02-05" },
-            { id: 2, title: "신규 회원 가입 안내", author: "김훈규(CM)", date: "2026-02-03" },
-            { id: 3, title: "고기 모임 특별 이벤트 안내", author: "김훈규(CM)", date: "2026-02-01" },
+            {
+              id: 1,
+              title: "이번 주 모임 일정 공지",
+              author: "김훈규(CM)",
+              date: "2026-02-05",
+            },
+            {
+              id: 2,
+              title: "신규 회원 가입 안내",
+              author: "김훈규(CM)",
+              date: "2026-02-03",
+            },
+            {
+              id: 3,
+              title: "고기 모임 특별 이벤트 안내",
+              author: "김훈규(CM)",
+              date: "2026-02-01",
+            },
           ].map((notice, idx) => (
             <div
               key={notice.id}
               className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
             >
-              <span className="col-span-1 text-left sm:text-center !text-xs !sm:text-md !md:text-lg">{idx + 1}</span>
+              <span className="col-span-1 text-left sm:text-center !text-xs !sm:text-md !md:text-lg">
+                {idx + 1}
+              </span>
               <span className="col-span-5 text-left sm:text-center text-point-hov !text-sm !sm:text-md !md:text-lg truncate">
                 {notice.title}
               </span>
-              <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">{notice.author}</span>
-              <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">{notice.date}</span>
+              <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">
+                {notice.author}
+              </span>
+              <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">
+                {notice.date}
+              </span>
             </div>
           ))}
         </div>
@@ -151,7 +210,8 @@ function ClubDetailMain() {
               title: "한우파티 ㄱㄱㄱㄱㄱㄱㄱㄱ",
               author: "홍지승",
               date: "2026-02-03",
-              content: "오늘은 한우를 먹으러왔습니다. 다들 행복하루 보내시고 건강하세요.",
+              content:
+                "오늘은 한우를 먹으러왔습니다. 다들 행복하루 보내시고 건강하세요.",
             },
           ].map((post) => (
             <div
@@ -171,8 +231,12 @@ function ClubDetailMain() {
 
               {/* 글 내용 */}
               <div className="p-4">
-                <h3 className="font-semibold !text-2xl !sm:text-xl mb-2 text-deep">{post.title}</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-2">{post.content}</p>
+                <h3 className="font-semibold !text-2xl !sm:text-xl mb-2 text-deep">
+                  {post.title}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-2">
+                  {post.content}
+                </p>
                 <div className="text-gray-500 text-xs sm:text-sm flex justify-between">
                   <span className="!text-sm !sm:text-md">{post.author}</span>
                   <span className="!text-sm !sm:text-md">{post.date}</span>

@@ -27,7 +27,7 @@ export const useClubStore = create((set) => ({
         tags: club.keywords
           ? club.keywords.split(",").map((k) => k.trim())
           : [],
-        memberCount: 0, // API에 없으면 기본값
+        memberCount: null, // API에 없으므로 null로 처리
         postCount: 0, // API에 없으면 기본값
         managerId: club.managerId,
         createdAt: club.createdAt,
