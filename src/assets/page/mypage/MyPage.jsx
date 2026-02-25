@@ -7,6 +7,7 @@ import MyInfo from './MyInfo';
 import WeekHistory from './WeekHistory';
 import CMHistory from './CMHistory';
 import Food_HistoryWrite from './Food_HistoryWrite';
+import MyInfoTitle from './MyInfoTitle';
 import Chart from '../../../components/ChartComp';
 import {
   getPieChartData2,
@@ -46,40 +47,7 @@ function MyPageMain() {
           </div>
         </header>
         <div className="containers">
-          {/* 프로필 */}
-          <section className="profile mt-[5%] w-full md:w-[50%] mx-auto flex items-center justify-center p-4 rounded-[20px]">
-            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
-              {/* 프로필 이미지 */}
-              <div className="pf_img w-[64px] h-[64px] bg-gray-deep rounded-full overflow-hidden flex-shrink-0">
-                <img
-                  src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/KakaoTalk_20251215_235650856.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9LYWthb1RhbGtfMjAyNTEyMTVfMjM1NjUwODU2LnBuZyIsImlhdCI6MTc3MDE5NDc5OCwiZXhwIjoxODAxNzMwNzk4fQ.ZJpgBLlzkCZVPseq-OEQfutNUTFinQ3JlZByBdymIpk"
-                  alt="img"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* 이름 / 정보 */}
-              <div className="flex flex-col min-w-[120px] items-center md:items-start">
-                <div className="flex items-center gap-2">
-                  <span className="text-black font-semibold text-base">
-                    홍지승
-                  </span>
-                  <div className="bg-main-02 rounded-full text-white w-[22px] h-[22px] flex items-center justify-center text-sm">
-                    <i className="fa-solid fa-mars"></i>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-600">178cm / 50kg</span>
-              </div>
-
-              {/* 관리자 뱃지 */}
-              <div className="bg-[#d9fbd3] px-4 py-2 rounded-[14px] flex items-center gap-2">
-                <i className="fa-solid fa-users text-green-700"></i>
-                <span className="text-green-900 font-semibold text-sm whitespace-nowrap">
-                  목표 채중: kg 보유 포인트 :
-                </span>
-              </div>
-            </div>
-          </section>
+          <MyInfoTitle />
 
           {/* 나머지 */}
           <section className="helpme mt-[3%] pb-[10%]">
