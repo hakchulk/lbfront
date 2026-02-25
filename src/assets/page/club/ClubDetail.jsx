@@ -2,25 +2,25 @@ import React, { useEffect } from "react";
 import { Link, Route, Routes, useParams } from "react-router-dom";
 import ClubPostList from "./ClubPostList";
 import BtnComp from "../../../components/BtnComp";
-import { useClubStore } from "../../../api/ClubData";
+import { useClubDetailStore } from "../../../api/ClubDetailData";
 
 function ClubDetailMain() {
   const { id } = useParams();
-  const { clubs, fetchClubs, loading, error } = useClubStore();
+  const { club, fetchClubDetail, loading, error } = useClubDetailStore();
 
-  // 클럽 데이터 로드
+  // 클럽 상세 데이터 로드
   useEffect(() => {
-    const loadClubs = async () => {
+    const loadClubDetail = async () => {
       try {
-        await fetchClubs();
+        if (id) {
+          await fetchClubDetail(id);
+        }
       } catch (err) {
-        console.error("클럽 데이터 로드 실패:", err);
+        console.error("클럽 상세 데이터 로드 실패:", err);
       }
     };
-    loadClubs();
-  }, [fetchClubs]);
-
-  const club = clubs.find((c) => c.id === Number(id));
+    loadClubDetail();
+  }, [id, fetchClubDetail]);
 
   if (loading) {
     return (
@@ -75,7 +75,7 @@ function ClubDetailMain() {
                 : "정보 없음"}
             </span>
             <span className="!text-sm">
-              운영자: {club.managerId || "정보 없음"}
+              운영자: {club.managerName || club.managerId || "정보 없음"}
             </span>
           </div>
 
