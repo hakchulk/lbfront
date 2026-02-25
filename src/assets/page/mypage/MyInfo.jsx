@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BtnComp from "../../../components/BtnComp";
-import { apiClient, BASE_URL } from "../../../api/config";
+import { apiClient } from "../../../api/config";
 import { GOAL_OPTIONS, ALLERGY_OPTIONS } from "../../../constants/member";
 import ChangePassword from "./ChangePassword";
+import ProfileImage from "./ProfileImage";
 
 /** 내 정보 조회 (GET /me) */
 const getMe = async () => {
@@ -15,26 +16,6 @@ const getMe = async () => {
 const updateMe = async (requestData) => {
   const response = await apiClient.put("/me", requestData);
   return response.data;
-};
-
-/** 프로필 이미지 조회 (GET /me/profile-image) → 썸네일: "t_" + filename + ".jpg" */
-const getProfileImageThumbnailUrl = (profileImage) => {
-  if (!profileImage?.filename) return null;
-  const thumbnailFilename = `t_${profileImage.filename}.jpg`;
-  return `${BASE_URL}/file/${thumbnailFilename}`;
-};
-
-/** 프로필 이미지 교체 (PATCH /me/profile-image, multipart/form-data, key: file) */
-const updateProfileImage = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  const response = await apiClient.patch("/me/profile-image", formData);
-  return response.data;
-};
-
-/** 프로필 이미지 삭제 (DELETE /me/profile-image) */
-const deleteProfileImage = async () => {
-  await apiClient.delete("/me/profile-image");
 };
 
 const emptyForm = {
@@ -58,12 +39,6 @@ function MyInfo() {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
-  const [profileImage, setProfileImage] = useState(null);
-  const [profileImageUploading, setProfileImageUploading] = useState(false);
-  const [profileImageDeleting, setProfileImageDeleting] = useState(false);
-  const [showProfileImageMenu, setShowProfileImageMenu] = useState(false);
-  const fileInputRef = useRef(null);
-  const profileImageMenuRef = useRef(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -123,87 +98,13 @@ function MyInfo() {
         setLoading(false);
       }
     };
-    const fetchProfileImage = async () => {
-      try {
-        const data = await apiClient
-          .get("/me/profile-image")
-          .then((res) => res.data);
-        setProfileImage(data);
-      } catch {
-        setProfileImage(null);
-      }
-    };
     fetchMe();
-    fetchProfileImage();
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
-  };
-
-  const handleProfileImageAreaClick = () => {
-    if (profileImageUploading) return;
-    setShowProfileImageMenu((prev) => !prev);
-  };
-
-  const handleProfileImageReplace = () => {
-    setShowProfileImageMenu(false);
-    fileInputRef.current?.click();
-  };
-
-  const handleProfileImageDelete = async () => {
-    if (!profileImage?.filename) return;
-    setShowProfileImageMenu(false);
-    setProfileImageDeleting(true);
-    try {
-      await deleteProfileImage();
-      setProfileImage(null);
-    } catch (err) {
-      console.error("프로필 이미지 삭제 실패:", err);
-      setErrors((prev) => ({
-        ...prev,
-        submit:
-          err.response?.data?.message || "프로필 이미지 삭제에 실패했습니다.",
-      }));
-    } finally {
-      setProfileImageDeleting(false);
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        showProfileImageMenu &&
-        profileImageMenuRef.current &&
-        !profileImageMenuRef.current.contains(e.target)
-      ) {
-        setShowProfileImageMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showProfileImageMenu]);
-
-  const handleProfileImageChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setProfileImageUploading(true);
-    try {
-      const data = await updateProfileImage(file);
-      setProfileImage(data);
-    } catch (err) {
-      console.error("프로필 이미지 업로드 실패:", err);
-      setErrors((prev) => ({
-        ...prev,
-        submit:
-          err.response?.data?.message || "프로필 이미지 변경에 실패했습니다.",
-      }));
-    } finally {
-      setProfileImageUploading(false);
-      e.target.value = "";
-    }
   };
 
   const handleAllergyClick = (allergy) => {
@@ -311,72 +212,19 @@ function MyInfo() {
   return (
     <div className="wrap bg-light-03 min-h-screen mt-0">
       <div className="containers">
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="w-full max-w-lg mx-auto py-10 space-y-5"
-        >
+        <div className="w-full max-w-lg mx-auto py-10">
           <div className="flex flex-row items-center justify-center gap-2 mb-10">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleProfileImageChange}
-              disabled={profileImageUploading}
-            />
-            <div
-              className="relative flex flex-col items-center"
-              ref={profileImageMenuRef}
-            >
-              <button
-                type="button"
-                onClick={handleProfileImageAreaClick}
-                disabled={profileImageUploading}
-                className="flex items-center justify-center rounded-full border-2 border-main-02 w-[40px] h-[40px] overflow-hidden bg-light-03 cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="프로필 이미지 메뉴"
-              >
-                {profileImageUploading ? (
-                  <span className="text-deep text-xs">...</span>
-                ) : getProfileImageThumbnailUrl(profileImage) ? (
-                  <img
-                    src={getProfileImageThumbnailUrl(profileImage)}
-                    alt="프로필"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="material-icons text-2xl leading-none text-deep">
-                    person
-                  </span>
-                )}
-              </button>
-              {showProfileImageMenu && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 py-1 min-w-[120px] bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                  <button
-                    type="button"
-                    onClick={handleProfileImageReplace}
-                    className="w-full px-3 py-2 text-left text-sm text-deep hover:bg-gray-100"
-                  >
-                    이미지 교체
-                  </button>
-                  {profileImage?.filename && (
-                    <button
-                      type="button"
-                      onClick={handleProfileImageDelete}
-                      disabled={profileImageDeleting}
-                      className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      {profileImageDeleting ? "삭제 중..." : "이미지 삭제"}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+            <ProfileImage />
             <h4 className="text-2xl font-bold leading-none text-deep m-0">
               내 정보 수정
             </h4>
           </div>
 
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="w-full space-y-5"
+          >
           {errors.submit && (
             <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
               {errors.submit}
@@ -625,10 +473,11 @@ function MyInfo() {
               저장
             </BtnComp>
           </div>
-        </form>
+          </form>
 
-        <div className="w-full max-w-lg mx-auto pt-4 mb-10">
-          <ChangePassword />
+          <div className="w-full max-w-lg mx-auto pt-4 mb-10">
+            <ChangePassword />
+          </div>
         </div>
       </div>
     </div>
