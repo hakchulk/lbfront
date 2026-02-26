@@ -1,10 +1,32 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import BtnComp from "../../../components/BtnComp";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useClubDetailStore } from "../../../api/ClubDetailData";
+import { useBoardsStore } from "../../../api/BoardsData";
+import { useAuthStore } from "../../../stores/authStore";
 
 function ClubPostWrite() {
-  // 샘플 데이터 - 실제로는 API에서 받아올 데이터
-  const clubName = "고기고기"; // 클럽 이름
+  const { id } = useParams();
+  const { club, fetchClubDetail } = useClubDetailStore();
+  const { createBoard } = useBoardsStore();
+  const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+
+  // 클럽 상세 데이터 로드
+  useEffect(() => {
+    const loadClubDetail = async () => {
+      try {
+        if (id) {
+          await fetchClubDetail(id);
+        }
+      } catch (err) {
+        console.error("클럽 상세 데이터 로드 실패:", err);
+      }
+    };
+    loadClubDetail();
+  }, [id, fetchClubDetail]);
+
+  const clubName = club?.name || "";
 
   // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
   const today = new Date();
@@ -13,12 +35,12 @@ function ClubPostWrite() {
   const day = String(today.getDate()).padStart(2, "0");
   const todayString = `${year}-${month}-${day}`;
 
-  const [keywords, setKeywords] = useState([]);
-  const [keywordInput, setKeywordInput] = useState("");
+  const [title, setTitle] = useState("");
+  const [contents, setContents] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate();
 
   /* 이미지 처리 */
   const handleImageChange = (e) => {
@@ -33,6 +55,66 @@ function ClubPostWrite() {
     fileInputRef.current?.click();
   };
 
+  /* 게시글 저장 */
+  const handleSave = async () => {
+    if (!title.trim()) {
+      alert("제목을 입력해주세요.");
+      return;
+    }
+    if (!contents.trim()) {
+      alert("내용을 입력해주세요.");
+      return;
+    }
+    if (!id) {
+      alert("클럽 ID가 없습니다.");
+      return;
+    }
+    if (!user?.id) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // FormData로 모든 데이터를 함께 전송
+      const formData = new FormData();
+      formData.append("clubId", id);
+      formData.append("title", title.trim());
+      formData.append("contents", contents.trim());
+      formData.append("boardType", "1"); // 일반 게시글
+      formData.append("memberName", user.name || "");
+
+      // 파일이 있으면 추가
+      if (imageFile) {
+        formData.append("file", imageFile);
+      }
+
+      // 게시글 저장
+      const response = await createBoard(formData);
+      
+      // 성공 시 alert 표시 후 게시글 상세 페이지로 이동
+      const boardId = response?.id || response?.data?.id;
+      if (boardId) {
+        alert("작성이 완료되었습니다.");
+        navigate(`/club/detail/${id}/postlist/posting/${boardId}`);
+      } else {
+        alert("작성이 완료되었습니다.");
+        navigate(`/club/detail/${id}/postlist`);
+      }
+    } catch (err) {
+      console.error("게시글 저장 실패:", err);
+      alert(err.response?.data?.message || "게시글 저장에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* 취소 */
+  const handleCancel = () => {
+    navigate(`../postlist`);
+  };
+
   return (
     <>
       <div className="wrap !mt-0 !bg-light-02">
@@ -41,7 +123,7 @@ function ClubPostWrite() {
           <section className="wr_tit text-black py-[10px] mt-[50px] border-b border-b-[1px] border-b-deep">
             <div className="flex flex-row  items-center text-deep">
               <i class="fa-solid fa-file-pen"></i>
-              <span>{clubName} 모임</span>
+              <span className="ml-1"> {clubName} 모임</span>
             </div>
             <h3>게시글 작성</h3>
           </section>
@@ -51,7 +133,13 @@ function ClubPostWrite() {
             {/* 제목 */}
             <div className="mb-6">
               <label className="block mb-2 font-semibold">제목</label>
-              <input className="w-full border  border-deep rounded px-3 h-[35px] bg-white" />
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full border  border-deep rounded px-3 h-[35px] bg-white"
+                placeholder="제목을 입력하세요"
+              />
             </div>
 
             {/* 작성일자 */}
@@ -94,13 +182,25 @@ function ClubPostWrite() {
                 </div>
               </div>
 
-              {preview && <img src={preview} alt="preview" className="mt-4 w-32 h-32 object-cover rounded border" />}
+              {preview && (
+                <img
+                  src={preview}
+                  alt="preview"
+                  className="mt-4 w-32 h-32 object-cover rounded border"
+                />
+              )}
             </div>
 
             {/* 내용 */}
             <div className="mb-8">
               <label className="block mb-2 font-semibold">내용</label>
-              <textarea className="w-full h-100 border  border-deep rounded p-3 bg-white" />
+              <textarea
+                value={contents}
+                onChange={(e) => setContents(e.target.value)}
+                className="w-full h-100 border  border-deep rounded p-3 bg-white"
+                placeholder="내용을 입력하세요"
+                rows={10}
+              />
             </div>
 
             {/* 버튼 */}
@@ -108,12 +208,20 @@ function ClubPostWrite() {
               <BtnComp
                 variant="primary"
                 size="short"
-                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
+                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save"
+                onClick={handleSave}
+                disabled={loading}
               >
-                저장
+                {loading ? "저장 중..." : "저장"}
               </BtnComp>
 
-              <BtnComp variant="point" size="short" className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can">
+              <BtnComp
+                variant="point"
+                size="short"
+                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+                onClick={handleCancel}
+                disabled={loading}
+              >
                 취소
               </BtnComp>
             </div>

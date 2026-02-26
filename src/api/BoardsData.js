@@ -139,6 +139,21 @@ export const useBoardsStore = create((set) => ({
     }
   },
 
+  createBoard: async (formData) => {
+    try {
+      const response = await apiClient.post("/boards", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("게시글 생성 API 응답:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("게시글 생성 중 오류 발생:", error);
+      throw error;
+    }
+  },
+
   resetBoards: () => set({ boards: [], error: null }),
   resetNormalBoards: () => set({ normalBoards: [], normalBoardsError: null }),
   resetBoardDetail: () => set({ boardDetail: null, boardDetailError: null }),
