@@ -3,10 +3,22 @@ import { Link, Route, Routes, useParams } from "react-router-dom";
 import ClubPostList from "./ClubPostList";
 import BtnComp from "../../../components/BtnComp";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
+import { useBoardsStore } from "../../../api/BoardsData";
+import { BASE_URL } from "../../../api/config";
 
 function ClubDetailMain() {
   const { id } = useParams();
   const { club, fetchClubDetail, loading, error } = useClubDetailStore();
+  const {
+    boards,
+    fetchBoards,
+    loading: boardsLoading,
+    error: boardsError,
+    normalBoards,
+    fetchNormalBoards,
+    normalBoardsLoading,
+    normalBoardsError,
+  } = useBoardsStore();
 
   // 클럽 상세 데이터 로드
   useEffect(() => {
@@ -21,6 +33,23 @@ function ClubDetailMain() {
     };
     loadClubDetail();
   }, [id, fetchClubDetail]);
+
+  // 게시판 데이터 로드
+  useEffect(() => {
+    const loadBoards = async () => {
+      try {
+        if (id) {
+          // 클럽 ID가 변경될 때 데이터 초기화
+          await fetchBoards(id);
+          await fetchNormalBoards(id);
+        }
+      } catch (err) {
+        console.error("게시판 데이터 로드 실패:", err);
+      }
+    };
+    loadBoards();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   if (loading) {
     return (
@@ -134,44 +163,58 @@ function ClubDetailMain() {
             </span>
           </div>
           {/* 공지사항 리스트 */}
-          {[
-            {
-              id: 1,
-              title: "이번 주 모임 일정 공지",
-              author: "김훈규(CM)",
-              date: "2026-02-05",
-            },
-            {
-              id: 2,
-              title: "신규 회원 가입 안내",
-              author: "김훈규(CM)",
-              date: "2026-02-03",
-            },
-            {
-              id: 3,
-              title: "고기 모임 특별 이벤트 안내",
-              author: "김훈규(CM)",
-              date: "2026-02-01",
-            },
-          ].map((notice, idx) => (
-            <div
-              key={notice.id}
-              className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
-            >
-              <span className="col-span-1 text-left sm:text-center !text-xs !sm:text-md !md:text-lg">
-                {idx + 1}
-              </span>
-              <span className="col-span-5 text-left sm:text-center text-point-hov !text-sm !sm:text-md !md:text-lg truncate">
-                {notice.title}
-              </span>
-              <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">
-                {notice.author}
-              </span>
-              <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">
-                {notice.date}
-              </span>
-            </div>
-          ))}
+          {(() => {
+            const uniqueBoards = boards
+              ? boards.filter(
+                  (board, index, self) =>
+                    index === self.findIndex((b) => b.id === board.id),
+                )
+              : [];
+
+            if (boardsLoading) {
+              return (
+                <div className="px-4 py-8 text-center text-gray-500">
+                  로딩 중...
+                </div>
+              );
+            }
+
+            if (boardsError) {
+              return (
+                <div className="px-4 py-8 text-center text-red-500">
+                  공지사항을 불러오는 중 오류가 발생했습니다.
+                </div>
+              );
+            }
+
+            if (uniqueBoards.length === 0) {
+              return (
+                <div className="px-4 py-8 text-center text-gray-500">
+                  공지사항이 없습니다.
+                </div>
+              );
+            }
+
+            return uniqueBoards.slice(0, 3).map((notice, idx) => (
+              <div
+                key={notice.id}
+                className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
+              >
+                <span className="col-span-1 text-left sm:text-center !text-xs !sm:text-md !md:text-lg">
+                  {idx + 1}
+                </span>
+                <span className="col-span-5 text-left sm:text-center text-point-hov !text-sm !sm:text-md !md:text-lg truncate">
+                  {notice.title}
+                </span>
+                <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">
+                  {notice.author || "정보 없음"}
+                </span>
+                <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">
+                  {notice.date || "정보 없음"}
+                </span>
+              </div>
+            ));
+          })()}
         </div>
       </div>
 
@@ -183,67 +226,79 @@ function ClubDetailMain() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-          {[
-            {
-              id: 1,
-              title: "어제 먹은 고기가 생각납니다.",
-              author: "홍지승",
-              date: "2026-02-06",
-              content: "고기 사진입니다. 잘먹고갑니다.",
-            },
-            {
-              id: 2,
-              title: "다이어트 하기싫어요.",
-              author: "홍지승",
-              date: "2026-02-05",
-              content: "다이어트고 뭐고 때려칩시다.",
-            },
-            {
-              id: 3,
-              title: "ㅈㄴ맛있네",
-              author: "홍지승",
-              date: "2026-02-04",
-              content: "부럽죠. 맛있겠죠.",
-            },
-            {
-              id: 4,
-              title: "한우파티 ㄱㄱㄱㄱㄱㄱㄱㄱ",
-              author: "홍지승",
-              date: "2026-02-03",
-              content:
-                "오늘은 한우를 먹으러왔습니다. 다들 행복하루 보내시고 건강하세요.",
-            },
-          ].map((post) => (
-            <div
-              key={post.id}
-              className="border border-main-02 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer bg-white overflow-hidden"
-            >
-              {/* 이미지 */}
-              <div className="p-2">
-                {" "}
-                {/* 이미지 주변 패딩 */}
-                <img
-                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image1.png"
-                  alt={post.title}
-                  className="w-full h-60 object-cover rounded-lg"
-                />
-              </div>
+          {(() => {
+            // 중복 제거: id를 기준으로 고유한 게시글만 필터링
+            const uniqueNormalBoards = normalBoards
+              ? normalBoards.filter(
+                  (board, index, self) =>
+                    index === self.findIndex((b) => b.id === board.id)
+                )
+              : [];
 
-              {/* 글 내용 */}
-              <div className="p-4">
-                <h3 className="font-semibold !text-2xl !sm:text-xl mb-2 text-deep">
-                  {post.title}
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-2">
-                  {post.content}
-                </p>
-                <div className="text-gray-500 text-xs sm:text-sm flex justify-between">
-                  <span className="!text-sm !sm:text-md">{post.author}</span>
-                  <span className="!text-sm !sm:text-md">{post.date}</span>
+            if (normalBoardsLoading) {
+              return (
+                <div className="col-span-2 px-4 py-8 text-center text-gray-500">
+                  로딩 중...
+                </div>
+              );
+            }
+
+            if (normalBoardsError) {
+              return (
+                <div className="col-span-2 px-4 py-8 text-center text-red-500">
+                  게시글을 불러오는 중 오류가 발생했습니다.
+                </div>
+              );
+            }
+
+            if (uniqueNormalBoards.length === 0) {
+              return (
+                <div className="col-span-2 px-4 py-8 text-center text-gray-500">
+                  게시글이 없습니다.
+                </div>
+              );
+            }
+
+            return uniqueNormalBoards.map((post) => (
+              <div
+                key={post.id}
+                className="border border-main-02 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer bg-white overflow-hidden"
+              >
+                {/* 이미지 */}
+                <div className="p-2">
+                  <img
+                    src={
+                      post.filename
+                        ? `${BASE_URL}/file/${post.filename}`
+                        : post.fileId
+                        ? `${BASE_URL}/file/${post.fileId}`
+                        : "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image1.png"
+                    }
+                    alt={post.title}
+                    className="w-full h-60 object-cover rounded-lg"
+                  />
+                </div>
+
+                {/* 글 내용 */}
+                <div className="p-4">
+                  <h3 className="font-semibold !text-2xl !sm:text-xl mb-2 text-deep">
+                    {post.title}
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-600 mb-2 line-clamp-2">
+                    {post.contents}
+                  </p>
+                  <div className="text-gray-500 text-xs sm:text-sm flex justify-between">
+                    <span className="!text-sm !sm:text-md">
+                      {post.author || "정보 없음"}
+                    </span>
+                    <span className="!text-sm !sm:text-md">
+                      {post.date || "정보 없음"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ));
+          })()}
         </div>
 
         {/* 더보기 버튼 */}
