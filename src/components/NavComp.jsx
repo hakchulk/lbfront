@@ -66,6 +66,7 @@ function NavComp() {
     callLogout();
     setLogout();
     setIsOpen(false);
+    navigate("/member");
   };
 
   return (

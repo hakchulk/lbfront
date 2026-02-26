@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Link, Route, Routes, useParams } from "react-router-dom";
+import { Link, Route, Routes, useParams, useNavigate } from "react-router-dom";
 import ClubPostList from "./ClubPostList";
 import BtnComp from "../../../components/BtnComp";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
@@ -8,6 +8,7 @@ import { BASE_URL } from "../../../api/config";
 
 function ClubDetailMain() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { club, fetchClubDetail, loading, error } = useClubDetailStore();
   const {
     boards,
@@ -198,6 +199,7 @@ function ClubDetailMain() {
             return uniqueBoards.slice(0, 3).map((notice, idx) => (
               <div
                 key={notice.id}
+                onClick={() => navigate(`/club/detail/${id}/postlist/posting/${notice.id}`)}
                 className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
               >
                 <span className="col-span-1 text-left sm:text-center !text-xs !sm:text-md !md:text-lg">
@@ -262,6 +264,7 @@ function ClubDetailMain() {
             return uniqueNormalBoards.slice(0, 4).map((post) => (
               <div
                 key={post.id}
+                onClick={() => navigate(`/club/detail/${id}/postlist/posting/${post.id}`)}
                 className="border border-main-02 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer bg-white overflow-hidden"
               >
                 {/* 이미지 */}

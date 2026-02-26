@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useBoardsStore } from "../../../api/BoardsData";
+import { useClubDetailStore } from "../../../api/ClubDetailData";
+import { useAuthStore } from "../../../stores/authStore";
+import BtnComp from "../../../components/BtnComp";
 import { BASE_URL } from "../../../api/config";
 
 function ClubPosting() {
   const { id: boardId } = useParams();
-  const { boardDetail, fetchBoardDetail, boardDetailLoading, boardDetailError } = useBoardsStore();
+  const navigate = useNavigate();
+  const {
+    boardDetail,
+    fetchBoardDetail,
+    boardDetailLoading,
+    boardDetailError,
+  } = useBoardsStore();
+  const { club, fetchClubDetail } = useClubDetailStore();
+  const user = useAuthStore((state) => state.user);
   const [liked, setLiked] = useState(false);
+
+  // 내가 쓴 글인지 확인
+  const isMyPost =
+    user?.id && boardDetail?.memberId && user.id === boardDetail.memberId;
 
   // 게시글 상세 데이터 로드
   useEffect(() => {
@@ -22,6 +37,21 @@ function ClubPosting() {
     loadBoardDetail();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardId]);
+
+  // 클럽 정보 로드
+  useEffect(() => {
+    const loadClubDetail = async () => {
+      try {
+        if (boardDetail?.clubId) {
+          await fetchClubDetail(boardDetail.clubId);
+        }
+      } catch (err) {
+        console.error("클럽 상세 데이터 로드 실패:", err);
+      }
+    };
+    loadClubDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardDetail?.clubId]);
 
   const handleLike = () => {
     setLiked((prev) => !prev);
@@ -65,7 +95,7 @@ function ClubPosting() {
           {/* 모임명 + 아이콘 */}
           <div className="flex items-center gap-2 text-main-02 mb-2">
             <span className="material-icons text-lg">edit</span>
-            <span className="text-sm font-semibold">커뮤니티</span>
+            <span className="text-sm font-semibold">{club?.name || ""} 모임</span>
           </div>
 
           {/* 제목 */}
@@ -86,10 +116,14 @@ function ClubPosting() {
                 />
               </div>
 
-              <span className="text-sm text-gray-600 font-medium">{boardDetail.author || "정보 없음"}</span>
+              <span className="text-sm text-gray-600 font-medium">
+                {boardDetail.author || "정보 없음"}
+              </span>
             </div>
             <span className="!text-sm text-gray-400">
-              {boardDetail.date ? boardDetail.date.replace(/-/g, ".") : "정보 없음"}
+              {boardDetail.date
+                ? boardDetail.date.replace(/-/g, ".")
+                : "정보 없음"}
             </span>
           </div>
 
@@ -109,11 +143,17 @@ function ClubPosting() {
             {boardDetail.contents}
           </p>
 
-          {/* 버튼 영역 */}
-          <div className="flex justify-center gap-4">
-            <button className="px-6 py-2 bg-main-02 text-white rounded-md">수정</button>
-            <button className="px-6 py-2 bg-point text-white rounded-md">삭제</button>
-          </div>
+          {/* 버튼 영역 - 내가 쓴 글에서만 표시 */}
+          {isMyPost && (
+            <div className="flex justify-center gap-4">
+              <button className="px-6 py-2 bg-main-02 text-white rounded-md cursor-pointer hover:bg-main-01 transition">
+                수정
+              </button>
+              <button className="px-6 py-2 bg-point text-white rounded-md cursor-pointer hover:opacity-80 transition">
+                삭제
+              </button>
+            </div>
+          )}
         </section>
 
         {/* 댓글 영역 */}
@@ -212,6 +252,22 @@ function ClubPosting() {
             </button>
           </div>
         </section>
+
+        <div className="w-full sm:w-[50%] mx-auto flex items-center justify-center mb-[5%]  ">
+          <BtnComp
+            size="mid"
+            variant="primary"
+            onClick={() => {
+              if (boardDetail?.clubId) {
+                navigate(`/club/detail/${boardDetail.clubId}/postlist`);
+              } else {
+                navigate(-1);
+              }
+            }}
+          >
+            목록으로 돌아가기
+          </BtnComp>
+        </div>
       </div>
     </div>
   );
