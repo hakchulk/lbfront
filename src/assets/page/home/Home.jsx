@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import BtnComp from "../../../components/BtnComp";
 import MealAnal from "./MealAnal";
 import { useClubStore } from "../../../api/ClubData";
@@ -184,16 +184,16 @@ function Home() {
               </div>
             ) : (
               displayedClubs.map((club) => (
-                <Link
-                  to={`detail/${club.id}`}
+                <div
                   key={club.id}
-                  className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform transform hover:-translate-y-1 "
+                  onClick={() => navigate(`/club/detail/${club.id}`)}
+                  className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform transform hover:-translate-y-1 cursor-pointer"
                 >
                   {/* 이미지 */}
                   <div className="w-full h-[200px] sm:h-[300px] overflow-hidden ">
                     <img
                       src={club.image}
-                      alt={club.title}
+                      alt={club.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -219,7 +219,7 @@ function Home() {
                       ))}
                     </div>
                   </div>
-                </Link>
+                </div>
               ))
             )}
           </div>

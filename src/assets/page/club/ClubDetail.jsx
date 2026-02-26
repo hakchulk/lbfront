@@ -259,7 +259,7 @@ function ClubDetailMain() {
               );
             }
 
-            return uniqueNormalBoards.map((post) => (
+            return uniqueNormalBoards.slice(0, 4).map((post) => (
               <div
                 key={post.id}
                 className="border border-main-02 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer bg-white overflow-hidden"
