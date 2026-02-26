@@ -1,13 +1,61 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useBoardsStore } from "../../../api/BoardsData";
+import { BASE_URL } from "../../../api/config";
 
 function ClubPosting() {
+  const { id: boardId } = useParams();
+  const { boardDetail, fetchBoardDetail, boardDetailLoading, boardDetailError } = useBoardsStore();
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(24);
+
+  // 게시글 상세 데이터 로드
+  useEffect(() => {
+    const loadBoardDetail = async () => {
+      try {
+        if (boardId) {
+          await fetchBoardDetail(boardId);
+        }
+      } catch (err) {
+        console.error("게시글 상세 데이터 로드 실패:", err);
+      }
+    };
+    loadBoardDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardId]);
 
   const handleLike = () => {
     setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+    // 실제로는 API 호출이 필요하지만, 현재는 UI만 업데이트
   };
+
+  // 로딩 상태
+  if (boardDetailLoading) {
+    return (
+      <div className="w-full flex justify-center items-center h-[400px] text-gray-500">
+        로딩 중...
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (boardDetailError) {
+    return (
+      <div className="w-full flex justify-center items-center h-[400px] text-red-500">
+        게시글을 불러오는 중 오류가 발생했습니다.
+      </div>
+    );
+  }
+
+  // 데이터가 없을 때
+  if (!boardDetail) {
+    return (
+      <div className="w-full flex justify-center items-center h-[400px] text-gray-500">
+        게시글이 없습니다.
+      </div>
+    );
+  }
+
+  const likeCount = liked ? boardDetail.likeCount + 1 : boardDetail.likeCount;
 
   return (
     <div className="w-full flex justify-center">
@@ -17,40 +65,48 @@ function ClubPosting() {
           {/* 모임명 + 아이콘 */}
           <div className="flex items-center gap-2 text-main-02 mb-2">
             <span className="material-icons text-lg">edit</span>
-            <span className="text-sm font-semibold">고기고기 모임</span>
+            <span className="text-sm font-semibold">커뮤니티</span>
           </div>
 
           {/* 제목 */}
-          <h1 className="text-2xl font-bold mb-4">오늘 저녁은 샐러드 삽니다. ㅠㅠㅠㅠㅠㅠ</h1>
+          <h1 className="text-2xl font-bold mb-4">{boardDetail.title}</h1>
 
           {/* 작성자 / 날짜 */}
           <div className="flex justify-between items-end pb-1 border-b border-gray-200 mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full overflow-hidden">
                 <img
-                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
+                  src={
+                    boardDetail.profileFilename
+                      ? `${BASE_URL}/file/${boardDetail.profileFilename}`
+                      : "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
+                  }
                   className="w-full h-full object-cover scale-125"
                   alt="profile"
                 />
               </div>
 
-              <span className="text-sm text-gray-600 font-medium">홍지승</span>
+              <span className="text-sm text-gray-600 font-medium">{boardDetail.author || "정보 없음"}</span>
             </div>
-            <span className="!text-sm text-gray-400">2026.02.10</span>
+            <span className="!text-sm text-gray-400">
+              {boardDetail.date ? boardDetail.date.replace(/-/g, ".") : "정보 없음"}
+            </span>
           </div>
 
           {/* 이미지 */}
-          <div className="w-full mb-6">
-            <img
-              src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image5.png"
-              alt="post"
-              className="w-full rounded-lg object-cover"
-            />
-          </div>
+          {boardDetail.filename && (
+            <div className="w-full mb-6">
+              <img
+                src={`${BASE_URL}/file/${boardDetail.filename}`}
+                alt={boardDetail.title}
+                className="w-full rounded-lg object-cover"
+              />
+            </div>
+          )}
 
           {/* 본문 */}
-          <p className="text-gray-700 leading-relaxed mb-8">
-            오늘은 다이어트도 할 겸 샐러드를 먹어보려고 합니다. 혼자 먹기엔 너무 많아서 같이 드실 분 있으면 댓글 주세요!
+          <p className="text-gray-700 leading-relaxed mb-8 whitespace-pre-line">
+            {boardDetail.contents}
           </p>
 
           {/* 버튼 영역 */}
@@ -72,7 +128,7 @@ function ClubPosting() {
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <span className="material-icons text-base">visibility</span>
-                <span>128</span>
+                <span>{boardDetail.viewCount || 0}</span>
               </div>
 
               {/* 좋아요 버튼 */}

@@ -4,10 +4,13 @@ import apiClient, { BASE_URL } from "./config";
 export const useBoardsStore = create((set) => ({
   boards: [],
   normalBoards: [],
+  boardDetail: null,
   loading: false,
   normalBoardsLoading: false,
+  boardDetailLoading: false,
   error: null,
   normalBoardsError: null,
+  boardDetailError: null,
 
   fetchBoards: async (clubId) => {
     set({ loading: true, error: null, boards: [] });
@@ -99,6 +102,44 @@ export const useBoardsStore = create((set) => ({
     }
   },
 
+  fetchBoardDetail: async (boardId) => {
+    set({ boardDetailLoading: true, boardDetailError: null, boardDetail: null });
+    try {
+      const response = await apiClient.get(`/boards/${boardId}`);
+      console.log("게시글 상세 API 응답:", response.data);
+      const boardData = response.data;
+
+      // API 응답을 컴포넌트에서 사용할 수 있는 형태로 변환
+      const boardDetail = {
+        id: boardData.id,
+        title: boardData.title || "",
+        contents: boardData.contents || "",
+        author: boardData.member_name || "",
+        date: boardData.createdAt ? boardData.createdAt.substring(0, 10) : "",
+        board_type: boardData.board_type || 1,
+        boardType: boardData.board_type || 1,
+        likeCount: boardData.like_count || 0,
+        viewCount: boardData.view_count || 0,
+        clubId: boardData.club_id,
+        memberId: boardData.member_id,
+        profileFilename: boardData.profile_filename,
+        fileId: boardData.file_id,
+        filename: boardData.filename,
+        createdAt: boardData.createdAt,
+        updatedAt: boardData.updatedAt,
+        deletedAt: boardData.deletedAt,
+      };
+
+      set({ boardDetail: boardDetail, boardDetailLoading: false });
+      return boardDetail;
+    } catch (error) {
+      console.error("게시글 상세 데이터 가져오기 중 오류 발생:", error);
+      set({ boardDetailError: error.message || error, boardDetailLoading: false, boardDetail: null });
+      throw error;
+    }
+  },
+
   resetBoards: () => set({ boards: [], error: null }),
   resetNormalBoards: () => set({ normalBoards: [], normalBoardsError: null }),
+  resetBoardDetail: () => set({ boardDetail: null, boardDetailError: null }),
 }));
