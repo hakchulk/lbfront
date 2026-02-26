@@ -3,7 +3,7 @@ import { apiClient } from "../../../api/config";
 import {
   getProfileImageThumbnailUrl,
   getProfileImage,
-} from "../../utils/profileimage";
+} from "../../../api/profileimage";
 
 /**
  * 마이페이지 프로필 영역 - 이름, 성별, 키/몸무게, 목표 체중·포인트 뱃지

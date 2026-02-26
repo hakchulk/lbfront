@@ -4,7 +4,7 @@ import {
   getProfileImage,
   updateProfileImage,
   deleteProfileImage,
-} from "../../utils/profileimage";
+} from "../../../api/profileimage";
 
 function ProfileImage() {
   const [profileImage, setProfileImage] = useState(null);

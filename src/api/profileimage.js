@@ -1,4 +1,4 @@
-import { apiClient, BASE_URL } from "../../api/config";
+import { apiClient, BASE_URL } from "./config";
 
 /** 썸네일 URL: "t_" + filename + ".jpg" */
 export const getProfileImageThumbnailUrl = (profileImage) => {
