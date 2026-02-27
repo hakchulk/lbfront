@@ -2,8 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBoardsStore } from "../../../api/BoardsData";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
+import { useCommentsStore } from "../../../api/CommentsData";
 import { useAuthStore } from "../../../stores/authStore";
+import usePaginationStore from "../../../stores/paginationStore";
 import BtnComp from "../../../components/BtnComp";
+import PageNatation from "../../../components/PageNatation";
 import { BASE_URL } from "../../../api/config";
 
 function ClubPosting() {
@@ -17,8 +20,20 @@ function ClubPosting() {
     deleteBoard,
   } = useBoardsStore();
   const { club, fetchClubDetail } = useClubDetailStore();
+  const {
+    comments,
+    page,
+    loading: commentsLoading,
+    error: commentsError,
+    fetchComments,
+    resetComments,
+    createComment,
+  } = useCommentsStore();
   const user = useAuthStore((state) => state.user);
+  const resetPagination = usePaginationStore((state) => state.resetPagination);
   const [liked, setLiked] = useState(false);
+  const [commentContent, setCommentContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 내가 쓴 글인지 확인
   const isMyPost =
@@ -54,6 +69,28 @@ function ClubPosting() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardDetail?.clubId]);
 
+  // 댓글 데이터 로드
+  useEffect(() => {
+    const loadComments = async () => {
+      try {
+        if (boardId) {
+          // 페이지네이션을 첫 페이지로 리셋
+          resetPagination(`comment-list-${boardId}`);
+          await fetchComments(boardId, 0);
+        }
+      } catch (err) {
+        console.error("댓글 데이터 로드 실패:", err);
+      }
+    };
+
+    loadComments();
+
+    return () => {
+      resetComments();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardId]);
+
   const handleLike = () => {
     setLiked((prev) => !prev);
     // 실제로는 API 호출이 필요하지만, 현재는 UI만 업데이트
@@ -61,7 +98,9 @@ function ClubPosting() {
 
   const handleEdit = () => {
     if (boardDetail?.clubId && boardId) {
-      navigate(`/club/detail/${boardDetail.clubId}/postlist/postwrite?boardId=${boardId}`);
+      navigate(
+        `/club/detail/${boardDetail.clubId}/postlist/postwrite?boardId=${boardId}`,
+      );
     }
   };
 
@@ -81,6 +120,42 @@ function ClubPosting() {
     } catch (err) {
       console.error("게시글 삭제 실패:", err);
       alert(err.response?.data?.message || "게시글 삭제에 실패했습니다.");
+    }
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    if (!commentContent.trim()) {
+      alert("댓글 내용을 입력해주세요.");
+      return;
+    }
+
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await createComment(boardId, commentContent);
+      setCommentContent("");
+      // 댓글 작성 후 첫 페이지로 리셋하고 댓글 목록 새로고침
+      resetPagination(`comment-list-${boardId}`);
+      await fetchComments(boardId, 0);
+    } catch (err) {
+      console.error("댓글 작성 실패:", err);
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "댓글 작성에 실패했습니다.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,7 +196,9 @@ function ClubPosting() {
           {/* 모임명 + 아이콘 */}
           <div className="flex items-center gap-2 text-main-02 mb-2">
             <span className="material-icons text-lg">edit</span>
-            <span className="text-sm font-semibold">{club?.name || ""} 모임</span>
+            <span className="text-sm font-semibold">
+              {club?.name || ""} 모임
+            </span>
           </div>
 
           {/* 제목 */}
@@ -193,7 +270,12 @@ function ClubPosting() {
           {/* 댓글 헤더 */}
           <div className="flex justify-between items-center pb-3 border-b border-gray-300 mb-6">
             <h2 className="!text-lg font-semibold">
-              댓글 <span className="text-main-02">3</span>
+              댓글{" "}
+              <span className="text-main-02">
+                {page?.totalElements !== undefined
+                  ? page.totalElements
+                  : comments.length}
+              </span>
             </h2>
 
             {/* 조회수 + 좋아요 */}
@@ -216,73 +298,94 @@ function ClubPosting() {
           </div>
 
           {/* 댓글 리스트 */}
-          <ul className="mb-6">
-            <li className="flex gap-3 py-4 border-b border-gray-500">
-              <div className="w-10 h-10 rounded-full overflow-hidden">
-                <img
-                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
-                  className="w-full h-full object-cover scale-125"
-                  alt="profile"
-                />
+          <div className="mb-6">
+            {commentsLoading ? (
+              <div className="py-6 text-center text-gray-500">
+                댓글 로딩 중...
               </div>
+            ) : commentsError ? (
+              <div className="py-6 text-center text-red-500">
+                댓글을 불러오는 중 오류가 발생했습니다.
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="py-6 text-center text-gray-500">
+                첫 댓글을 남겨보세요.
+              </div>
+            ) : (
+              <ul>
+                {comments.map((comment) => {
+                  const createdDate = comment.createdAt
+                    ? comment.createdAt.substring(0, 10).replace(/-/g, ".")
+                    : "";
 
-              <div className="flex-1">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">유저1</span>
-                  <span className="text-gray-400 !text-sm">2026.02.10</span>
-                </div>
-                <p className="text-gray-700 mt-1">샐러드 좋네요! 같이 먹어요</p>
-              </div>
-            </li>
+                  return (
+                    <li
+                      key={comment.id}
+                      className="flex gap-3 py-4 border-b border-gray-500 last:border-b-0"
+                    >
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <img
+                          src={
+                            comment.profileFilename
+                              ? `${BASE_URL}/file/${comment.profileFilename}`
+                              : "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
+                          }
+                          className="w-full h-full object-cover scale-125"
+                          alt="profile"
+                        />
+                      </div>
 
-            <li className="flex gap-3 py-4 border-b border-gray-500">
-              <div className="w-10 h-10 rounded-full overflow-hidden">
-                <img
-                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
-                  className="w-full h-full object-cover scale-125"
-                  alt="profile"
-                />
-              </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">
+                            {comment.memberName || "익명"}
+                          </span>
+                          <span className="text-gray-400 !text-sm">
+                            {createdDate || "날짜 정보 없음"}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 mt-1">{comment.content}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
 
-              <div className="flex-1">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">유저2</span>
-                  <span className="text-gray-400 !text-sm">2026.02.10</span>
-                </div>
-                <p className="text-gray-700 mt-1">위치 어디인가요?</p>
-              </div>
-            </li>
-
-            <li className="flex gap-3 py-4">
-              <div className="w-10 h-10 rounded-full overflow-hidden">
-                <img
-                  src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/face.png"
-                  className="w-full h-full object-cover scale-125"
-                  alt="profile"
-                />
-              </div>
-
-              <div className="flex-1">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">유저3</span>
-                  <span className="text-gray-400 !text-sm">2026.02.10</span>
-                </div>
-                <p className="text-gray-700 mt-1">다이어트 화이팅입니다</p>
-              </div>
-            </li>
-          </ul>
+          {/* 댓글 페이지네이션 */}
+          {page && page.totalPages > 1 && (
+            <div className="flex justify-center mb-6">
+              <PageNatation
+                storeKey={`comment-list-${boardId}`}
+                totalElements={page.totalElements}
+                pageSize={page.size || 10}
+                totalPages={page.totalPages}
+                pageFn={(nextPage) => {
+                  if (boardId) {
+                    fetchComments(boardId, nextPage);
+                  }
+                }}
+              />
+            </div>
+          )}
 
           {/* 댓글 입력 */}
-          <div className="relative">
+          <form onSubmit={handleCommentSubmit} className="relative">
             <textarea
+              value={commentContent}
+              onChange={(e) => setCommentContent(e.target.value)}
               className="w-full border bg-white rounded-md p-3 pr-20 resize-none focus:outline-none focus:ring-1 focus:ring-main-02"
               rows={3}
               placeholder="댓글을 입력하세요"
             />
-            <button className="absolute bottom-3 right-3 px-5 py-1.5 bg-main-02 text-white text-sm rounded-md">
-              등록
+            <button
+              type="submit"
+              className="absolute bottom-3 right-3 px-5 py-1.5 mb-1 bg-main-02 text-white text-sm rounded-md hover:bg-main-01 transition"
+            >
+              {isSubmitting ? "등록 중..." : "등록"}
             </button>
-          </div>
+          </form>
         </section>
 
         <div className="w-full sm:w-[50%] mx-auto flex items-center justify-center mb-[5%]  ">
