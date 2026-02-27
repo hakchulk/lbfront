@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useBoardsStore } from "../../../api/BoardsData";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
 import { useCommentsStore } from "../../../api/CommentsData";
+import { useLikesStore } from "../../../api/LikesData";
 import { useAuthStore } from "../../../stores/authStore";
 import usePaginationStore from "../../../stores/paginationStore";
 import BtnComp from "../../../components/BtnComp";
@@ -29,9 +30,15 @@ function ClubPosting() {
     resetComments,
     createComment,
   } = useCommentsStore();
+  const {
+    likes,
+    loading: likesLoading,
+    toggleLike,
+    setInitialLike,
+    fetchLikeCount,
+  } = useLikesStore();
   const user = useAuthStore((state) => state.user);
   const resetPagination = usePaginationStore((state) => state.resetPagination);
-  const [liked, setLiked] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -91,9 +98,47 @@ function ClubPosting() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardId]);
 
-  const handleLike = () => {
-    setLiked((prev) => !prev);
-    // 실제로는 API 호출이 필요하지만, 현재는 UI만 업데이트
+  // 좋아요 초기 상태 세팅
+  // 1) 게시글 상세에서 내려준 likeCount로 기본 값 세팅
+  // 2) 이어서 /likes/{boardId} GET으로 서버 기준 최신 상태(카운트 + 내가 눌렀는지)를 동기화
+  useEffect(() => {
+    if (!boardId || !boardDetail) return;
+
+    const initLikeState = async () => {
+      // 우선 상세 데이터 기준으로 기본값 세팅
+      setInitialLike(boardId, boardDetail.likeCount || 0, false);
+
+      try {
+        await fetchLikeCount(boardId);
+      } catch (err) {
+        console.error("좋아요 초기 상태 동기화 실패:", err);
+        // 실패해도 화면은 그대로 동작하도록 에러만 로그
+      }
+    };
+
+    initLikeState();
+  }, [boardId, boardDetail, setInitialLike, fetchLikeCount]);
+
+  const handleLike = async () => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    if (!boardId || likesLoading) {
+      return;
+    }
+
+    try {
+      await toggleLike(boardId);
+    } catch (err) {
+      console.error("좋아요 처리 실패:", err);
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "좋아요 처리 중 오류가 발생했습니다.",
+      );
+    }
   };
 
   const handleEdit = () => {
@@ -186,7 +231,10 @@ function ClubPosting() {
     );
   }
 
-  const likeCount = liked ? boardDetail.likeCount + 1 : boardDetail.likeCount;
+  const currentLikeState = (boardId && likes[boardId]) || {
+    liked: false,
+    count: boardDetail.likeCount || 0,
+  };
 
   return (
     <div className="w-full flex justify-center">
@@ -286,13 +334,18 @@ function ClubPosting() {
               </div>
 
               {/* 좋아요 버튼 */}
-              <button onClick={handleLike} className="flex items-center gap-1">
+              <button
+                onClick={handleLike}
+                className="flex items-center gap-1 cursor-pointer"
+              >
                 <span
-                  className={`material-icons text-base transition-colors ${liked ? "text-pink-500" : "text-gray-400"}`}
+                  className={`material-icons text-base transition-colors ${
+                    currentLikeState.liked ? "text-pink-500" : "text-gray-400"
+                  }`}
                 >
                   favorite
                 </span>
-                <span>{likeCount}</span>
+                <span>{currentLikeState.count}</span>
               </button>
             </div>
           </div>
