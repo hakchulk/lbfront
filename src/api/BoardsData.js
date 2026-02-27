@@ -154,6 +154,26 @@ export const useBoardsStore = create((set) => ({
     }
   },
 
+  // 게시글 수정
+  updateBoard: async (boardId, formData) => {
+    if (!boardId) {
+      throw new Error("boardId가 없습니다.");
+    }
+
+    try {
+      const response = await apiClient.put(`/boards/${boardId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("게시글 수정 API 응답:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("게시글 수정 중 오류 발생:", error);
+      throw error;
+    }
+  },
+
   resetBoards: () => set({ boards: [], error: null }),
   resetNormalBoards: () => set({ normalBoards: [], normalBoardsError: null }),
   resetBoardDetail: () => set({ boardDetail: null, boardDetailError: null }),
