@@ -7,19 +7,27 @@ import usePaginationStore from "../../../stores/paginationStore";
 
 function ClubMain() {
   const [sort, setSort] = useState("latest");
-  const { clubs, fetchClubs, loading, error } = useClubStore();
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const { clubs, fetchClubs, fetchClubsBySort, searchClubs, loading, error } = useClubStore();
 
-  // 데이터 로드 하긔긕
+  // 검색어와 정렬에 따라 데이터 로드
   useEffect(() => {
     const loadClubs = async () => {
       try {
-        await fetchClubs();
+        if (searchKeyword.trim()) {
+          // 검색어가 있으면 검색 API 호출
+          await searchClubs(searchKeyword.trim());
+        } else {
+          // 검색어가 없으면 정렬 API 호출
+          await fetchClubsBySort(sort);
+        }
       } catch (err) {
         console.error("클럽 데이터 로드 실패:", err);
       }
     };
     loadClubs();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sort, searchKeyword]);
 
   // 반응형 pageSize 상태
   const [pageSize, setPageSize] = useState(4);
@@ -58,34 +66,57 @@ function ClubMain() {
   const resetPagination = usePaginationStore((state) => state.resetPagination);
   useEffect(() => {
     resetPagination(storeKey);
-  }, [sort, storeKey, resetPagination]);
+  }, [sort, searchKeyword, storeKey, resetPagination]);
 
-  // 정렬된 클럽 리스트
+  // 검색 결과를 정렬하여 필터링
   const sortedClubs = useMemo(() => {
     if (!clubs || clubs.length === 0) return [];
-
-    const sorted = [...clubs];
-    switch (sort) {
-      case "latest":
-        return sorted.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-        );
-      case "members":
-        return sorted.sort(
-          (a, b) => (b.memberCount || 0) - (a.memberCount || 0),
-        );
-      case "posts":
-        return sorted.sort((a, b) => (b.postCount || 0) - (a.postCount || 0));
-      default:
-        return sorted;
+    
+    // 검색 결과가 있을 때만 정렬 적용
+    if (searchKeyword.trim()) {
+      const sorted = [...clubs];
+      switch (sort) {
+        case "latest":
+          sorted.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateB - dateA;
+          });
+          break;
+        case "members":
+          sorted.sort((a, b) => (b.memberCount || 0) - (a.memberCount || 0));
+          break;
+        case "posts":
+          sorted.sort((a, b) => (b.postCount || 0) - (a.postCount || 0));
+          break;
+        default:
+          break;
+      }
+      return sorted;
     }
-  }, [clubs, sort]);
+    return clubs;
+  }, [clubs, sort, searchKeyword]);
 
   // 현재 페이지에 보여줄 클럽만 슬라이스
   const currentPageClubs = useMemo(() => {
+    if (!sortedClubs || sortedClubs.length === 0) return [];
     const start = currentPage * pageSize;
     return sortedClubs.slice(start, start + pageSize);
   }, [currentPage, pageSize, sortedClubs]);
+
+  // 검색 핸들러
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const keyword = e.target.searchInput?.value || searchKeyword;
+    setSearchKeyword(keyword);
+    resetPagination(storeKey);
+  };
+
+  // 검색어 입력 핸들러
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    setSearchKeyword(value);
+  };
 
   return (
     <div className="myBg bg-light-03">
@@ -118,15 +149,21 @@ function ClubMain() {
         <div className="containers">
           <div className="bg-white rounded-2xl shadow-lg px-2 py-8 flex flex-col items-center gap-6">
             {/* 검색창 */}
-            <div className="flex items-center w-full max-w-[800px] bg-white border border-1 border-main-02 rounded-full overflow-hidden">
+            <form
+              onSubmit={handleSearch}
+              className="flex items-center w-full max-w-[800px] bg-white border border-1 border-main-02 rounded-full overflow-hidden"
+            >
               <input
                 type="text"
+                name="searchInput"
+                value={searchKeyword}
+                onChange={handleSearchInputChange}
                 placeholder="검색어를 입력하세요"
                 className="flex-1 px-6 py-3 text-sm outline-none bg-white"
               />
 
               <button
-                type="button"
+                type="submit"
                 aria-label="검색"
                 className="mr-2 w-9 h-9 rounded-full bg-main-02 text-white flex items-center justify-center"
               >
@@ -144,7 +181,7 @@ function ClubMain() {
                   <path d="M21 21l-4.3-4.3" />
                 </svg>
               </button>
-            </div>
+            </form>
 
             {/* 정렬 버튼 */}
             <div className="flex gap-3 flex-wrap justify-center ">

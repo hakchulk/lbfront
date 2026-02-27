@@ -1,10 +1,13 @@
 import React, { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import BtnComp from "../../../components/BtnComp";
 import MealAnal from "./MealAnal";
+import { useClubStore } from "../../../api/ClubData";
 
 function Home() {
   const navigate = useNavigate();
+  const { clubs, fetchClubsBySort, loading } = useClubStore();
+
   useEffect(() => {
     const swiper = new window.Swiper(".home-swiper", {
       slidesPerView: 1,
@@ -21,14 +24,21 @@ function Home() {
     };
   }, []);
 
-  const clubs = Array.from({ length: 4 }).map((_, i) => ({
-    id: i + 1,
-    title: "경찰과 도둑 보라매 공원 모임",
-    desc: "매주 함께 운동하고 건강한 습관을 만들어가는 모임입니다.",
-    image:
-      "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image2.png",
-    tags: ["2030", "추억소환", "다이어트", "놀이", "경찰과도둑"],
-  }));
+  // 최신순 클럽 데이터 가져오기
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        await fetchClubsBySort("latest");
+      } catch (err) {
+        console.error("클럽 데이터 로드 실패:", err);
+      }
+    };
+    loadClubs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 최대 4개만 표시
+  const displayedClubs = clubs.slice(0, 4);
 
   return (
     <>
@@ -146,7 +156,7 @@ function Home() {
         </section>
 
         {/* sect3 */}
-        <div className="containers my-[10%]">
+        <div className="containers my-[10%] ">
           <section className="sect3 w-full flex flex-col justify-center items-center ">
             <div className="cont_tit w-[90%] sm:w-[70%] md:w-[60%] lg:w-[50%] xl:w-[40%] flex flex-col justify-center items-center my-[3%] sm:my-[4%] md:my-[5%]">
               <h2 className="!text-base md:!text-lg lg:!text-xl xl:!text-3xl text-black">
@@ -166,46 +176,52 @@ function Home() {
           {/* 카드 섹션 */}
           <div
             className="w-[95%] sm:w-[90%] md:w-[100%] lg:w-full xl:w-[80%] lg:min-w-[940px] xl:min-w-0
-  mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 md:gap-x-8 md:gap-y-10 justify-items-stretch mb-[3%] sm:mb-[4%] md:mb-[%] "
+  mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 md:gap-x-8 md:gap-y-10 justify-items-stretch mb-[10%]"
           >
-            {clubs.map((club) => (
-              <Link
-                to={`detail/${club.id}`}
-                key={club.id}
-                className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform transform hover:-translate-y-1 "
-              >
-                {/* 이미지 */}
-                <div className="w-full h-[200px] sm:h-[300px] overflow-hidden ">
-                  <img
-                    src={club.image}
-                    alt={club.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            {loading ? (
+              <div className="col-span-2 flex justify-center items-center h-[400px] text-gray-500">
+                로딩 중...
+              </div>
+            ) : (
+              displayedClubs.map((club) => (
+                <div
+                  key={club.id}
+                  onClick={() => navigate(`/club/detail/${club.id}`)}
+                  className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform transform hover:-translate-y-1 cursor-pointer"
+                >
+                  {/* 이미지 */}
+                  <div className="w-full h-[200px] sm:h-[300px] overflow-hidden ">
+                    <img
+                      src={club.image}
+                      alt={club.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-                {/* 내용 */}
-                <div className="p-4 flex flex-col items-center text-center gap-2 text-light-03">
-                  <h4 className="text-lg font-semibold text-light-03">
-                    {club.title}
-                  </h4>
-                  <p className="text-sm text-light-03/90 line-clamp-2">
-                    {club.desc}
-                  </p>
+                  {/* 내용 */}
+                  <div className="p-4 flex flex-col items-center text-center gap-2 text-light-03">
+                    <h4 className="text-lg font-semibold text-light-03">
+                      {club.name}
+                    </h4>
+                    <p className="text-sm text-light-03/90 line-clamp-2 w-[70%]">
+                      {club.desc}
+                    </p>
 
-                  {/* 태그 */}
-                  <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mt-3">
-                    {club.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 !text-[14px] !sm:text-xs !md:text-sm !lg:text-sm rounded-full border border-light-03 bg-light-03 text-deep"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
+                    {/* 태그 */}
+                    <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mt-3">
+                      {club.tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 !text-[14px] !sm:text-xs !md:text-sm !lg:text-sm rounded-full border border-light-03 bg-light-03 text-deep"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </Link>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

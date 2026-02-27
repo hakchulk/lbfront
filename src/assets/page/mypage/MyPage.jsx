@@ -1,22 +1,88 @@
-import { useMemo } from 'react';
-import { Route, Routes, Link, Outlet } from 'react-router-dom';
-import FoodHistory from './FoodHistory';
-import HealthHistory from './HealthHistory';
-import FoodManagement from './FoodManagement';
-import MyInfo from './MyInfo';
-import WeekHistory from './WeekHistory';
-import CMHistory from './CMHistory';
-import Food_HistoryWrite from './Food_HistoryWrite';
-import Chart from '../../../components/ChartComp';
+import { useMemo } from "react";
+import { Route, Routes, Link, Outlet } from "react-router-dom";
+import { useAuthStore } from "../../../stores/authStore";
+import FoodHistory from "./FoodHistory";
+import HealthHistory from "./HealthHistory";
+import FoodManagement from "./FoodManagement";
+import MyInfo from "./MyInfo";
+import WeekHistory from "./WeekHistory";
+import CMHistory from "./CMHistory";
+import Food_HistoryWrite from "./Food_HistoryWrite";
+import MyInfoTitle from "./MyInfoTitle";
+import Chart from "../../../components/ChartComp";
 import {
   getPieChartData2,
   WeightChart,
   getDonutChartData1,
   CmChart,
-} from '../../../api/TestChartData';
+} from "../../../api/TestChartData";
+import { getExerciseRecords } from "../../../api/TestHealthData";
 
 // 마이페이지 메인 화면 컴포넌트
 function MyPageMain() {
+  const user = useAuthStore((state) => state.user);
+  const isLoggedIn = !!user;
+
+  // 운동 기록 데이터 (추후 API로 받아올 예정이고 가짜 데이이이-타)
+  const exerciseRecords = getExerciseRecords();
+
+  // 차트 데이터 생성 (요일별 총 소모 칼로리 - 이번주 vs 지난주)
+  const weeklyCalorieData = useMemo(() => {
+    const weekDayLabels = ["월", "화", "수", "목", "금", "토", "일"];
+
+    // 이번주/지난주 월요일 계산
+    const today = new Date();
+    const daysFromMonday = (today.getDay() || 7) - 1; // 일요일을 7로 처리
+    const thisWeekMonday = new Date(today);
+    thisWeekMonday.setDate(today.getDate() - daysFromMonday);
+    thisWeekMonday.setHours(0, 0, 0, 0);
+
+    // 요일별 칼로리 합산 헬퍼
+    const sumCaloriesByWeek = (startDate) => {
+      const weekCalories = new Array(7).fill(0);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      endDate.setHours(23, 59, 59, 999);
+
+      exerciseRecords
+        .filter((record) => {
+          const recordDate = new Date(record.date);
+          return recordDate >= startDate && recordDate <= endDate;
+        })
+        .forEach((record) => {
+          const dayIndex = (new Date(record.date).getDay() || 7) - 1;
+          weekCalories[dayIndex] += record.totalCalories;
+        });
+
+      return weekCalories;
+    };
+
+    const thisWeek = sumCaloriesByWeek(thisWeekMonday);
+    const lastWeek = sumCaloriesByWeek(
+      new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000),
+    );
+
+    return {
+      labels: weekDayLabels,
+      datasets: [
+        {
+          label: "지난주",
+          data: lastWeek,
+          backgroundColor: "#DFF0FF",
+          borderColor: "#A7D6FF",
+          borderWidth: 1,
+        },
+        {
+          label: "이번주",
+          data: thisWeek,
+          backgroundColor: "#D9FFD5",
+          borderColor: "#AFE1AA",
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [exerciseRecords]);
+
   return (
     <>
       <div className="wrap !bg-light-02 !mt-0  md:min-h-[calc(100vh-180px)] flex justify-center items-center">
@@ -29,12 +95,13 @@ function MyPageMain() {
           />
 
           {/* 어두운 오버레이(가독성 개선, 선택) */}
-          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute inset-0 bg-black/60"></div>
 
           {/* 텍스트 레이어 */}
           <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
             <h3 className="text-white text-2xl md:text-3xl font-semibold drop-shadow">
-              이하늘 님을 위한 밸런스 체크 공간입니다
+              {isLoggedIn ? user?.name + "님을 위한" : ""} 밸런스 체크
+              공간입니다
               <hr className="my-4 w-full border-t-4 border-main-02" />
             </h3>
             <p className="text-white">
@@ -46,52 +113,19 @@ function MyPageMain() {
           </div>
         </header>
         <div className="containers">
-          {/* 프로필 */}
-          <section className="profile mt-[5%] w-full md:w-[50%] mx-auto flex items-center justify-center p-4 rounded-[20px]">
-            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
-              {/* 프로필 이미지 */}
-              <div className="pf_img w-[64px] h-[64px] bg-gray-deep rounded-full overflow-hidden flex-shrink-0">
-                <img
-                  src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/KakaoTalk_20251215_235650856.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9LYWthb1RhbGtfMjAyNTEyMTVfMjM1NjUwODU2LnBuZyIsImlhdCI6MTc3MDE5NDc5OCwiZXhwIjoxODAxNzMwNzk4fQ.ZJpgBLlzkCZVPseq-OEQfutNUTFinQ3JlZByBdymIpk"
-                  alt="img"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* 이름 / 정보 */}
-              <div className="flex flex-col min-w-[120px] items-center md:items-start">
-                <div className="flex items-center gap-2">
-                  <span className="text-black font-semibold text-base">
-                    홍지승
-                  </span>
-                  <div className="bg-main-02 rounded-full text-white w-[22px] h-[22px] flex items-center justify-center text-sm">
-                    <i className="fa-solid fa-mars"></i>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-600">178cm / 50kg</span>
-              </div>
-
-              {/* 관리자 뱃지 */}
-              <div className="bg-[#d9fbd3] px-4 py-2 rounded-[14px] flex items-center gap-2">
-                <i className="fa-solid fa-users text-green-700"></i>
-                <span className="text-green-900 font-semibold text-sm whitespace-nowrap">
-                  목표 채중: kg 보유 포인트 :
-                </span>
-              </div>
-            </div>
-          </section>
+          <MyInfoTitle />
 
           {/* 나머지 */}
           <section className="helpme mt-[3%] pb-[10%]">
-            <ul className="w-full flex flex-row gap-y-10 justify-between flex-wrap">
-              <li className="w-full md:w-[45%] lg:w-[30%]">
+            <ul className="w-full flex flex-row gap-y-15 justify-between flex-wrap ">
+              <li className="w-full md:w-[45%] lg:w-[30%] ">
                 <Link
                   to="foodhistory"
-                  className="flex flex-col justify-center items-center"
+                  className="flex flex-col justify-center items-center "
                 >
                   <h4 className="text-deep mb-[3%]">오늘 식사 기록</h4>
-                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center">
-                    <div className="w-[70%]">
+                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center bg-white">
+                    <div className="w-[70%] m-5">
                       <Chart
                         type="pie"
                         data={getPieChartData2()}
@@ -111,14 +145,19 @@ function MyPageMain() {
                   className="flex flex-col justify-center items-center"
                 >
                   <h4 className="text-deep mb-[3%]">나의 운동 기록</h4>
-                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center">
-                    <div className="w-[70%]">
+                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center bg-white">
+                    <div className="w-[80%] m-5">
                       <Chart
-                        type="pie"
-                        data={getPieChartData2()}
+                        type="bar"
+                        data={weeklyCalorieData}
                         options={{
                           responsive: true,
                           maintainAspectRatio: false,
+                          plugins: {
+                            title: {
+                              display: false,
+                            },
+                          },
                         }}
                       />
                     </div>
@@ -132,8 +171,8 @@ function MyPageMain() {
                   className="flex flex-col justify-center items-center"
                 >
                   <h4 className="text-deep mb-[3%]">주간 체중 기록</h4>
-                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center">
-                    <div className="w-[70%]  ">
+                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center bg-white">
+                    <div className="w-[90%] m-5">
                       <Chart
                         type="line"
                         data={WeightChart()}
@@ -157,8 +196,8 @@ function MyPageMain() {
                   className="flex flex-col justify-center items-center"
                 >
                   <h4 className="text-deep mb-[3%]">나의 커뮤니티 활동</h4>
-                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center">
-                    <div className="w-[70%]">
+                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center bg-white">
+                    <div className="w-[80%] m-5">
                       <Chart
                         type="line"
                         data={CmChart()}
@@ -182,8 +221,8 @@ function MyPageMain() {
                   className="flex flex-col justify-center items-center"
                 >
                   <h4 className="text-deep mb-[3%]">오늘의 식단 추천</h4>
-                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center">
-                    <div className="w-[70%]]">
+                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center bg-white">
+                    <div className="w-[70%] m-5">
                       <Chart
                         type="donut"
                         data={getDonutChartData1()}
@@ -203,8 +242,8 @@ function MyPageMain() {
                   className="flex flex-col justify-center items-center"
                 >
                   <h4 className="text-deep mb-[3%]">내정보 수정</h4>
-                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center">
-                    <div className="w-[480px] h-[402px] flex">
+                  <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center bg-white">
+                    <div className="w-[480px] h-[402px] flex m-5">
                       <img
                         className="h-full object-contain"
                         src="https://tcrvvxreqanojyitggun.supabase.co/storage/v1/object/sign/LB/myinfo_icon.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMmQ3ZWQ0Ni0xYzhjLTQ1NzgtYjAyMC1hYmMxNGQyMTg1ZmUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9teWluZm9faWNvbi5wbmciLCJpYXQiOjE3NzAzNjUzODMsImV4cCI6MTgwMTkwMTM4M30.KoyaxRlICl6mfJoSlR9fksEvrxQdeDx067Atcyfy8GQ"
