@@ -14,6 +14,7 @@ function ClubPosting() {
     fetchBoardDetail,
     boardDetailLoading,
     boardDetailError,
+    deleteBoard,
   } = useBoardsStore();
   const { club, fetchClubDetail } = useClubDetailStore();
   const user = useAuthStore((state) => state.user);
@@ -56,6 +57,31 @@ function ClubPosting() {
   const handleLike = () => {
     setLiked((prev) => !prev);
     // 실제로는 API 호출이 필요하지만, 현재는 UI만 업데이트
+  };
+
+  const handleEdit = () => {
+    if (boardDetail?.clubId && boardId) {
+      navigate(`/club/detail/${boardDetail.clubId}/postlist/postwrite?boardId=${boardId}`);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("정말로 이 게시글을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      await deleteBoard(boardId);
+      alert("게시글이 삭제되었습니다.");
+      if (boardDetail?.clubId) {
+        navigate(`/club/detail/${boardDetail.clubId}/postlist`);
+      } else {
+        navigate(-1);
+      }
+    } catch (err) {
+      console.error("게시글 삭제 실패:", err);
+      alert(err.response?.data?.message || "게시글 삭제에 실패했습니다.");
+    }
   };
 
   // 로딩 상태
@@ -146,10 +172,16 @@ function ClubPosting() {
           {/* 버튼 영역 - 내가 쓴 글에서만 표시 */}
           {isMyPost && (
             <div className="flex justify-center gap-4">
-              <button className="px-6 py-2 bg-main-02 text-white rounded-md cursor-pointer hover:bg-main-01 transition">
+              <button
+                onClick={handleEdit}
+                className="px-6 py-2 bg-main-02 text-white rounded-md cursor-pointer hover:bg-main-01 transition"
+              >
                 수정
               </button>
-              <button className="px-6 py-2 bg-point text-white rounded-md cursor-pointer hover:opacity-80 transition">
+              <button
+                onClick={handleDelete}
+                className="px-6 py-2 bg-point text-white rounded-md cursor-pointer hover:opacity-80 transition"
+              >
                 삭제
               </button>
             </div>

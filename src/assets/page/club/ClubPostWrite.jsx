@@ -1,14 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import BtnComp from "../../../components/BtnComp";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
 import { useBoardsStore } from "../../../api/BoardsData";
 import { useAuthStore } from "../../../stores/authStore";
+import { BASE_URL } from "../../../api/config";
 
 function ClubPostWrite() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const boardId = searchParams.get("boardId");
+  const isEditMode = !!boardId;
   const { club, fetchClubDetail } = useClubDetailStore();
-  const { createBoard } = useBoardsStore();
+  const { createBoard, updateBoard, fetchBoardDetail, boardDetail } = useBoardsStore();
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
@@ -26,6 +30,21 @@ function ClubPostWrite() {
     loadClubDetail();
   }, [id, fetchClubDetail]);
 
+  // 수정 모드일 때 기존 게시글 데이터 로드
+  useEffect(() => {
+    const loadBoardDetail = async () => {
+      if (isEditMode && boardId) {
+        try {
+          await fetchBoardDetail(boardId);
+        } catch (err) {
+          console.error("게시글 상세 데이터 로드 실패:", err);
+        }
+      }
+    };
+    loadBoardDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardId, isEditMode]);
+
   const clubName = club?.name || "";
 
   // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
@@ -41,6 +60,17 @@ function ClubPostWrite() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
+
+  // 수정 모드일 때 기존 데이터로 폼 초기화
+  useEffect(() => {
+    if (isEditMode && boardDetail) {
+      setTitle(boardDetail.title || "");
+      setContents(boardDetail.contents || "");
+      if (boardDetail.filename) {
+        setPreview(`${BASE_URL}/file/${boardDetail.filename}`);
+      }
+    }
+  }, [isEditMode, boardDetail]);
 
   /* 이미지 처리 */
   const handleImageChange = (e) => {
@@ -79,32 +109,40 @@ function ClubPostWrite() {
     try {
       // FormData로 모든 데이터를 함께 전송
       const formData = new FormData();
-      formData.append("clubId", id);
       formData.append("title", title.trim());
       formData.append("contents", contents.trim());
-      formData.append("boardType", "1"); // 일반 게시글
-      formData.append("memberName", user.name || "");
+      formData.append("boardType", boardDetail?.boardType || "1");
 
-      // 파일이 있으면 추가
+      // 파일이 있으면 추가 (수정 모드에서 새 파일로 교체)
       if (imageFile) {
         formData.append("file", imageFile);
       }
 
-      // 게시글 저장
-      const response = await createBoard(formData);
-      
-      // 성공 시 alert 표시 후 게시글 상세 페이지로 이동
-      const boardId = response?.id || response?.data?.id;
-      if (boardId) {
-        alert("작성이 완료되었습니다.");
+      let response;
+      if (isEditMode && boardId) {
+        // 수정 모드
+        response = await updateBoard(boardId, formData);
+        alert("수정이 완료되었습니다.");
         navigate(`/club/detail/${id}/postlist/posting/${boardId}`);
       } else {
-        alert("작성이 완료되었습니다.");
-        navigate(`/club/detail/${id}/postlist`);
+        // 작성 모드
+        formData.append("clubId", id);
+        formData.append("memberName", user.name || "");
+        response = await createBoard(formData);
+        
+        // 성공 시 alert 표시 후 게시글 상세 페이지로 이동
+        const newBoardId = response?.id || response?.data?.id;
+        if (newBoardId) {
+          alert("작성이 완료되었습니다.");
+          navigate(`/club/detail/${id}/postlist/posting/${newBoardId}`);
+        } else {
+          alert("작성이 완료되었습니다.");
+          navigate(`/club/detail/${id}/postlist`);
+        }
       }
     } catch (err) {
-      console.error("게시글 저장 실패:", err);
-      alert(err.response?.data?.message || "게시글 저장에 실패했습니다.");
+      console.error(isEditMode ? "게시글 수정 실패:" : "게시글 저장 실패:", err);
+      alert(err.response?.data?.message || (isEditMode ? "게시글 수정에 실패했습니다." : "게시글 저장에 실패했습니다."));
     } finally {
       setLoading(false);
     }
@@ -125,7 +163,7 @@ function ClubPostWrite() {
               <i class="fa-solid fa-file-pen"></i>
               <span className="ml-1"> {clubName} 모임</span>
             </div>
-            <h3>게시글 작성</h3>
+            <h3>{isEditMode ? "게시글 수정" : "게시글 작성"}</h3>
           </section>
 
           {/* 입력 폼 */}
@@ -212,7 +250,7 @@ function ClubPostWrite() {
                 onClick={handleSave}
                 disabled={loading}
               >
-                {loading ? "저장 중..." : "저장"}
+                {loading ? (isEditMode ? "수정 중..." : "저장 중...") : (isEditMode ? "수정" : "저장")}
               </BtnComp>
 
               <BtnComp
