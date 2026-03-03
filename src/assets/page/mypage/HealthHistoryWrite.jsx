@@ -1,180 +1,279 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import BtnComp from "../../../components/BtnComp";
+import { getExercises } from "../../../api/exercise";
+import { calculateWorkout, createWorkout, deleteWorkout } from "../../../api/Workout";
+
+function InputRow({ label, exerciseId, value, onChange }) {
+  return (
+    <div className="flex flex-col sm:grid sm:grid-cols-[90px_1fr] items-start sm:items-center gap-2 sm:gap-x-4 min-w-0">
+      <span className="!text-sm text-gray-700 whitespace-nowrap">{label}</span>
+      <input
+        type="number"
+        min="0"
+        value={value}
+        onChange={(e) => onChange(exerciseId, e.target.value)}
+        placeholder="분 단위로 입력해주세요"
+        className="w-full min-w-0 h-9 rounded-md border border-deep bg-white px-3 text-sm"
+      />
+    </div>
+  );
+}
+
+function CategoryBlock({ title, list, exerciseInputs, handleChange }) {
+  if (!list || list.length === 0) return null;
+
+  console.log(" CategoryBlock exerciseInputs:", exerciseInputs);
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-start gap-6">
+        <h3 className="text-green-800 font-bold !text-2xl leading-10 min-w-[150px]">{title}</h3>
+        <div className="flex flex-col gap-3 flex-1">
+          {list.map((exercise) => (
+            <InputRow
+              key={exercise.id}
+              label={exercise.name}
+              exerciseId={exercise.id}
+              value={exerciseInputs[String(exercise.id)] ?? ""}
+              onChange={handleChange}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HealthHistoryWrite() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const record = location.state?.record;
 
-  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
+  const [exercises, setExercises] = useState([]);
+  const [exerciseInputs, setExerciseInputs] = useState({});
+  const [totalCalories, setTotalCalories] = useState(0);
+  const [selectedDate, setSelectedDate] = useState("");
+
   const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  const todayString = `${year}-${month}-${day}`;
+  const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
+    today.getDate(),
+  ).padStart(2, "0")}`;
 
-  const handleSave = () => {
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const data = await getExercises();
+        console.log(" 운동목록:", data);
+        setExercises(data);
+      } catch (error) {
+        console.error("운동 목록 불러오기 실패", error);
+      }
+    };
+    fetchExercises();
+  }, []);
+
+  // 수정 모드 세팅
+  useEffect(() => {
+    if (record && exercises.length > 0) {
+      console.log(" record 전체", record);
+
+      setSelectedDate(record.date || record.dateAt);
+
+      const inputObj = {};
+      record.exercises.forEach((ex) => {
+        console.log(" record ex:", ex);
+        inputObj[String(ex.exerciseId)] = Number(ex.durationMin);
+      });
+
+      setExerciseInputs(inputObj);
+      setTotalCalories(record.totalCalories || 0);
+
+      console.log(" 초기 세팅 exerciseInputs:", inputObj);
+    } else if (!record) {
+      setSelectedDate(todayString);
+    }
+  }, [record, exercises]);
+
+  const handleChange = (exerciseId, value) => {
+    console.log("✏️ 입력 변경:", exerciseId, value);
+    setExerciseInputs((prev) => ({
+      ...prev,
+      [String(exerciseId)]: value,
+    }));
+  };
+
+  //  계산
+  const handleCalculate = async () => {
+    console.log(" 계산 시작");
+    console.log("현재 날짜:", selectedDate);
+    console.log("현재 입력값:", exerciseInputs);
+
+    if (!selectedDate) {
+      alert("날짜가 없습니다.");
+      return;
+    }
+
+    const payload = {
+      dateAt: selectedDate,
+      exercises: Object.entries(exerciseInputs)
+        .filter(([_, duration]) => Number(duration) > 0)
+        .map(([exerciseId, durationMin]) => ({
+          exerciseId: Number(exerciseId),
+          durationMin: Number(durationMin),
+        })),
+    };
+
+    console.log("calculate payload:", payload);
+
+    if (payload.exercises.length === 0) {
+      alert("운동 시간을 입력해주세요!");
+      return;
+    }
+
+    try {
+      const data = await calculateWorkout(payload);
+      console.log(" calculate 응답:", data);
+      setTotalCalories(data.totalCalories);
+    } catch (error) {
+      console.error(" 계산 실패", error);
+      alert("칼로리 계산 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 저장
+  const handleSave = async () => {
+    console.log("저장 시작");
+    console.log("현재 입력값:", exerciseInputs);
+    console.log("현재 totalCalories:", totalCalories);
+    console.log("현재 record:", record);
+
+    if (totalCalories <= 0) {
+      alert("운동 시간을 입력하고 계산 후 저장해주세요!");
+      return;
+    }
+
+    try {
+      if (record && record.exercises) {
+        const deleteIds = record.exercises.filter((ex) => Array.isArray(ex.ids)).flatMap((ex) => ex.ids);
+
+        console.log("🗑 삭제할 ID들:", deleteIds);
+
+        if (deleteIds.length > 0) {
+          await Promise.all(
+            deleteIds.map(async (id) => {
+              console.log("🗑 delete 요청:", id);
+              return deleteWorkout(id);
+            }),
+          );
+        }
+      }
+
+      for (const [exerciseId, duration] of Object.entries(exerciseInputs)) {
+        const durationNum = Number(duration);
+
+        if (durationNum > 0) {
+          console.log("create 요청:", exerciseId, durationNum);
+
+          const res = await createWorkout({
+            exerciseId: Number(exerciseId),
+            durationMin: durationNum,
+            dateAt: selectedDate,
+          });
+
+          console.log("create 응답:", res);
+        }
+      }
+
+      alert(`총 ${totalCalories} Kcal 운동 기록이 저장되었습니다!`);
+
+      navigate("/mypage/healthhistory", {
+        state: { refresh: true },
+      });
+    } catch (error) {
+      console.error("저장 실패 상세:", error);
+      alert("저장 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleCancel = () => {
     navigate("/mypage/healthhistory");
   };
 
-  // 입력함수
-  function InputRow({ label, placeholder = "" }) {
-    return (
-      <div className="flex flex-col sm:grid sm:grid-cols-[90px_1fr] items-start sm:items-center gap-2 sm:gap-x-4 min-w-0">
-        <span className="!text-sm text-gray-700 whitespace-nowrap">
-          {label}
-        </span>
-        <input
-          placeholder={placeholder}
-          className="w-full min-w-0 h-9 rounded-md border border-deep bg-white px-3 text-sm placeholder:text-gray-mid focus:outline-none focus:ring-1 focus:ring-main-02"
-        />
-      </div>
-    );
-  }
+  const core = exercises.filter((e) => e.name.includes("플랭크"));
+  const cardio = exercises.filter((e) => ["걷기", "달리기", "자전거", "줄넘기"].some((k) => e.name.includes(k)));
+  const strength = exercises.filter((e) => ["푸시업", "런지", "웨이트"].some((k) => e.name.includes(k)));
+  const flexibility = exercises.filter((e) => e.name.includes("요가") || e.name.includes("스트레칭"));
+  const hiit = exercises.filter((e) => ["버피", "계단"].some((k) => e.name.includes(k)));
 
   return (
-    <>
-      <div className="wrap !mt-0 !bg-light-02">
-        <div className="containers">
-          {/* sect_tit */}
-          <section className="sect_tit flex items-center justify-center mx-0 mt-[50px] border-b-[5px] border-main-02">
-            <h3 className=" !text-main-02 mb-[20px] ">
-              <span class="material-icons ">directions_run</span>
-              나의 운동 기록 하기
-            </h3>
-          </section>
+    <div className="wrap !mt-0 !bg-light-02">
+      <div className="containers">
+        <section className="sect_tit flex items-center justify-center mx-0 mt-[50px] border-b-[5px] border-main-02">
+          <h3 className="!text-main-02 mb-[20px] flex items-center gap-2">
+            <span className="material-icons">directions_run</span>
+            나의 운동 기록 하기
+          </h3>
+        </section>
 
-          <div className="min-tit flex flex-row justify-center items-center bg-main-02 w-[200px] mx-auto text-white py-[5px] border rounded-[20px] mt-[3%]">
-            <span className="material-icons mr-1.5">calendar_today</span>
-            <span>{todayString}</span>
-          </div>
-
-          {/* 입력구간 */}
-          <section className="sect1 w-full md:w-[90%] lg:w-[70%] xl:w-[45%] bg-white rounded-[20px] border border-green-800 shadow-[0_4px_4px_rgba(0,0,0,0.15)] mx-auto my-[3%] mb-[5%]">
-            <div className="max-w-[920px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
-              {/* 코어 */}
-              <div className="flex flex-col md:grid md:grid-cols-[150px_1fr] gap-4 md:gap-x-6 mb-6 md:mb-8">
-                <h3 className="text-green-800 font-bold !text-2xl leading-10">
-                  코어
-                </h3>
-                <div className="flex flex-col gap-3">
-                  <InputRow
-                    label="플랭크"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                </div>
-              </div>
-
-              {/* 유산소 */}
-              <div className="flex flex-col md:grid md:grid-cols-[150px_1fr] gap-4 md:gap-x-6 mb-6 md:mb-8">
-                <h3 className="text-green-800 font-bold !text-2xl leading-10">
-                  유산소
-                </h3>
-                <div className="flex flex-col gap-3">
-                  <InputRow label="걷기" placeholder="분 단위로 입력해주세요" />
-                  <InputRow
-                    label="달리기"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                  <InputRow
-                    label="자전거 타기"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                  <InputRow
-                    label="줄넘기"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                </div>
-              </div>
-
-              {/* 근력 */}
-              <div className="flex flex-col md:grid md:grid-cols-[150px_1fr] gap-4 md:gap-x-6 mb-6 md:mb-8">
-                <h3 className="text-green-800 font-bold !text-2xl leading-10">
-                  근력
-                </h3>
-                <div className="flex flex-col gap-3">
-                  <InputRow
-                    label="푸시업/런지"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                  <InputRow
-                    label="웨이트 트레이닝"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                </div>
-              </div>
-
-              {/* 유연성 */}
-              <div className="flex flex-col md:grid md:grid-cols-[150px_1fr] gap-4 md:gap-x-6 mb-6 md:mb-8">
-                <h3 className="text-green-800 font-bold !text-2xl leading-10">
-                  유연성
-                </h3>
-                <div className="flex flex-col gap-3">
-                  <InputRow
-                    label="요가/스트레칭"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                </div>
-              </div>
-
-              {/* 종합/HIIT */}
-              <div className="flex flex-col md:grid md:grid-cols-[150px_1fr] gap-4 md:gap-x-6 mb-8 md:mb-10">
-                <h3 className="text-green-800 font-bold !text-2xl leading-10">
-                  종합/HIIT
-                </h3>
-                <div className="flex flex-col gap-3">
-                  <InputRow
-                    label="버피 테스트"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                  <InputRow
-                    label="계단 오르기"
-                    placeholder="분 단위로 입력해주세요"
-                  />
-                </div>
-              </div>
-
-              {/* 입력 버튼 */}
-              <div className="flex justify-center w-[50%] mx-auto">
-                <BtnComp
-                  variant="primary"
-                  size="short"
-                  className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm"
-                >
-                  계산
-                </BtnComp>
-              </div>
-
-              {/* 결과 */}
-              <p className="text-center mt-6 md:mt-8 text-sm sm:text-base px-6">
-                오늘 하신 운동의 칼로리 소모량은{" "}
-                <span className="text-red-500 font-bold">10,000Kcal</span>{" "}
-                입니다.
-              </p>
-
-              {/* 하단 버튼 */}
-              <div className="flex gap-2 mt-2 w-[50%] mx-auto py-[5%]">
-                <BtnComp
-                  variant="primary"
-                  size="short"
-                  className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
-                  onClick={handleSave}
-                >
-                  저장
-                </BtnComp>
-
-                <BtnComp
-                  variant="point"
-                  size="short"
-                  className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
-                >
-                  취소
-                </BtnComp>
-              </div>
-            </div>
-          </section>
+        <div className="min-tit flex justify-center items-center bg-main-02 w-[200px] mx-auto text-white py-[5px] border rounded-[20px] mt-[3%]">
+          <span className="material-icons mr-1.5">calendar_today</span>
+          <span>{selectedDate}</span>
         </div>
+
+        <section className="sect1 w-full md:w-[90%] lg:w-[70%] xl:w-[45%] bg-white rounded-[20px] border border-green-800 shadow-[0_4px_4px_rgba(0,0,0,0.15)] mx-auto my-[3%] mb-[5%]">
+          <div className="max-w-[920px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+            <CategoryBlock title="코어" list={core} exerciseInputs={exerciseInputs} handleChange={handleChange} />
+            <CategoryBlock title="유산소" list={cardio} exerciseInputs={exerciseInputs} handleChange={handleChange} />
+            <CategoryBlock title="근력" list={strength} exerciseInputs={exerciseInputs} handleChange={handleChange} />
+            <CategoryBlock
+              title="유연성"
+              list={flexibility}
+              exerciseInputs={exerciseInputs}
+              handleChange={handleChange}
+            />
+            <CategoryBlock title="종합/HIIT" list={hiit} exerciseInputs={exerciseInputs} handleChange={handleChange} />
+
+            <div className="flex justify-center w-[50%] mx-auto mt-4">
+              <BtnComp
+                variant="primary"
+                size="short"
+                onClick={handleCalculate}
+                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm"
+              >
+                계산
+              </BtnComp>
+            </div>
+
+            <p className="text-center mt-6 md:mt-8 text-sm sm:text-base px-6">
+              오늘 하신 운동의 칼로리 소모량은
+              <span className="text-red-500 font-bold"> {totalCalories} Kcal</span>
+              입니다.
+            </p>
+
+            <div className="flex gap-2 mt-2 w-[50%] mx-auto py-[5%]">
+              <BtnComp
+                variant="primary"
+                size="short"
+                onClick={handleSave}
+                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm"
+              >
+                저장
+              </BtnComp>
+
+              <BtnComp
+                variant="point"
+                size="short"
+                onClick={handleCancel}
+                className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm"
+              >
+                취소
+              </BtnComp>
+            </div>
+          </div>
+        </section>
       </div>
-    </>
+    </div>
   );
 }
 
