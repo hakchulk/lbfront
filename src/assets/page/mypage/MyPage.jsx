@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Route, Routes, Link } from "react-router-dom";
+import { Route, Routes, Link, Outlet } from "react-router-dom";
 import { useAuthStore } from "../../../stores/authStore";
 import FoodHistory from "./FoodHistory";
 import HealthHistory from "./HealthHistory";
