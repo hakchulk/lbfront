@@ -32,6 +32,8 @@ function CMManagementMain() {
     return clubs.filter((club) => club.managerId === user.id);
   }, [clubs, user]);
 
+  const hasManagedClub = myManagedClubs.length > 0;
+
   return (
     <>
       <div className="wrap !bg-light-02 !mt-0 pt-[50px] py-[5%]">
@@ -101,7 +103,7 @@ function CMManagementMain() {
                               <h4 className="text-base md:text-lg font-semibold">
                                 {club.name}
                               </h4>
-                              <p className="text-xs md:text-sm opacity-90 line-clamp-2">
+                              <p className="text-xs md:text-sm opacity-90 line-clamp-2 w-[80%]">
                                 {club.desc}
                               </p>
 
@@ -110,7 +112,7 @@ function CMManagementMain() {
                                   ? club.tags.map((tag, idx) => (
                                       <span
                                         key={idx}
-                                        className="px-2 md:px-3 py-1 text-xs md:!text-[14px] rounded-full bg-light-03 text-deep"
+                                        className="px-2 md:px-3 py-1 !text-xs md:!text-[14px] rounded-full bg-light-03 text-deep"
                                       >
                                         #{tag}
                                       </span>
@@ -150,11 +152,17 @@ function CMManagementMain() {
                   <h4 className="text-deep mb-4 text-base md:text-lg">
                     가입 신청 리스트
                   </h4>
-                  <div className="border border-main-02 overflow-hidden rounded-[20px] w-full">
+                  <div
+                    className={`border border-main-02 overflow-hidden rounded-[20px] w-full ${
+                      hasManagedClub
+                        ? "h-[350px] bg-white flex items-center justify-center"
+                        : ""
+                    }`}
+                  >
                     <img
                       src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/cm_02.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9jbV8wMi5wbmciLCJpYXQiOjE3NzAxOTU3MzksImV4cCI6MTgwMTczMTczOX0.bKsf-9IonbfvVxFuvc47tc5vja03HLVo6SlQqE83qFk"
                       alt="img"
-                      className="w-full h-auto object-cover"
+                      className="w-full  object-cover"
                     />
                   </div>
                 </Link>
@@ -168,7 +176,13 @@ function CMManagementMain() {
                   <h4 className="text-deep mb-4 text-base md:text-lg">
                     공지사항 관리
                   </h4>
-                  <div className="border border-main-02 overflow-hidden rounded-[20px] w-full">
+                  <div
+                    className={`border border-main-02 overflow-hidden rounded-[20px] w-full ${
+                      hasManagedClub
+                        ? "h-[350px] bg-white flex items-center justify-center"
+                        : ""
+                    }`}
+                  >
                     <img
                       src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/cm_03.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9jbV8wMy5wbmciLCJpYXQiOjE3NzAxOTU3NTIsImV4cCI6MTgwMTczMTc1Mn0.OOiiJ4PpEUVfA_wRKJh-VvRS6Iy3Kg2awptk2JFj-eE"
                       alt="img"
