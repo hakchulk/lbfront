@@ -1,76 +1,159 @@
-// import React from "react";
-import BtnComp from '../../../components/BtnComp';
-import { useState, useEffect, useMemo } from 'react';
-import { Link, Routes, Route } from 'react-router-dom';
-import PageNatation from './../../../components/PageNatation';
-import { getExerciseRecords } from '../../../api/TestHealthData';
-import usePaginationStore from '../../../stores/paginationStore';
-import Chart from '../../../components/ChartComp';
-import HealthHistoryWrite from './HealthHistoryWrite';
+// 기존 import 그대로
+import BtnComp from "../../../components/BtnComp";
+import { useState, useEffect, useMemo } from "react";
+import { Link, Routes, Route, useNavigate, useLocation } from "react-router-dom"; // ✅ location 추가
+import PageNatation from "./../../../components/PageNatation";
+import Chart from "../../../components/ChartComp";
+import HealthHistoryWrite from "./HealthHistoryWrite";
+import usePaginationStore from "../../../stores/paginationStore";
+import { getWorkouts, deleteWorkout } from "../../../api/Workout";
 
 function HealthHistoryMain() {
-  // 정렬 상태 (UI용, 실제 정렬은 하지 않음)
-  const [sort, setSort] = useState('latest');
-
-  // 반응형 pageSize 상태
+  const [sort, setSort] = useState("latest");
   const [pageSize, setPageSize] = useState(4);
+  const [exerciseRecords, setExerciseRecords] = useState([]);
+  const [totalElements, setTotalElements] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const storeKey = 'test-list2';
-
-  // paginationStore에서 현재 페이지 가져오기
+  const storeKey = "test-list2";
   const pagination = usePaginationStore((state) => state.paginations[storeKey]);
   const currentPage = pagination?.currentPage ?? 0;
   const setPageSizeStore = usePaginationStore((state) => state.setPageSize);
+  const setCurrentPage = usePaginationStore((state) => state.setCurrentPage);
 
-  // 화면 크기에 따라 pageSize 설정 (PC: 8개, 태블릿 이하: 4개)
+  // 반응형 페이지 사이즈
   useEffect(() => {
     const handleResize = () => {
-      const newPageSize = window.innerWidth >= 1024 ? 8 : 4;
-      setPageSize(newPageSize);
+      setPageSize(window.innerWidth >= 1024 ? 8 : 4);
     };
-
-    // 초기 설정
     handleResize();
-
-    // 리사이즈 이벤트 리스너 추가
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // pageSize 변경 시 paginationStore 업데이트
   useEffect(() => {
     setPageSizeStore(storeKey, pageSize);
   }, [pageSize, storeKey, setPageSizeStore]);
 
-  // 오운완
-  const days = [
-    { label: '월', done: true },
-    { label: '화', done: true },
-    { label: '수', done: true },
-    { label: '목', done: false },
-    { label: '금', done: false },
-    { label: '토', done: false },
-    { label: '일', done: false },
-  ];
+  // 전체 가져오고 날짜별 그룹핑
+  const fetchWorkouts = async () => {
+    try {
+      const data = await getWorkouts({
+        page: 0,
+        size: 1000,
+        sort,
+      });
 
-  // 운동 기록 데이터 (추후 API로 받아올 예정이고 가짜 데이이이-타)
-  const exerciseRecords = getExerciseRecords();
+      const grouped = {};
 
-  // 차트 데이터 생성 (요일별 총 소모 칼로리 - 이번주 vs 지난주)
+      data.content.forEach((item) => {
+        const date = new Date(item.dateAt).toISOString().split("T")[0];
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(item);
+      });
+
+      const records = Object.entries(grouped).map(([date, items]) => {
+        const exerciseMap = {};
+
+        items.forEach((i) => {
+          const name = i.exerciseName;
+          const duration = Number(i.durationMin) || 0;
+          const calories = parseFloat(i.burntCalories) || 0;
+
+          if (!exerciseMap[name]) {
+            exerciseMap[name] = {
+              exerciseId: i.exerciseId,
+              name,
+              durationMin: 0,
+              burntCalories: 0,
+              ids: [],
+            };
+          }
+
+          exerciseMap[name].durationMin += duration;
+          exerciseMap[name].burntCalories += calories;
+          exerciseMap[name].ids.push(i.id);
+        });
+
+        const exercises = Object.values(exerciseMap);
+        const totalCalories = exercises.reduce((sum, ex) => sum + ex.burntCalories, 0);
+
+        return { date, exercises, totalCalories };
+      });
+
+      const sortedRecords = records.sort((a, b) =>
+        sort === "latest" ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date),
+      );
+
+      setExerciseRecords(sortedRecords);
+      setTotalElements(sortedRecords.length);
+
+      const maxPage = Math.ceil(sortedRecords.length / pageSize) - 1;
+      if (currentPage > maxPage && maxPage >= 0) {
+        setCurrentPage(storeKey, maxPage);
+      }
+    } catch (error) {
+      console.error("운동 기록 조회 실패", error);
+    }
+  };
+
+  // 수정 후 돌아오면 무조건 재조회
+  useEffect(() => {
+    fetchWorkouts();
+  }, [sort, pageSize, location.pathname]);
+
+  // 프론트 페이지 처리
+  const pagedRecords = useMemo(() => {
+    const start = currentPage * pageSize;
+    const end = start + pageSize;
+    return exerciseRecords.slice(start, end);
+  }, [exerciseRecords, currentPage, pageSize]);
+
+  // 삭제
+  const handleDelete = async (record) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    try {
+      const allIds = record.exercises.flatMap((ex) => ex.ids);
+      await Promise.all(allIds.map((id) => deleteWorkout(id)));
+      alert("해당 날짜의 운동 기록이 삭제되었습니다.");
+      fetchWorkouts();
+    } catch (error) {
+      console.error("삭제 실패", error);
+      alert("삭제에 실패했습니다.");
+    }
+  };
+
+  // 수정
+  const handleUpdate = (record) => {
+    navigate("/mypage/healthhistory/healthhistoywrite", {
+      state: { record },
+    });
+  };
+
+  const today = new Date();
+  const daysFromMonday = (today.getDay() || 7) - 1;
+  const thisWeekMonday = new Date(today);
+  thisWeekMonday.setDate(today.getDate() - daysFromMonday);
+  thisWeekMonday.setHours(0, 0, 0, 0);
+
+  const weekStamps = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const dayDate = new Date(thisWeekMonday);
+      dayDate.setDate(thisWeekMonday.getDate() + i);
+      dayDate.setHours(0, 0, 0, 0);
+      const done = exerciseRecords.some((record) => {
+        const recordDate = new Date(record.date);
+        recordDate.setHours(0, 0, 0, 0);
+        return recordDate.getTime() === dayDate.getTime();
+      });
+      return { label: ["월", "화", "수", "목", "금", "토", "일"][i], done };
+    });
+  }, [exerciseRecords]);
+
   const weeklyCalorieData = useMemo(() => {
-    const weekDayLabels = ['월', '화', '수', '목', '금', '토', '일'];
+    const weekDayLabels = ["월", "화", "수", "목", "금", "토", "일"];
 
-    // 이번주/지난주 월요일 계산
-    const today = new Date();
-    const daysFromMonday = (today.getDay() || 7) - 1; // 일요일을 7로 처리
-    const thisWeekMonday = new Date(today);
-    thisWeekMonday.setDate(today.getDate() - daysFromMonday);
-    thisWeekMonday.setHours(0, 0, 0, 0);
-
-    // 요일별 칼로리 합산 헬퍼
     const sumCaloriesByWeek = (startDate) => {
       const weekCalories = new Array(7).fill(0);
       const endDate = new Date(startDate);
@@ -87,230 +170,168 @@ function HealthHistoryMain() {
           weekCalories[dayIndex] += record.totalCalories;
         });
 
-      return weekCalories;
+      return weekCalories.map((c) => Math.round(c));
     };
 
     const thisWeek = sumCaloriesByWeek(thisWeekMonday);
-    const lastWeek = sumCaloriesByWeek(
-      new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000),
-    );
+    const lastWeek = sumCaloriesByWeek(new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000));
 
     return {
       labels: weekDayLabels,
       datasets: [
-        {
-          label: '지난주',
-          data: lastWeek,
-          backgroundColor: '#DFF0FF',
-          borderColor: '#A7D6FF',
-          borderWidth: 1,
-        },
-        {
-          label: '이번주',
-          data: thisWeek,
-          backgroundColor: '#D9FFD5',
-          borderColor: '#AFE1AA',
-          borderWidth: 1,
-        },
+        { label: "지난주", data: lastWeek, backgroundColor: "#DFF0FF", borderColor: "#A7D6FF", borderWidth: 1 },
+        { label: "이번주", data: thisWeek, backgroundColor: "#D9FFD5", borderColor: "#AFE1AA", borderWidth: 1 },
       ],
     };
-  }, [exerciseRecords]);
-
-  // 페이지네이션된 데이터 (정렬하지 않음)
-  const paginatedRecords = useMemo(() => {
-    const startIndex = currentPage * pageSize;
-    const endIndex = startIndex + pageSize;
-    return exerciseRecords.slice(startIndex, endIndex);
-  }, [exerciseRecords, currentPage, pageSize]);
+  }, [exerciseRecords, thisWeekMonday]);
 
   return (
-    <>
-      <div className="w-full">
-        <div className="containers">
-          {/* sect_tit */}
-          <section className="sect_tit flex items-center justify-center mx-0 mt-[20px] border-b-[5px] border-main-02">
-            <h3 className=" !text-main-02 mb-[20px] ">
-              <span class="material-icons ">directions_run</span>
-              나의 운동 기록
-            </h3>
-          </section>
+    <div className="w-full">
+      <div className="containers">
+        {/* 제목 */}
+        <section className="sect_tit flex items-center justify-center mx-0 mt-[20px] border-b-[5px] border-main-02">
+          <h3 className=" !text-main-02 mb-[20px] ">
+            <span className="material-icons">directions_run</span>
+            나의 운동 기록
+          </h3>
+        </section>
 
-          {/* sect01 */}
-          <section className="sect01  flex items-center justify-center mt-[20px]">
-            <h4 className="tit">
-              <span class="material-icons">fitness_center</span>
-              오늘은 운동을 하셨나요?
-            </h4>
-          </section>
+        <section className="sect01 flex items-center justify-center mt-[20px]">
+          <h4 className="tit">
+            <span className="material-icons">fitness_center</span>
+            오늘은 운동을 하셨나요?
+          </h4>
+        </section>
 
-          {/* 오운완 */}
-          <section className="w-full max-w-[900px] mx-auto">
-            <div className="grid grid-cols-7 bg-white rounded-2xl shadow-md my-[2%] border-1 border-gray-mid">
-              {days.map((day, idx) => (
-                <div
-                  key={idx}
-                  className="flex flex-col items-center justify-center py-6 border-r last:border-r-0  border-gray-mid"
-                >
-                  {/* 요일 */}
-                  <span className="text-sm font-semibold text-green-700 mb-[10px]">
-                    {day.label}
-                  </span>
-
-                  {/* 스탬프 */}
-                  <img
-                    src={
-                      day.done
-                        ? 'https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ex_s.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9leF9zLnBuZyIsImlhdCI6MTc3MDEwNDM1NSwiZXhwIjoxODAxNjQwMzU1fQ.qhhg6-X00dSR8Her0jEXPmeRWSIqjEcywfS1qfmcuuo'
-                        : 'https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ex_f.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9leF9mLnBuZyIsImlhdCI6MTc3MDEwNDI4MSwiZXhwIjoxODAxNjQwMjgxfQ.jGc2SXJBtCtNqLfdYSF8yy-bj08VgcPmgmZVqm9S_50'
-                    }
-                    alt="stamp"
-                    className="w-[30px] aspect-square sm:w-[60px] "
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <Link to="../healthhistoywrite">
-            <div className="w-full sm:w-[50%] mx-auto flex items-center justify-center mb-[5%]  ">
-              <BtnComp size="mid" variant="primary">
-                오늘의 운동 입력하기
-              </BtnComp>
-            </div>
-          </Link>
-
-          {/* sect02 */}
-          <div className=" bg-light-02 myBg py-[10%]">
-            <section className="containers sect02 flex items-center flex-col justify-center text-gray-deep ">
-              <h4 className="tit">
-                <span class="material-icons ">directions_run</span>
-                운동 기록 리스트
-              </h4>
-              <div className="filters w-full flex items-center justify-start sm:justify-end gap-2 mt-4">
-                <span className="material-icons !text-[30px]">sort</span>
-
-                {/* 최신순 */}
-                <button
-                  type="button"
-                  onClick={() => setSort('latest')}
-                  className={`border rounded-[4px] transition-colors ${sort === 'latest' ? 'bg-deep text-white border-1 border-deep' : 'bg-white hover:bg-light-01'}`}
-                >
-                  <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">
-                    최신순
-                  </p>
-                </button>
-
-                {/* 오래된 순 */}
-                <button
-                  type="button"
-                  onClick={() => setSort('oldest')}
-                  className={`border rounded-[4px] transition-colors ${sort === 'oldest' ? 'bg-deep text-white border-1  border-deep' : 'bg-white hover:bg-light-01'}`}
-                >
-                  <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">
-                    오래된 순
-                  </p>
-                </button>
-              </div>
-              {/* 리스트 */}
-              <div className="hel_list w-full mt-6">
-                <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                  {paginatedRecords.map((record) => (
-                    <li
-                      key={record.id}
-                      className="bg-white border-[0.5px] border-main-02 rounded-lg p-4 md:p-5 flex flex-col gap-4 lg:min-w-[230px]"
-                    >
-                      {/* 날짜 */}
-                      <div className="text-base md:text-lg font-semibold text-gray-deep border-b border-gray-light pb-2">
-                        {record.date}
-                      </div>
-
-                      {/* 운동 종류별 그룹 */}
-                      <div className="flex flex-col gap-3 grow">
-                        {Object.entries(record.exercises).map(
-                          ([category, exercises]) => (
-                            <div key={category} className="flex flex-col gap-1">
-                              <div className="text-lg md:text-xlg font-semibold text-deep">
-                                {category}
-                              </div>
-                              <div className="flex flex-col gap-1 ml-2">
-                                {exercises.map((exercise, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="text-xs md:text-sm text-gray-deep flex items-center"
-                                  >
-                                    <span className="mr-1">·</span>
-                                    <span>
-                                      {exercise.name} : {exercise.value}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ),
-                        )}
-                      </div>
-
-                      {/* 총 소모 칼로리 */}
-                      <div className="text-xl md:text-lg font-semibold text-main-02 border-t border-gray-light pt-3">
-                        총 소모 칼로리 {record.totalCalories}kcal
-                      </div>
-
-                      {/* 수정, 삭제 버튼 */}
-                      <div className="flex gap-2 mt-2">
-                        <BtnComp
-                          variant="primary"
-                          size="short"
-                          className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm"
-                        >
-                          수정
-                        </BtnComp>
-                        <BtnComp
-                          variant="primary"
-                          size="short"
-                          className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm"
-                        >
-                          삭제
-                        </BtnComp>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="w-full mt-[50px]">
-                <PageNatation
-                  storeKey={storeKey}
-                  totalElements={exerciseRecords.length}
-                  pageSize={pageSize}
+        {/* 주간 스탬프 */}
+        <section className="w-full max-w-[900px] mx-auto">
+          <div className="grid grid-cols-7 bg-white rounded-2xl shadow-md my-[2%] border-1 border-gray-mid">
+            {weekStamps.map((day, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center justify-center py-6 border-r last:border-r-0 border-gray-mid"
+              >
+                <span className="text-sm font-semibold text-green-700 mb-[10px]">{day.label}</span>
+                <img
+                  src={
+                    day.done
+                      ? "https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ex_s.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9leF9zLnBuZyIsImlhdCI6MTc3MDEwNDM1NSwiZXhwIjoxODAxNjQwMzU1fQ.qhhg6-X00dSR8Her0jEXPmeRWSIqjEcywfS1qfmcuuo"
+                      : "https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ex_f.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9leF9mLnBuZyIsImlhdCI6MTc3MDEwNDI4MSwiZXhwIjoxODAxNjQwMjgxfQ.jGc2SXJBtCtNqLfdYSF8yy-bj08VgcPmgmZVqm9S_50"
+                  }
+                  alt="stamp"
+                  className="w-[30px] aspect-square sm:w-[60px]"
                 />
               </div>
-            </section>
+            ))}
           </div>
+        </section>
 
-          {/* sect03 */}
-          <section className="sect03">
-            <div className="min-tit flex flex-row justify-center items-center bg-main-02 w-[200px] mx-auto text-white py-[5px] border rounded-[20px] mt-[5%]">
-              <span className="material-icons mr-1.5">calendar_today</span>
-              <span>주간 운동 기록 비교</span>
+        {/* 오늘 운동 입력 버튼 */}
+        <Link to="../healthhistoywrite">
+          <div className="w-full sm:w-[50%] mx-auto flex items-center justify-center mb-[5%]">
+            <BtnComp size="mid" variant="primary">
+              오늘의 운동 입력하기
+            </BtnComp>
+          </div>
+        </Link>
+
+        {/* 운동 기록 리스트 */}
+        <div className="bg-light-02 myBg py-[10%]">
+          <section className="containers sect02 flex items-center flex-col justify-center text-gray-deep">
+            <h4 className="tit">
+              <span className="material-icons">directions_run</span>
+              운동 기록 리스트
+            </h4>
+            <div className="filters w-full flex items-center justify-start sm:justify-end gap-2 mt-4">
+              <span className="material-icons !text-[30px]">sort</span>
+              <button
+                type="button"
+                onClick={() => setSort("latest")}
+                className={`border rounded-[4px] transition-colors ${
+                  sort === "latest" ? "bg-deep text-white border-1 border-deep" : "bg-white hover:bg-light-01"
+                }`}
+              >
+                <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">최신순</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSort("oldest")}
+                className={`border rounded-[4px] transition-colors ${
+                  sort === "oldest" ? "bg-deep text-white border-1 border-deep" : "bg-white hover:bg-light-01"
+                }`}
+              >
+                <p className="px-3 py-1 text-center !text-[14px] md:!text-[18px]">오래된 순</p>
+              </button>
             </div>
 
-            <div className="w-full mt-8 xl:w-[70%] flex  justify-center items-center mx-auto mb-[5%]">
-              <Chart
-                type="bar"
-                data={weeklyCalorieData}
-                options={{
-                  plugins: {
-                    title: {
-                      display: false,
-                    },
-                  },
-                }}
-              />
+            <div className="hel_list w-full mt-6">
+              <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {exerciseRecords.map((record) => (
+                  <li
+                    key={record.date}
+                    className="bg-white border-[0.5px] border-main-02 rounded-lg p-4 md:p-5 flex flex-col gap-4 lg:min-w-[230px]"
+                  >
+                    <div className="text-base md:text-lg font-semibold text-gray-deep border-b border-gray-light pb-2">
+                      {record.date}
+                    </div>
+
+                    <div className="flex flex-col gap-3 grow">
+                      {record.exercises.map((exercise, idx) => (
+                        <div key={idx} className="text-xs md:text-sm text-gray-deep flex items-center">
+                          <span className="mr-1">·</span>
+                          <span>
+                            {exercise.name} : {exercise.durationMin}분
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="text-xl md:text-lg font-semibold text-main-02 border-t border-gray-light pt-3">
+                      총 소모 칼로리 {Math.round(record.totalCalories)}kcal
+                    </div>
+
+                    <div className="flex gap-2 mt-2">
+                      <BtnComp
+                        variant="primary"
+                        size="short"
+                        className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm"
+                        onClick={() => handleUpdate(record)}
+                      >
+                        수정
+                      </BtnComp>
+                      <BtnComp
+                        variant="primary"
+                        size="short"
+                        className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm"
+                        onClick={() => handleDelete(record)}
+                      >
+                        삭제
+                      </BtnComp>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="w-full mt-[50px]">
+              <PageNatation storeKey={storeKey} totalElements={totalElements} pageSize={pageSize} />
             </div>
           </section>
         </div>
+
+        {/* 주간 운동 칼로리 비교 차트 */}
+        <section className="sect03">
+          <div className="min-tit flex flex-row justify-center items-center bg-main-02 w-[200px] mx-auto text-white py-[5px] border rounded-[20px] mt-[5%]">
+            <span className="material-icons mr-1.5">calendar_today</span>
+            <span>주간 운동 기록 비교</span>
+          </div>
+
+          <div className="w-full mt-8 xl:w-[70%] flex justify-center items-center mx-auto mb-[5%]">
+            <Chart type="bar" data={weeklyCalorieData} options={{ plugins: { title: { display: false } } }} />
+          </div>
+        </section>
       </div>
-    </>
+    </div>
   );
 }
 
