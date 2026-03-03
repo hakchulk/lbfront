@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Route, Routes, Link, Outlet } from "react-router-dom";
 import { useAuthStore } from "../../../stores/authStore";
 import FoodHistory from "./FoodHistory";
@@ -14,9 +14,11 @@ import {
   getPieChartData2,
   WeightChart,
   getDonutChartData1,
-  CmChart,
 } from "../../../api/TestChartData";
 import { getExerciseRecords } from "../../../api/TestHealthData";
+import { useMyClubStore } from "../../../api/MyClubData";
+import { useMyBoardsStore } from "../../../api/MyBoardsData";
+import { getMyClubChartData } from "../../../api/MyClubChartData";
 
 // 마이페이지 메인 화면 컴포넌트
 function MyPageMain() {
@@ -25,6 +27,35 @@ function MyPageMain() {
 
   // 운동 기록 데이터 (추후 API로 받아올 예정이고 가짜 데이이이-타)
   const exerciseRecords = getExerciseRecords();
+
+  const {
+    myClubs,
+    fetchMyClubs,
+  } = useMyClubStore();
+
+  const {
+    myBoards,
+    fetchMyBoards,
+  } = useMyBoardsStore();
+
+  // 마이클럽 및 게시글 데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await fetchMyClubs();
+        await fetchMyBoards();
+      } catch (err) {
+        console.error("데이터 로드 실패:", err);
+      }
+    };
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 커뮤니티 활동 차트 데이터
+  const communityChartData = useMemo(() => {
+    return getMyClubChartData(myClubs, myBoards);
+  }, [myClubs, myBoards]);
 
   // 차트 데이터 생성 (요일별 총 소모 칼로리 - 이번주 vs 지난주)
   const weeklyCalorieData = useMemo(() => {
@@ -200,7 +231,7 @@ function MyPageMain() {
                     <div className="w-[80%] m-5">
                       <Chart
                         type="line"
-                        data={CmChart()}
+                        data={communityChartData}
                         options={{
                           maintainAspectRatio: false,
                           plugins: {

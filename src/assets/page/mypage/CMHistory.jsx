@@ -1,47 +1,16 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Chart from "../../../components/ChartComp";
-import { CmChart, cmChartOptions } from "../../../api/TestChartData";
+import { cmChartOptions } from "../../../api/TestChartData";
+import { getMyClubChartData } from "../../../api/MyClubChartData";
 import PageNatation from "../../../components/PageNatation";
 import { useMyClubStore } from "../../../api/MyClubData";
+import { useMyBoardsStore } from "../../../api/MyBoardsData";
+import usePaginationStore from "../../../stores/paginationStore";
+import { useAuthStore } from "../../../stores/authStore";
 
 const PAGE_SIZE = 5; // 테이블 페이지 크기
 const CLUB_PAGE_SIZE = 3; // 카드 리스트 페이지 크기
-
-// 더미 데이터 (나중에 API 연동 시 교체)
-const NOTICE_DATA = [
-  {
-    id: 1,
-    title: "이번 주 모임 일정 공지",
-    author: "김훈규(CM)",
-    date: "2026-02-05",
-  },
-  {
-    id: 2,
-    title: "신규 회원 가입 안내",
-    author: "김훈규(CM)",
-    date: "2026-02-03",
-  },
-  {
-    id: 3,
-    title: "고기 모임 특별 이벤트 안내",
-    author: "김훈규(CM)",
-    date: "2026-02-01",
-  },
-  { id: 4, title: "정모 후기 공유", author: "김훈규(CM)", date: "2026-01-28" },
-  {
-    id: 5,
-    title: "다음 달 일정 예고",
-    author: "김훈규(CM)",
-    date: "2026-01-25",
-  },
-  {
-    id: 6,
-    title: "운영 정책 변경 안내",
-    author: "김훈규(CM)",
-    date: "2026-01-20",
-  },
-];
 
 function CMHistory() {
   // PageNatation에서 0-based page를 넘겨주므로 이에 맞춤
@@ -55,6 +24,26 @@ function CMHistory() {
     error: clubsError,
   } = useMyClubStore();
 
+  const {
+    myBoards,
+    fetchMyBoards,
+    loading: boardsLoading,
+    error: boardsError,
+  } = useMyBoardsStore();
+
+  const user = useAuthStore((state) => state.user);
+
+  const resetPagination = usePaginationStore((state) => state.resetPagination);
+
+  // 컴포넌트 마운트 시 페이지네이션 초기화
+  useEffect(() => {
+    resetPagination("cm-history");
+    resetPagination("cm-history-clubs");
+    setPage(0);
+    setClubPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 마이클럽 데이터 로드
   useEffect(() => {
     const loadMyClubs = async () => {
@@ -67,14 +56,32 @@ function CMHistory() {
     loadMyClubs();
   }, [fetchMyClubs]);
 
-  const totalElements = NOTICE_DATA.length;
+  // 내 게시글 데이터 로드
+  useEffect(() => {
+    const loadMyBoards = async () => {
+      try {
+        await fetchMyBoards();
+      } catch (err) {
+        console.error("내 게시글 데이터 로드 실패:", err);
+      }
+    };
+    loadMyBoards();
+  }, [fetchMyBoards]);
+
+  // 클럽 ID로 클럽 이름 찾기
+  const getClubName = (clubId) => {
+    const club = myClubs.find((c) => c.id === clubId);
+    return club ? club.name : `클럽 #${clubId}`;
+  };
+
+  const totalElements = myBoards.length;
 
   // 현재 페이지 데이터 slice
   const currentPageItems = useMemo(() => {
     const start = page * PAGE_SIZE;
     const end = start + PAGE_SIZE;
-    return NOTICE_DATA.slice(start, end);
-  }, [page]);
+    return myBoards.slice(start, end);
+  }, [myBoards, page]);
 
   const handlePageChange = (nextPage) => {
     setPage(nextPage); // 0-based
@@ -92,6 +99,11 @@ function CMHistory() {
     setClubPage(nextPage); // 0-based
   };
 
+  // 차트 데이터 생성
+  const chartData = useMemo(() => {
+    return getMyClubChartData(myClubs, myBoards);
+  }, [myClubs, myBoards]);
+
   return (
     <>
       <div className="wrap">
@@ -100,13 +112,17 @@ function CMHistory() {
           <div className="containers mx-auto text-center ">
             <h3 className="text-main-02 text-base md:text-lg lg:text-xl xl:text-2xl">
               <i class="material-icons mx-5  mb-[3%]">groups</i>
-              나의 커뮤니티 활동 내역
+              {user?.name
+                ? `${user.name}님의 커뮤니티 활동 내역`
+                : "나의 커뮤니티 활동 내역"}
             </h3>
-            <hr className=" mt-[3%] border-t-10 border-main-02 my-4 mb-[3%]" />
+            <hr className=" mt-[2%] border-t-10 border-main-02 my-4 mb-[2%]" />
             <div className="flex justify-center mb-[5%]">
               <span className="mt-[2%] inline-flex items-center gap-2 bg-green-600 text-white text-sm px-4 py-1 rounded-full">
                 <i class="material-icons">star</i>
-                나의 가입 커뮤니티
+                {user?.name
+                  ? `${user.name}님이 가입한 커뮤니티`
+                  : "님이 가입한 커뮤니티"}
               </span>
             </div>
 
@@ -186,7 +202,7 @@ function CMHistory() {
             </div>
 
             <div className="w-full max-w-[900px] mx-auto">
-              <Chart type="line" data={CmChart()} options={cmChartOptions} />
+              <Chart type="line" data={chartData} options={cmChartOptions} />
             </div>
           </div>
         </section>
@@ -213,24 +229,40 @@ function CMHistory() {
               </div>
 
               {/* 리스트 */}
-              {currentPageItems.map((notice, idx) => (
-                <div
-                  key={notice.id}
-                  className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                >
-                  <span className="col-span-1">
-                    {page * PAGE_SIZE + idx + 1}
-                  </span>
-
-                  <span className="col-span-5 text-main-02 truncate">
-                    {notice.title}
-                  </span>
-
-                  <span className="col-span-3">{notice.author}</span>
-
-                  <span className="col-span-3">{notice.date}</span>
+              {boardsLoading ? (
+                <div className="w-full flex justify-center items-center h-[200px] text-gray-500">
+                  로딩 중...
                 </div>
-              ))}
+              ) : boardsError ? (
+                <div className="w-full flex justify-center items-center h-[200px] text-red-500">
+                  데이터를 불러오는 중 오류가 발생했습니다.
+                </div>
+              ) : myBoards.length === 0 ? (
+                <div className="w-full flex justify-center items-center h-[200px] text-gray-500">
+                  작성한 게시글이 없습니다.
+                </div>
+              ) : (
+                currentPageItems.map((notice, idx) => (
+                  <div
+                    key={notice.id}
+                    className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <span className="col-span-1">
+                      {page * PAGE_SIZE + idx + 1}
+                    </span>
+
+                    <span className="col-span-5 text-main-02 truncate">
+                      {notice.title}
+                    </span>
+
+                    <span className="col-span-3">
+                      {getClubName(notice.clubId)}
+                    </span>
+
+                    <span className="col-span-3">{notice.date}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
