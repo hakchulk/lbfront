@@ -1,9 +1,9 @@
-// EventMain.jsx
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import EventDetailPage from "./EventDetail";
 import BtnComp from "../../../components/BtnComp";
-import axios from "axios";
+import apiClient from "../../../api/config";
+import Member from "../../member/SignIn";
 
 // =======================
 // 포인트샵 데이터
@@ -21,26 +21,24 @@ function EventMain() {
   const [submittedIds, setSubmittedIds] = useState({});
   const [insufficientIds, setInsufficientIds] = useState({});
   const [userPoint, setUserPoint] = useState(0);
+  const navigate = useNavigate();
+  const [isLogin, setIsLogin] = useState(false);
 
+  // =======================
   // 페이지 로드 시 유저 포인트 가져오기
+  // =======================
   useEffect(() => {
     const fetchUserPoint = async () => {
-      const token = localStorage.getItem("accessToken");
-
-      if (!token) {
-        console.warn("로그인 토큰이 없습니다. 로그인 필요");
-        return; // 토큰 없으면 요청 중단
-      }
-
       try {
-        const res = await axios.get("http://localhost:8080/api/lastlayer/me/points", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUserPoint(res.data.point); // 서버에서 반환되는 포인트
+        const res = await apiClient.get("/me/points");
+        setUserPoint(res.data.point);
+        setIsLogin(true); // ✅ 로그인 성공
       } catch (err) {
+        if (err.response?.status === 401) {
+          setIsLogin(false); // ✅ 로그인 안 됨
+          return;
+        }
         console.error("유저 포인트 가져오기 실패", err);
-        // 필요 시 alert로 사용자 안내 가능
-        // alert("포인트 정보를 가져오는 중 오류가 발생했습니다.");
       }
     };
 
@@ -51,31 +49,55 @@ function EventMain() {
   // 상품 응모
   // =======================
   const handleSubmit = async (product) => {
+    if (!isLogin) {
+      alert("로그인이 필요합니다.");
+      navigate("/member");
+      return;
+    }
+
+    // ✅ 2. 포인트 부족 체크
     if (userPoint < product.point) {
       setInsufficientIds((prev) => ({ ...prev, [product.id]: true }));
       alert("포인트가 부족합니다.");
       return;
     }
 
+    // ✅ 3. 포인트 차감
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/lastlayer/me/points",
-        { productId: product.id },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
+      const response = await apiClient.post(
+        "/me/points/adjust",
+        { amount: -product.point }
       );
 
       const remainingPoint = response.data.remainingPoint;
-      setUserPoint(remainingPoint);
 
+      setUserPoint(remainingPoint);
       setSubmittedIds((prev) => ({ ...prev, [product.id]: true }));
       setInsufficientIds((prev) => ({ ...prev, [product.id]: false }));
+
       alert(`${product.name} 응모 완료! 잔여 포인트: ${remainingPoint}`);
+
     } catch (error) {
-      setInsufficientIds((prev) => ({ ...prev, [product.id]: true }));
-      alert("포인트가 부족하거나 오류가 발생했습니다.");
+
+      console.log("🔥 실제 상태코드:", error.response?.status);
+      console.log("🔥 에러 전체:", error);
+
+      const status = error.response?.status;
+
+      // 🔥 인증 관련 에러 전부 로그인 페이지로
+      if (status === 401 || status === 403 || !error.response) {
+        alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
+        setIsLogin(false);
+        navigate("/member");
+        return;
+      }
+
+      alert("오류가 발생했습니다.");
     }
   };
-
+  // =======================
+  // JSX 렌더링
+  // =======================
   return (
     <div className="mx-auto w-full sm:w-[100%] md:w-[100%] lg:w-[100%]">
 
@@ -93,7 +115,7 @@ function EventMain() {
       {/* 안내 문구 */}
       <div className="flex flex-col h-auto gap-2 mb-8 md:mb-12 lg:mb-16 xl:mb-16 text-center">
         <h2 className="!text-2xl sm:!text-3xl md:!text-3xl font-bold text-green-700 mb-1">
-          <i className="fa-solid fa-gift text-xl sm:text-2xl md:text-3xl text-green-600 mr-2 -translate-y-1 inline-block"></i>
+          <i className="fa-solid fa-gift text-xl sm:text-2xl md:text-3xl text-green-600 mr-2 -translate-y-0.5 inline-block"></i>
           지금 참여하면 혜택이 쏟아진다!
         </h2>
         <p className="text-black leading-relaxed mb-6 md:mb-8 lg:mb-12 xl:mb-12">
@@ -116,7 +138,7 @@ function EventMain() {
           { id: 4, imgPc: "https://yojekojpfikeuposuyuf.supabase.co/storage/v1/object/public/images/ev04_bn_1000.png", imgMb: "https://yojekojpfikeuposuyuf.supabase.co/storage/v1/object/public/images/ev04_bn_1920.png" }
         ].map(item => (
           <Link key={item.id} to={`/event/detail/${item.id}`} className="overflow-hidden flex flex-col items-center text-center">
-            <div className="w-full h-[32vh] sm:h-[45vh] md:h-[30vh] lg:h-[42vh] xl:h-[45vh] 2xl:h-[60vh] overflow-hidden mb-8 sm:mb-10 md:mb-12 lg:mb-14">
+            <div className=" w-full aspect-[16/9] md:aspect-[9/9]       overflow-hidden mb-8 sm:mb-10 md:mb-12 lg:mb-14">
               <img src={item.imgMb} alt={`이벤트 ${item.id} 모바일`} className="w-full h-full object-cover md:hidden" />
               <img src={item.imgPc} alt={`이벤트 ${item.id} PC`} className="hidden md:block w-full h-full object-cover" />
             </div>
@@ -127,7 +149,7 @@ function EventMain() {
       {/* 포인트샵 응모하기 */}
       <div className="flex justify-center mb-8 md:mb-12">
         <h2 className="!text-2xl sm:!text-3xl md:!text-3xl font-bold text-green-700">
-          <i className="fa-solid fa-gift text-xl sm:text-2xl md:text-3xl text-green-600 mr-2 -translate-y-1 inline-block"></i>
+          <i className="fa-solid fa-gift text-xl sm:text-2xl md:text-3xl text-green-600 mr-2 -translate-y-0.5 inline-block"></i>
           포인트샵 응모하기!
         </h2>
       </div>
@@ -182,7 +204,7 @@ function EventMain() {
           <li>본 이벤트는 당사 사정에 따라 변경 또는 종료될 수 있습니다.</li>
         </ul>
       </div>
-    </div>
+    </div >
   );
 }
 
@@ -193,6 +215,7 @@ function Event() {
   return (
     <Routes>
       <Route path="/" element={<EventMain />} />
+      <Route path="member" element={<Member />} />
       <Route path="detail/:id" element={<EventDetailPage />} />
     </Routes>
   );
