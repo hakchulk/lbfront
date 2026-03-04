@@ -17,8 +17,13 @@ function Noticemanagement() {
   const user = useAuthStore((state) => state.user);
 
   // 공지사항 데이터 (BoardsData 사용)
-  const { boards, loading: boardsLoading, error: boardsError, fetchBoards } =
-    useBoardsStore();
+  const {
+    boards,
+    loading: boardsLoading,
+    error: boardsError,
+    fetchBoards,
+    deleteBoard,
+  } = useBoardsStore();
 
   // 반응형 pageSize 상태
   const [pageSize, setPageSize] = useState(4);
@@ -63,6 +68,7 @@ function Noticemanagement() {
   const pagination = usePaginationStore((state) => state.paginations[storeKey]);
   const currentPage = pagination?.currentPage ?? 0;
   const setPageSizeStore = usePaginationStore((state) => state.setPageSize);
+  const resetPagination = usePaginationStore((state) => state.resetPagination);
 
   // 화면 크기에 따라 pageSize 설정 (PC: 6개(3열 2행), 태블릿: 6개(2열 3행), 모바일: 4개(1열))
   useEffect(() => {
@@ -118,9 +124,46 @@ function Noticemanagement() {
     return notices.slice(startIndex, endIndex);
   }, [notices, currentPage, pageSize]);
 
-  //이동
-  const handleEdit = () => {
-    navigate('noticewrite');
+  // 공지사항 수정 화면 이동 (boardId를 쿼리 파라미터로 전달)
+  const handleEdit = (e, noticeId) => {
+    e.stopPropagation(); // 카드 클릭 이동 막기
+    if (!noticeId) return;
+    resetPagination(storeKey); // 페이지네이션 초기화
+    navigate(`noticewrite?boardId=${noticeId}`);
+  };
+
+  // 공지사항 카드 클릭 시 해당 게시글 상세로 이동
+  const handleNoticeClick = (noticeId) => {
+    if (!myManagedClubs.length || !noticeId) return;
+    resetPagination(storeKey); // 페이지네이션 초기화
+    const clubId = myManagedClubs[0].id;
+    // 클럽 상세 > 게시판 상세와 동일한 라우트 패턴 사용
+    navigate(`/club/detail/${clubId}/postlist/posting/${noticeId}`);
+  };
+
+  // 공지사항 삭제 (deleted_at에 시간 찍히도록 백엔드 delete API 호출)
+  const handleDelete = async (e, noticeId) => {
+    e.stopPropagation(); // 카드 클릭 이동 막기
+
+    if (!noticeId) return;
+    if (!window.confirm('정말로 이 공지사항을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await deleteBoard(noticeId);
+      alert('공지사항이 삭제되었습니다.');
+
+      // 삭제 후 리스트 새로고침 및 페이지네이션 초기화
+      resetPagination(storeKey);
+      if (myManagedClubs.length) {
+        const clubId = myManagedClubs[0].id;
+        await fetchBoards(clubId);
+      }
+    } catch (err) {
+      console.error('공지사항 삭제 실패:', err);
+      alert(err.response?.data?.message || '공지사항 삭제에 실패했습니다.');
+    }
   };
 
   return (
@@ -146,20 +189,21 @@ function Noticemanagement() {
                   {paginatedNotices.map((notice) => (
                     <div
                       key={notice.id}
-                      className="bg-white rounded-xl shadow-sm border border-[#E0F2C9] p-6 flex flex-col items-start justify-s "
+                    className="bg-white rounded-xl shadow-sm border border-[#E0F2C9] p-6 flex flex-col items-start justify-s cursor-pointer hover:shadow-md transition"
+                    onClick={() => handleNoticeClick(notice.id)}
                     >
                       <p className="text-center text-gray-deep leading-relaxed">
-                        · 공지사항 {notice.noticeNumber}
+                        · 공지사항
                       </p>
                       <h4 className="!text-base md:!text-lg lg:!text-xl line-clamp-2 text-deep my-[10px]">
                         {notice.title}
                       </h4>
 
                       <p className="text-center text-gray-deep leading-relaxed">
-                        · 작성자 : {notice.userName}
+                        · 작성자 : {notice.author}
                       </p>
                       <p className="text-center text-gray-deep leading-relaxed">
-                        · 작성일자 : {todayString}
+                        · 작성일자 : {notice.date}
                       </p>
 
                       <div className="flex gap-2 w-[50%] min-w-[180px] mx-auto mt-[10px]">
@@ -167,7 +211,7 @@ function Noticemanagement() {
                           variant="primary"
                           size="short"
                           className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
-                          onClick={handleEdit}
+                          onClick={(e) => handleEdit(e, notice.id)}
                         >
                           수정
                         </BtnComp>
@@ -176,6 +220,7 @@ function Noticemanagement() {
                           variant="primary"
                           size="short"
                           className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+                          onClick={(e) => handleDelete(e, notice.id)}
                         >
                           삭제
                         </BtnComp>
