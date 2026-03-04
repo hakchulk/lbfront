@@ -5,6 +5,7 @@ import { cmChartOptions } from "../../../api/TestChartData";
 import { getMyClubChartData } from "../../../api/MyClubChartData";
 import PageNatation from "../../../components/PageNatation";
 import { useMyClubStore } from "../../../api/MyClubData";
+import { useClubStore } from "../../../api/ClubData";
 import { useMyBoardsStore } from "../../../api/MyBoardsData";
 import usePaginationStore from "../../../stores/paginationStore";
 import { useAuthStore } from "../../../stores/authStore";
@@ -23,6 +24,9 @@ function CMHistory() {
     loading: clubsLoading,
     error: clubsError,
   } = useMyClubStore();
+
+  // 전체 클럽 리스트에서 내가 매니저(개설자)인 클럽을 가져오기
+  const { clubs, fetchClubs } = useClubStore();
 
   const {
     myBoards,
@@ -56,6 +60,18 @@ function CMHistory() {
     loadMyClubs();
   }, [fetchMyClubs]);
 
+  // 전체 클럽 리스트 로드 (내가 개설한 커뮤니티 판별용)
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        await fetchClubs();
+      } catch (err) {
+        console.error("클럽 리스트 로드 실패:", err);
+      }
+    };
+    loadClubs();
+  }, [fetchClubs]);
+
   // 내 게시글 데이터 로드
   useEffect(() => {
     const loadMyBoards = async () => {
@@ -68,9 +84,33 @@ function CMHistory() {
     loadMyBoards();
   }, [fetchMyBoards]);
 
+  // 내가 매니저(개설자)인 클럽들만 필터링
+  const myManagedClubs = useMemo(() => {
+    if (!user?.id || !Array.isArray(clubs)) return [];
+    return clubs.filter((club) => club.managerId === user.id);
+  }, [clubs, user]);
+
+  // 가입한 커뮤니티(myClubs) + 내가 개설한 커뮤니티(myManagedClubs)를 합친 목록 (id 기준 중복 제거)
+  const joinedAndManagedClubs = useMemo(() => {
+    const map = new Map();
+    // 가입한 커뮤니티 우선
+    myClubs.forEach((club) => {
+      if (club && club.id != null) {
+        map.set(club.id, club);
+      }
+    });
+    // 내가 개설한 커뮤니티 추가 (이미 있으면 중복 방지)
+    myManagedClubs.forEach((club) => {
+      if (club && club.id != null && !map.has(club.id)) {
+        map.set(club.id, club);
+      }
+    });
+    return Array.from(map.values());
+  }, [myClubs, myManagedClubs]);
+
   // 클럽 ID로 클럽 이름 찾기
   const getClubName = (clubId) => {
-    const club = myClubs.find((c) => c.id === clubId);
+    const club = joinedAndManagedClubs.find((c) => c.id === clubId);
     return club ? club.name : `클럽 #${clubId}`;
   };
 
@@ -88,12 +128,12 @@ function CMHistory() {
   };
 
   // 클럽 카드 페이지네이션
-  const totalClubElements = myClubs.length;
+  const totalClubElements = joinedAndManagedClubs.length;
   const currentClubItems = useMemo(() => {
     const start = clubPage * CLUB_PAGE_SIZE;
     const end = start + CLUB_PAGE_SIZE;
-    return myClubs.slice(start, end);
-  }, [myClubs, clubPage]);
+    return joinedAndManagedClubs.slice(start, end);
+  }, [joinedAndManagedClubs, clubPage]);
 
   const handleClubPageChange = (nextPage) => {
     setClubPage(nextPage); // 0-based
@@ -101,8 +141,8 @@ function CMHistory() {
 
   // 차트 데이터 생성
   const chartData = useMemo(() => {
-    return getMyClubChartData(myClubs, myBoards);
-  }, [myClubs, myBoards]);
+    return getMyClubChartData(joinedAndManagedClubs, myBoards);
+  }, [joinedAndManagedClubs, myBoards]);
 
   return (
     <>
@@ -136,7 +176,7 @@ function CMHistory() {
               <div className="w-full flex justify-center items-center h-[400px] text-red-500 mb-[5%]">
                 데이터를 불러오는 중 오류가 발생했습니다.
               </div>
-            ) : myClubs.length === 0 ? (
+            ) : joinedAndManagedClubs.length === 0 ? (
               <div className="w-full flex justify-center items-center h-[400px] text-gray-500 mb-[5%]">
                 가입한 커뮤니티가 없습니다.
               </div>

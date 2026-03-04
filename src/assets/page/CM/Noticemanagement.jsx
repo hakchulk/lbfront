@@ -2,16 +2,62 @@ import { useEffect, useMemo, useState } from 'react';
 import BtnComp from '../../../components/BtnComp';
 import PageNatation from './../../../components/PageNatation';
 import usePaginationStore from '../../../stores/paginationStore';
-import { Link, Routes, Route, useNavigate } from 'react-router-dom';
+import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import NoticeWrite from './NoticeWrite';
+import { useClubStore } from '../../../api/ClubData';
+import { useAuthStore } from '../../../stores/authStore';
+import { useBoardsStore } from '../../../api/BoardsData';
 
 function Noticemanagement() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // 클럽 데이터 가져오기
+  const { clubs, fetchClubs } = useClubStore();
+  const user = useAuthStore((state) => state.user);
+
+  // 공지사항 데이터 (BoardsData 사용)
+  const { boards, loading: boardsLoading, error: boardsError, fetchBoards } =
+    useBoardsStore();
 
   // 반응형 pageSize 상태
   const [pageSize, setPageSize] = useState(4);
 
   const storeKey = 'cm-join-list';
+
+  // 클럽 리스트 조회
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        await fetchClubs();
+      } catch (err) {
+        console.error('클럽 리스트 로드 실패:', err);
+      }
+    };
+    loadClubs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  // 내가 매니저인 클럽들만 필터링
+  const myManagedClubs = useMemo(() => {
+    if (!user?.id || !Array.isArray(clubs)) return [];
+    return clubs.filter((club) => club.managerId === user.id);
+  }, [clubs, user]);
+
+  // 내가 매니저인 첫 번째 클럽 기준으로 공지사항 조회
+  useEffect(() => {
+    const loadNotices = async () => {
+      if (!myManagedClubs.length) return;
+      try {
+        const clubId = myManagedClubs[0].id;
+        await fetchBoards(clubId);
+      } catch (err) {
+        console.error('공지사항 리스트 로드 실패:', err);
+      }
+    };
+
+    loadNotices();
+  }, [myManagedClubs, fetchBoards]);
 
   // paginationStore에서 현재 페이지 가져오기
   const pagination = usePaginationStore((state) => state.paginations[storeKey]);
@@ -58,30 +104,12 @@ function Noticemanagement() {
   const day = String(today.getDate()).padStart(2, '0');
   const todayString = `${year}-${month}-${day}`;
 
+  // 로그인한 유저가 클럽매니저인 클럽의 이름 가져오기
+  const clubName = myManagedClubs.length > 0 ? myManagedClubs[0].name : '';
+
   // 샘플 데이터 - 실제로는 API에서 받아올 데이터
-  const clubName = '고기고기'; // 클럽 이름
-  const notices = [
-    {
-      id: 1,
-      noticeNumber: 1,
-      title:
-        '옆 팀에 악플러 공개 처형 공지하는 것이고 제목 길이 테스트하는 중인데 이정도는 되어야 가능하겠죠.',
-      userName: '이하늘',
-    },
-    { id: 2, noticeNumber: 2, title: '공지사항 제목 2', userName: '장희란' },
-    { id: 3, noticeNumber: 3, title: '공지사항 제목 3', userName: '이지은' },
-    { id: 4, noticeNumber: 4, title: '공지사항 제목 4', userName: '홍지승' },
-    { id: 5, noticeNumber: 5, title: '공지사항 제목 5', userName: '이유정' },
-    { id: 6, noticeNumber: 6, title: '공지사항 제목 6', userName: '삼하늘' },
-    { id: 7, noticeNumber: 7, title: '공지사항 제목 7', userName: '이영호' },
-    { id: 8, noticeNumber: 8, title: '공지사항 제목 8', userName: '김미영' },
-    { id: 9, noticeNumber: 9, title: '공지사항 제목 9', userName: '박준호' },
-    { id: 10, noticeNumber: 10, title: '공지사항 제목 10', userName: '김하늘' },
-    { id: 11, noticeNumber: 11, title: '공지사항 제목 11', userName: '강유진' },
-    { id: 12, noticeNumber: 12, title: '공지사항 제목 12', userName: '임윤섭' },
-    { id: 13, noticeNumber: 13, title: '공지사항 제목 13', userName: '이윤섭' },
-    { id: 14, noticeNumber: 14, title: '공지사항 제목 14', userName: '삼윤섭' },
-  ];
+  // BoardsData에서 가져온 공지사항을 사용
+  const notices = boards;
 
   // 페이지네이션된 데이터
   const paginatedNotices = useMemo(() => {
