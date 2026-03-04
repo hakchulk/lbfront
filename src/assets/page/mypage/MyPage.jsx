@@ -11,7 +11,11 @@ import Food_HistoryWrite from "./Food_HistoryWrite";
 import MyInfoTitle from "./MyInfoTitle";
 
 import Chart from "../../../components/ChartComp";
-import { getPieChartData2, WeightChart, getDonutChartData1, CmChart } from "../../../api/TestChartData";
+import { getPieChartData2, WeightChart, getDonutChartData1 } from "../../../api/TestChartData";
+import { cmChartOptions } from "../../../api/TestChartData";
+import { getMyClubChartData } from "../../../api/MyClubChartData";
+import { useMyClubStore } from "../../../api/MyClubData";
+import { useMyBoardsStore } from "../../../api/MyBoardsData";
 import { getWeekHistoryAll } from "../../../api/WeekHistory";
 import { getWorkouts } from "../../../api/Workout";
 
@@ -22,6 +26,16 @@ function MyPageMain() {
 
   const [weekHistoryData, setWeekHistoryData] = useState([]);
   const [exerciseRecords, setExerciseRecords] = useState([]);
+
+  const {
+    myClubs,
+    fetchMyClubs,
+  } = useMyClubStore();
+
+  const {
+    myBoards,
+    fetchMyBoards,
+  } = useMyBoardsStore();
 
   // 주간 체중 기록 API 호출
   useEffect(() => {
@@ -74,6 +88,30 @@ function MyPageMain() {
     };
     fetchExerciseRecords();
   }, []);
+
+  // 마이클럽 데이터 로드
+  useEffect(() => {
+    const loadMyClubs = async () => {
+      try {
+        await fetchMyClubs();
+      } catch (err) {
+        console.error("마이클럽 데이터 로드 실패:", err);
+      }
+    };
+    loadMyClubs();
+  }, [fetchMyClubs]);
+
+  // 내 게시글 데이터 로드
+  useEffect(() => {
+    const loadMyBoards = async () => {
+      try {
+        await fetchMyBoards();
+      } catch (err) {
+        console.error("내 게시글 데이터 로드 실패:", err);
+      }
+    };
+    loadMyBoards();
+  }, [fetchMyBoards]);
   const today = new Date();
   const daysFromMonday = (today.getDay() || 7) - 1;
   const thisWeekMonday = new Date(today);
@@ -130,6 +168,11 @@ function MyPageMain() {
       ],
     };
   }, [weekHistoryData]);
+
+  // 커뮤니티 활동 차트 데이터
+  const cmChartData = useMemo(() => {
+    return getMyClubChartData(myClubs, myBoards);
+  }, [myClubs, myBoards]);
 
   // 요일별 운동 칼로리 차트 데이터
   const fetchWorkouts = async () => {
@@ -276,8 +319,8 @@ function MyPageMain() {
                   <div className="w-[80%] m-5">
                     <Chart
                       type="line"
-                      data={CmChart()}
-                      options={{ maintainAspectRatio: false, plugins: { title: { display: false } } }}
+                      data={cmChartData}
+                      options={cmChartOptions}
                     />
                   </div>
                 </div>
