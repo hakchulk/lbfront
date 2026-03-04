@@ -6,6 +6,6 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    open: "chrome", // npm run dev 시 http://localhost:5173 이 Chrome에서 자동으로 열림
+    open: "", // npm run dev 시 http://localhost:5173 이 Chrome에서 자동으로 열림
   },
 });
