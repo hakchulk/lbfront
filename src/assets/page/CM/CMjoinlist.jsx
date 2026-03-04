@@ -18,7 +18,7 @@ function CMjoinlist() {
   const setPageSizeStore = usePaginationStore((state) => state.setPageSize);
 
   // API 및 상태 관리
-  const { fetchPendingApplications, loadingPending } = useApplicationStore();
+  const { fetchPendingApplications, loadingPending, approveApplication, rejectApplication } = useApplicationStore();
   const { clubs, fetchClubs } = useClubStore();
   const user = useAuthStore((state) => state.user);
 
@@ -101,7 +101,17 @@ function CMjoinlist() {
           allRequests.push(...requestsWithClub);
         }
 
-        setJoinRequests(allRequests);
+        // 최신순 정렬 (createdAt 또는 applicationId 기준)
+        const sortedRequests = allRequests.sort((a, b) => {
+          // createdAt이 있으면 그것을 기준으로 정렬
+          if (a.createdAt && b.createdAt) {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          }
+          // createdAt이 없으면 applicationId 기준으로 정렬 (큰 값이 최신)
+          return (b.applicationId || 0) - (a.applicationId || 0);
+        });
+
+        setJoinRequests(sortedRequests);
         // 첫 번째 클럽 이름을 기본값으로 설정 (여러 클럽이 있을 경우)
         if (myManagedClubs.length > 0) {
           setClubName(myManagedClubs[0].name);
@@ -121,6 +131,76 @@ function CMjoinlist() {
     const endIndex = startIndex + pageSize;
     return joinRequests.slice(startIndex, endIndex);
   }, [joinRequests, currentPage, pageSize]);
+
+  // 가입 승인 핸들러
+  const handleApprove = async (applicationId, clubId) => {
+    if (!applicationId) {
+      alert("신청 정보를 찾을 수 없습니다.");
+      return;
+    }
+    
+    try {
+      await approveApplication(applicationId);
+      alert("가입 승인이 처리되었습니다.");
+      // 승인 후 리스트 새로고침
+      const allRequests = [];
+      for (const club of myManagedClubs) {
+        const requests = await fetchPendingApplications(club.id);
+        const requestsWithClub = requests.map((req) => ({
+          ...req,
+          clubId: club.id,
+          clubName: club.name,
+        }));
+        allRequests.push(...requestsWithClub);
+      }
+      // 최신순 정렬
+      const sortedRequests = allRequests.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        return (b.applicationId || 0) - (a.applicationId || 0);
+      });
+      setJoinRequests(sortedRequests);
+    } catch (error) {
+      console.error("가입 승인 실패:", error);
+      alert("가입 승인 처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 가입 거절 핸들러
+  const handleReject = async (applicationId, clubId) => {
+    if (!applicationId) {
+      alert("신청 정보를 찾을 수 없습니다.");
+      return;
+    }
+    
+    try {
+      await rejectApplication(applicationId);
+      alert("가입 승인이 거절되었습니다.");
+      // 거절 후 리스트 새로고침
+      const allRequests = [];
+      for (const club of myManagedClubs) {
+        const requests = await fetchPendingApplications(club.id);
+        const requestsWithClub = requests.map((req) => ({
+          ...req,
+          clubId: club.id,
+          clubName: club.name,
+        }));
+        allRequests.push(...requestsWithClub);
+      }
+      // 최신순 정렬
+      const sortedRequests = allRequests.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        return (b.applicationId || 0) - (a.applicationId || 0);
+      });
+      setJoinRequests(sortedRequests);
+    } catch (error) {
+      console.error("가입 거절 실패:", error);
+      alert("가입 거절 처리 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <>
@@ -165,6 +245,7 @@ function CMjoinlist() {
                     variant="primary"
                     size="short"
                     className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
+                    onClick={() => handleApprove(request.applicationId, request.clubId)}
                   >
                     수락
                   </BtnComp>
@@ -173,6 +254,7 @@ function CMjoinlist() {
                     variant="point"
                     size="short"
                     className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+                    onClick={() => handleReject(request.applicationId, request.clubId)}
                   >
                     거절
                   </BtnComp>

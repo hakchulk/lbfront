@@ -29,10 +29,14 @@ function ClubDetailMain() {
     getApplication,
     loading: applicationLoading,
   } = useApplicationStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // 현재 사용자와 클럽의 가입 신청 상태 가져오기
-  const application = getApplication(id, user?.id);
+  // store에서 application 상태 구독
+  const application = useApplicationStore((state) => {
+    if (!id || !user?.id) return null;
+    const key = `${user.id}_${id}`;
+    return state.applications[key] || null;
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 클럽 상세 데이터 로드
   useEffect(() => {
@@ -182,19 +186,38 @@ function ClubDetailMain() {
 
           {/* 모임 참여 버튼 */}
           {(() => {
-            // 매니저인 경우 버튼 숨김
+            // 1. 매니저인 경우 버튼 숨김
             if (club.managerId === user?.id) {
               return null;
             }
 
-            // status가 PENDING이나 APPROVED인 경우 버튼 숨김
-            if (
-              application?.status === "PENDING" ||
-              application?.status === "APPROVED"
-            ) {
+            // 2. status가 PENDING 또는 APPROVED인 경우 버튼 숨김
+            const status = application?.status;
+            console.log("=== 버튼 표시 체크 ===");
+            console.log("application:", application);
+            console.log("status 원본:", status);
+            console.log("status 타입:", typeof status);
+            console.log("status JSON:", JSON.stringify(status));
+            
+            // status를 문자열로 변환하고 대소문자 무시하고 비교
+            const statusStr = String(status || "").trim();
+            const statusUpper = statusStr.toUpperCase();
+            
+            console.log("statusStr:", statusStr);
+            console.log("statusUpper:", statusUpper);
+            console.log("PENDING 비교 (원본):", statusStr === "PENDING");
+            console.log("APPROVED 비교 (원본):", statusStr === "APPROVED");
+            console.log("PENDING 비교 (대문자):", statusUpper === "PENDING");
+            console.log("APPROVED 비교 (대문자):", statusUpper === "APPROVED");
+            
+            // 대소문자 무시하고 비교
+            if (statusUpper === "PENDING" || statusUpper === "APPROVED") {
+              console.log("버튼 숨김 - status:", statusStr);
               return null;
             }
 
+            // 3. 그 외의 경우 버튼 표시
+            console.log("버튼 표시");
             return (
               <button
                 onClick={handleJoinClub}

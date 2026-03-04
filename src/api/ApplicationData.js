@@ -16,55 +16,55 @@ export const useApplicationStore = create((set, get) => ({
     const key = `${userId}_${clubId}`;
     set({ loading: true, error: null });
     try {
-      const response = await apiClient.get(`/applications?clubId=${clubId}`);
-      console.log("가입 신청 상태 API 응답:", response.data);
+      const response = await apiClient.get(`/applications/status/${clubId}`);
+      console.log("가입 신청 상태 API 응답 전체:", response);
+      console.log("가입 신청 상태 API 응답 data:", response.data);
+      console.log("응답 타입:", typeof response.data);
+      console.log("응답 JSON:", JSON.stringify(response.data));
       
-      // 응답이 배열인 경우 현재 사용자의 신청 찾기
-      const applications = Array.isArray(response.data)
-        ? response.data
-        : response.data?.content || response.data?.data || [];
-      
-      // 단일 객체로 반환되는 경우
-      if (!Array.isArray(response.data) && response.data?.memberId) {
-        const app = response.data;
-        // userId가 제공된 경우 현재 사용자의 신청인지 확인
-        if (userId && app.memberId !== userId) {
-          set((state) => {
-            const newApplications = { ...state.applications };
-            delete newApplications[key];
-            return {
-              applications: newApplications,
-              loading: false,
-              error: null,
-            };
-          });
-          return null;
-        }
-        set((state) => ({
-          applications: { ...state.applications, [key]: app },
-          loading: false,
-          error: null,
-        }));
-        return app;
+      // 응답이 객체인 경우 status 필드 추출
+      let status = response.data;
+      if (typeof status === "object" && status !== null) {
+        status = status.status || status.data || String(status);
       }
       
-      // 배열인 경우 현재 사용자의 신청 찾기
-      let myApplication = null;
-      if (userId) {
-        myApplication = applications.find(
-          (app) => app.memberId === userId || app.userId === userId
-        );
-      } else if (applications.length > 0) {
-        // userId가 없으면 첫 번째 항목 사용 (API가 현재 사용자 것만 반환한다고 가정)
-        myApplication = applications[0];
+      // 문자열로 변환하고 trim
+      status = String(status).trim();
+      
+      console.log("최종 처리된 status:", status, "타입:", typeof status);
+      console.log("status 길이:", status.length);
+      console.log("status === 'APPROVED':", status === "APPROVED");
+      console.log("status === 'PENDING':", status === "PENDING");
+      
+      // NONE인 경우 null 반환
+      if (status === "NONE" || status === "") {
+        set((state) => {
+          const newApplications = { ...state.applications };
+          delete newApplications[key];
+          return {
+            applications: newApplications,
+            loading: false,
+            error: null,
+          };
+        });
+        return null;
       }
+      
+      // 상태값이 있는 경우 application 객체 생성
+      const myApplication = {
+        clubId: clubId,
+        memberId: userId,
+        status: status,
+      };
       
       set((state) => ({
-        applications: { ...state.applications, [key]: myApplication || null },
+        applications: { ...state.applications, [key]: myApplication },
         loading: false,
         error: null,
       }));
-      return myApplication || null;
+      
+      console.log("저장된 application:", myApplication, "status:", status);
+      return myApplication;
     } catch (error) {
       console.error("가입 신청 상태 조회 중 오류 발생:", error);
       // 404 등으로 신청이 없는 경우는 정상적인 상황이므로 null로 설정
@@ -119,7 +119,9 @@ export const useApplicationStore = create((set, get) => ({
     }
     const state = get();
     const key = `${userId}_${clubId}`;
-    return state.applications[key] || null;
+    const application = state.applications[key] || null;
+    console.log("getApplication 호출 - clubId:", clubId, "userId:", userId, "key:", key, "application:", application);
+    return application;
   },
 
   resetApplication: (clubId) => {
@@ -187,5 +189,67 @@ export const useApplicationStore = create((set, get) => ({
     }
     const state = get();
     return state.pendingApplications[clubId] || [];
+  },
+
+  // 가입 승인
+  approveApplication: async (applicationId) => {
+    if (!applicationId) {
+      throw new Error("신청 ID가 필요합니다.");
+    }
+    
+    set({ loading: true, error: null });
+    try {
+      const response = await apiClient.put(`/applications/${applicationId}/approve`);
+      console.log("가입 승인 API 응답:", response.data);
+      
+      // 승인된 application 상태 업데이트
+      const approvedApp = response.data;
+      if (approvedApp && approvedApp.clubId && approvedApp.memberId) {
+        const key = `${approvedApp.memberId}_${approvedApp.clubId}`;
+        set((state) => ({
+          applications: { ...state.applications, [key]: approvedApp },
+          loading: false,
+          error: null,
+        }));
+      }
+      
+      set({ loading: false, error: null });
+      return response.data;
+    } catch (error) {
+      console.error("가입 승인 중 오류 발생:", error);
+      set({ error: error.message || error, loading: false });
+      throw error;
+    }
+  },
+
+  // 가입 거절
+  rejectApplication: async (applicationId) => {
+    if (!applicationId) {
+      throw new Error("신청 ID가 필요합니다.");
+    }
+    
+    set({ loading: true, error: null });
+    try {
+      const response = await apiClient.put(`/applications/${applicationId}/reject`);
+      console.log("가입 거절 API 응답:", response.data);
+      
+      // 거절된 application 상태 업데이트
+      const rejectedApp = response.data;
+      if (rejectedApp && rejectedApp.clubId && rejectedApp.memberId) {
+        const key = `${rejectedApp.memberId}_${rejectedApp.clubId}`;
+        set((state) => ({
+          applications: { ...state.applications, [key]: rejectedApp },
+          loading: false,
+          error: null,
+        }));
+      }
+      
+      set({ loading: false, error: null });
+      return response.data;
+    } catch (error) {
+      console.error("가입 거절 중 오류 발생:", error);
+      set({ error: error.message || error, loading: false });
+      throw error;
+    }
   },
 }));
