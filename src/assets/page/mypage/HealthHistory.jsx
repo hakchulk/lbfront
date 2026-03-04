@@ -45,43 +45,51 @@ function HealthHistoryMain() {
         sort,
       });
 
-      const grouped = {};
+      // 날짜 순서 Map으로
+      const dateMap = new Map();
 
       data.content.forEach((item) => {
         const date = new Date(item.dateAt).toISOString().split("T")[0];
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push(item);
+        if (!dateMap.has(date)) dateMap.set(date, []);
+        dateMap.get(date).push(item); // 순서 그대로
       });
 
-      const records = Object.entries(grouped).map(([date, items]) => {
-        const exerciseMap = {};
+      const records = Array.from(dateMap.entries()).map(([date, items]) => {
+        // ✅ 같은 날짜 안 운동은 createdAt 기준 정렬
+        const sortedItems = items.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-        items.forEach((i) => {
+        const exerciseMap = new Map();
+        const exercises = [];
+
+        sortedItems.forEach((i) => {
           const name = i.exerciseName;
           const duration = Number(i.durationMin) || 0;
           const calories = parseFloat(i.burntCalories) || 0;
 
-          if (!exerciseMap[name]) {
-            exerciseMap[name] = {
+          if (!exerciseMap.has(name)) {
+            const ex = {
               exerciseId: i.exerciseId,
               name,
-              durationMin: 0,
-              burntCalories: 0,
-              ids: [],
+              durationMin: duration,
+              burntCalories: calories,
+              ids: [i.id],
             };
+            exerciseMap.set(name, ex);
+            exercises.push(ex); // 순서 유지
+          } else {
+            const ex = exerciseMap.get(name);
+            ex.durationMin += duration;
+            ex.burntCalories += calories;
+            ex.ids.push(i.id);
           }
-
-          exerciseMap[name].durationMin += duration;
-          exerciseMap[name].burntCalories += calories;
-          exerciseMap[name].ids.push(i.id);
         });
 
-        const exercises = Object.values(exerciseMap);
         const totalCalories = exercises.reduce((sum, ex) => sum + ex.burntCalories, 0);
 
         return { date, exercises, totalCalories };
       });
 
+      // 날짜 순서만 정렬 (exercises 배열 순서는 그대로)
       const sortedRecords = records.sort((a, b) =>
         sort === "latest" ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date),
       );
