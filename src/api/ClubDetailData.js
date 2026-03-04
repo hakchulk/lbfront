@@ -42,4 +42,19 @@ export const useClubDetailStore = create((set) => ({
   },
 
   resetClubDetail: () => set({ club: null, error: null }),
+
+  createClub: async (formData) => {
+    try {
+      const response = await apiClient.post("/clubs", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("클럽 생성 API 응답:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("클럽 생성 중 오류 발생:", error);
+      throw error;
+    }
+  },
 }));

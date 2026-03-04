@@ -146,7 +146,7 @@ function CMHistory() {
                   {currentClubItems.map((club) => (
                     <Link
                       key={club.id}
-                      to={`detail/${club.id}`}
+                      to={`/club/detail/${club.id}`}
                       className="bg-deep rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-transform hover:-translate-y-1"
                     >
                       <div className="w-full h-[200px] overflow-hidden">

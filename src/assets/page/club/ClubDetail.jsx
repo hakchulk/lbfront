@@ -1,10 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Route, Routes, useParams, useNavigate } from "react-router-dom";
 import ClubPostList from "./ClubPostList";
 import BtnComp from "../../../components/BtnComp";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
 import { useBoardsStore } from "../../../api/BoardsData";
+import { useApplicationStore } from "../../../api/ApplicationData";
 import { BASE_URL } from "../../../api/config";
+import { useAuthStore } from "../../../stores/authStore";
 
 function ClubDetailMain() {
   const { id } = useParams();
@@ -20,6 +22,21 @@ function ClubDetailMain() {
     normalBoardsLoading,
     normalBoardsError,
   } = useBoardsStore();
+  const user = useAuthStore((state) => state.user);
+  const {
+    fetchMyApplication,
+    createApplication,
+    getApplication,
+    loading: applicationLoading,
+  } = useApplicationStore();
+  
+  // store에서 application 상태 구독
+  const application = useApplicationStore((state) => {
+    if (!id || !user?.id) return null;
+    const key = `${user.id}_${id}`;
+    return state.applications[key] || null;
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 클럽 상세 데이터 로드
   useEffect(() => {
@@ -51,6 +68,42 @@ function ClubDetailMain() {
     loadBoards();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // 가입 신청 상태 확인 (클럽 ID가 변경될 때마다)
+  useEffect(() => {
+    const loadApplicationStatus = async () => {
+      if (id && user?.id) {
+        try {
+          await fetchMyApplication(id, user.id);
+        } catch (err) {
+          console.error("가입 신청 상태 확인 실패:", err);
+        }
+      }
+    };
+    loadApplicationStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user?.id]);
+
+  // 모임 가입 신청 핸들러
+  const handleJoinClub = async () => {
+    if (!id || !user?.id || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await createApplication(id, user.id);
+      alert("모임 가입 신청이 완료되었습니다.");
+    } catch (err) {
+      console.error("모임 가입 신청 실패:", err);
+      alert(
+        err.response?.data?.message ||
+          "모임 가입 신청 중 오류가 발생했습니다."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -132,9 +185,51 @@ function ClubDetailMain() {
           </div>
 
           {/* 모임 참여 버튼 */}
-          <button className="mt-4 w-[280px] py-2 rounded-full bg-main-02 text-white font-medium hover:bg-main-01 transition">
-            모임 가입 하기
-          </button>
+          {(() => {
+            // 1. 매니저인 경우 버튼 숨김
+            if (club.managerId === user?.id) {
+              return null;
+            }
+
+            // 2. status가 PENDING 또는 APPROVED인 경우 버튼 숨김
+            const status = application?.status;
+            console.log("=== 버튼 표시 체크 ===");
+            console.log("application:", application);
+            console.log("status 원본:", status);
+            console.log("status 타입:", typeof status);
+            console.log("status JSON:", JSON.stringify(status));
+            
+            // status를 문자열로 변환하고 대소문자 무시하고 비교
+            const statusStr = String(status || "").trim();
+            const statusUpper = statusStr.toUpperCase();
+            
+            console.log("statusStr:", statusStr);
+            console.log("statusUpper:", statusUpper);
+            console.log("PENDING 비교 (원본):", statusStr === "PENDING");
+            console.log("APPROVED 비교 (원본):", statusStr === "APPROVED");
+            console.log("PENDING 비교 (대문자):", statusUpper === "PENDING");
+            console.log("APPROVED 비교 (대문자):", statusUpper === "APPROVED");
+            
+            // 대소문자 무시하고 비교
+            if (statusUpper === "PENDING" || statusUpper === "APPROVED") {
+              console.log("버튼 숨김 - status:", statusStr);
+              return null;
+            }
+
+            // 3. 그 외의 경우 버튼 표시
+            console.log("버튼 표시");
+            return (
+              <button
+                onClick={handleJoinClub}
+                disabled={isSubmitting || applicationLoading}
+                className="mt-4 w-[280px] py-2 rounded-full bg-main-02 text-white font-medium hover:bg-main-01 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting || applicationLoading
+                  ? "신청 중..."
+                  : "모임 가입 하기"}
+              </button>
+            );
+          })()}
         </div>
       </section>
 

@@ -58,6 +58,22 @@ export const getMyClubChartData = (myClubs, myBoards) => {
     };
   });
 
+  // 가입한 커뮤니티가 없을 때 빈 그래프를 표시하기 위해 빈 데이터셋 추가
+  // Chart.js는 빈 datasets 배열을 가진 차트도 표시할 수 있지만, 
+  // 명시적으로 빈 데이터셋을 하나 추가하여 빈 그래프가 확실히 표시되도록 함
+  if (datasets.length === 0) {
+    datasets.push({
+      label: '활동 내역 없음',
+      data: new Array(6).fill(0),
+      borderColor: '#e0e0e0',
+      backgroundColor: '#e0e0e0',
+      tension: 0.4,
+      pointRadius: 7,
+      pointHoverRadius: 9,
+      pointBorderWidth: 0,
+    });
+  }
+
   return {
     labels: months,
     datasets: datasets,
