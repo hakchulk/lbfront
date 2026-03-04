@@ -36,10 +36,10 @@ function CMManagementMain() {
 
   return (
     <>
-      <div className="wrap !bg-light-02 !mt-0 pt-[50px] py-[5%]">
+      <div className="wrap  !bg-light-02 !mt-0 pt-[50px] py-[5%]">
         <div className="containers">
           {/* 프로필 */}
-          <section className="profile w-full md:w-[50%] mx-auto flex items-center justify-center p-4 rounded-[20px]">
+          <section className="profile w-full md:w-[50%] mx-auto flex items-center justify-center pt-5 rounded-[20px]">
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
               {/* 프로필 이미지 */}
               <div className="pf_img w-[64px] h-[64px] bg-gray-deep rounded-full overflow-hidden flex-shrink-0">
@@ -74,17 +74,17 @@ function CMManagementMain() {
           </section>
 
           {/* 나머지 */}
-          <section className="helpme py-[5%]">
-            <ul className="w-full flex flex-col lg:flex-row justify-between items-center gap-6 lg:gap-4">
-              <li className="w-full lg:w-[30%]">
+          <section className="helpme py-[5%] flex items-center justify-center">
+            <ul className="w-[90%] lg:w-full flex flex-col lg:flex-row justify-between items-center lg:gap-0.5 xl:gap-2 ">
+              <li className="w-full lg:w-[32%] xl:w-[30%]">
                 {/* 유저가 매니저인 클럽이 있으면: 커뮤니티 개설하기 카드 대신 개설한 클럽 카드 노출 */}
                 {myManagedClubs.length > 0 ? (
-                  <div className="w-full">
-                    <h4 className="text-deep text-center mb-4 text-base md:text-lg">
+                  <div className="flex flex-col justify-center items-center">
+                    <h4 className="text-deep text-center mb-4 text-base md:text-lg mt-5">
                       나의 관리 커뮤니티
                     </h4>
-                    <div className="overflow-hidden rounded-[20px]">
-                      <div className="grid grid-cols-1 gap-4 md:gap-6">
+                    <div className="rounded-[20px] overflow-hidden w-full">
+                      <div className="grid grid-cols-1 gap-4 md:gap-6 ">
                         {myManagedClubs.map((club) => (
                           <Link
                             key={club.id}
@@ -107,12 +107,12 @@ function CMManagementMain() {
                                 {club.desc}
                               </p>
 
-                              <div className="flex flex-wrap justify-center gap-2 mt-2 md:mt-3">
+                              <div className="flex flex-wrap lg:flex-nowrap justify-center gap-2 mt-2 md:mt-3">
                                 {club.tags && club.tags.length > 0
                                   ? club.tags.map((tag, idx) => (
                                       <span
                                         key={idx}
-                                        className="px-2 md:px-3 py-1 !text-xs md:!text-[14px] rounded-full bg-light-03 text-deep"
+                                        className="px-2 lg:px-1.5 xl:px-2 md:px-3 py-1 !text-xs lg:!text-[10px] xl:!text-sm md:!text-[14px] rounded-full bg-light-03 text-deep whitespace-nowrap "
                                       >
                                         #{tag}
                                       </span>
@@ -130,7 +130,7 @@ function CMManagementMain() {
                     to="cmopen"
                     className="flex flex-col justify-center items-center"
                   >
-                    <h4 className="text-deep mb-4 text-base md:text-lg">
+                    <h4 className="text-deep mb-4 text-base md:text-lg mt-5">
                       커뮤니티 개설하기
                     </h4>
                     <div className="border border-main-02 overflow-hidden rounded-[20px] w-full">
@@ -144,12 +144,12 @@ function CMManagementMain() {
                 )}
               </li>
 
-              <li className="w-full lg:w-[30%]">
+              <li className="w-full lg:w-[32%] xl:w-[30%]">
                 <Link
                   to="cmjoinlist"
                   className="flex flex-col justify-center items-center"
                 >
-                  <h4 className="text-deep mb-4 text-base md:text-lg">
+                  <h4 className="text-deep mb-4 text-base md:text-lg mt-5">
                     가입 신청 리스트
                   </h4>
                   <div
@@ -168,12 +168,12 @@ function CMManagementMain() {
                 </Link>
               </li>
 
-              <li className="w-full lg:w-[30%]">
+              <li className="w-full lg:w-[32%] xl:w-[30%]">
                 <Link
                   to="noticemanagement"
                   className="flex flex-col justify-center items-center"
                 >
-                  <h4 className="text-deep mb-4 text-base md:text-lg">
+                  <h4 className="text-deep mb-4 text-base md:text-lg mt-5">
                     공지사항 관리
                   </h4>
                   <div
