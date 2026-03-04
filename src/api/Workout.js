@@ -29,3 +29,12 @@ export const updateWorkout = async (workoutId, data) => {
   const response = await apiClient.put(`/workouts/${workoutId}`, data);
   return response.data;
 };
+
+// 날짜별 운동 조회
+
+export const getWorkoutByDate = async (date) => {
+  const response = await apiClient.get("/workouts/date", {
+    params: { date },
+  });
+  return response.data;
+};

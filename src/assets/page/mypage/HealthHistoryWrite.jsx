@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import BtnComp from "../../../components/BtnComp";
 import { getExercises } from "../../../api/exercise";
-import { calculateWorkout, createWorkout, deleteWorkout } from "../../../api/Workout";
+import { calculateWorkout, createWorkout, deleteWorkout, getWorkoutByDate } from "../../../api/Workout";
 
 function InputRow({ label, exerciseId, value, onChange }) {
   return (
@@ -59,6 +59,37 @@ function HealthHistoryWrite() {
   const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
     today.getDate(),
   ).padStart(2, "0")}`;
+
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    const fetchByDate = async () => {
+      try {
+        const data = await getWorkoutByDate(selectedDate);
+
+        if (!data || data.length === 0) {
+          // 해당 날짜 기록 없으면 초기화
+          setExerciseInputs({});
+          setTotalCalories(0);
+          return;
+        }
+
+        const inputObj = {};
+        let total = 0;
+
+        data.forEach((item) => {
+          inputObj[String(item.exerciseId)] = item.durationMin;
+          total += item.burntCalories;
+        });
+
+        setExerciseInputs(inputObj);
+        setTotalCalories(total);
+      } catch (error) {
+        console.error("날짜별 조회 실패", error);
+      }
+    };
+    fetchByDate();
+  }, [selectedDate]);
 
   useEffect(() => {
     const fetchExercises = async () => {
@@ -146,7 +177,6 @@ function HealthHistoryWrite() {
     console.log("저장 시작");
     console.log("현재 입력값:", exerciseInputs);
     console.log("현재 totalCalories:", totalCalories);
-    console.log("현재 record:", record);
 
     if (totalCalories <= 0) {
       alert("운동 시간을 입력하고 계산 후 저장해주세요!");
@@ -154,21 +184,20 @@ function HealthHistoryWrite() {
     }
 
     try {
-      if (record && record.exercises) {
-        const deleteIds = record.exercises.filter((ex) => Array.isArray(ex.ids)).flatMap((ex) => ex.ids);
+      // 🔹 1. 기존 날짜 기록 조회
+      const existingData = await getWorkoutByDate(selectedDate);
 
-        console.log("🗑 삭제할 ID들:", deleteIds);
-
-        if (deleteIds.length > 0) {
-          await Promise.all(
-            deleteIds.map(async (id) => {
-              console.log("🗑 delete 요청:", id);
-              return deleteWorkout(id);
-            }),
-          );
-        }
+      // 🔹 2. 기존 기록 삭제
+      if (existingData && existingData.length > 0) {
+        await Promise.all(
+          existingData.map((item) => {
+            console.log("🗑 삭제 요청:", item.id);
+            return deleteWorkout(item.id);
+          }),
+        );
       }
 
+      // 🔹 3. 새로 입력된 값으로 생성
       for (const [exerciseId, duration] of Object.entries(exerciseInputs)) {
         const durationNum = Number(duration);
 
@@ -216,9 +245,15 @@ function HealthHistoryWrite() {
           </h3>
         </section>
 
-        <div className="min-tit flex justify-center items-center bg-main-02 w-[200px] mx-auto text-white py-[5px] border rounded-[20px] mt-[3%]">
-          <span className="material-icons mr-1.5">calendar_today</span>
-          <span>{selectedDate}</span>
+        <div className="flex justify-center mt-[3%]">
+          <div className="relative w-[200px]">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full border border-main-02 rounded-[5px] px-4 py-2 text-center bg-white text-deep focus:ring-2 focus:ring-main-02 accent-deep"
+            />
+          </div>
         </div>
 
         <section className="sect1 w-full md:w-[90%] lg:w-[70%] xl:w-[45%] bg-white rounded-[20px] border border-green-800 shadow-[0_4px_4px_rgba(0,0,0,0.15)] mx-auto my-[3%] mb-[5%]">
