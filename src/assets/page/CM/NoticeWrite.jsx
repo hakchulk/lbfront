@@ -1,12 +1,33 @@
-import { useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import BtnComp from "../../../components/BtnComp";
-import { useNavigate } from "react-router-dom";
-import Noticemanagement from "./Noticemanagement";
-import CMManagement from "./CMManagement";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useClubStore } from "../../../api/ClubData";
+import { useAuthStore } from "../../../stores/authStore";
+import { useBoardsStore } from "../../../api/BoardsData";
+import { BASE_URL } from "../../../api/config";
+import usePaginationStore from "../../../stores/paginationStore";
 
 function NoticeWrite() {
-  // 샘플 데이터 - 실제로는 API에서 받아올 데이터
-  const clubName = "고기고기"; // 클럽 이름
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const boardId = searchParams.get("boardId");
+  const isEditMode = !!boardId;
+
+  // 클럽 / 유저 / 게시판 스토어
+  const { clubs, fetchClubs } = useClubStore();
+  const user = useAuthStore((state) => state.user);
+  const { createBoard, updateBoard, fetchBoardDetail, boardDetail } = useBoardsStore();
+  const resetPagination = usePaginationStore((state) => state.resetPagination);
+
+  // 내가 매니저인 클럽들만 필터링 (공지사항은 매니저 클럽 기준으로 작성)
+  const myManagedClubs = useMemo(() => {
+    if (!user?.id || !Array.isArray(clubs)) return [];
+    return clubs.filter((club) => club.managerId === user.id);
+  }, [clubs, user]);
+
+  const managedClub = myManagedClubs[0];
+  const clubName = managedClub?.name || "";
+  const clubId = managedClub?.id;
 
   // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
   const today = new Date();
@@ -15,24 +36,50 @@ function NoticeWrite() {
   const day = String(today.getDate()).padStart(2, "0");
   const todayString = `${year}-${month}-${day}`;
 
-  const [keywords, setKeywords] = useState([]);
-  const [keywordInput, setKeywordInput] = useState("");
+  const [title, setTitle] = useState("");
+  const [contents, setContents] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate();
 
-  //이동
-  const handleSave = () => {
-    alert("작성이 완료되었습니다.");
-    navigate("/CMManagement/Noticemanagement");
-  };
+  // 클럽 리스트 로드 (ClubPostWrite 패턴 참고)
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        await fetchClubs();
+      } catch (err) {
+        console.error("클럽 리스트 로드 실패:", err);
+      }
+    };
+    loadClubs();
+  }, [fetchClubs]);
 
-  //취소
-  const handleCsl = () => {
-    alert("작성이 취소되었습니다.");
-    navigate("/CMManagement/Noticemanagement");
-  };
+  // 수정 모드일 때 기존 게시글 데이터 로드
+  useEffect(() => {
+    const loadBoardDetail = async () => {
+      if (isEditMode && boardId) {
+        try {
+          await fetchBoardDetail(boardId);
+        } catch (err) {
+          console.error("게시글 상세 데이터 로드 실패:", err);
+        }
+      }
+    };
+    loadBoardDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardId, isEditMode]);
+
+  // 수정 모드일 때 기존 데이터로 폼 초기화
+  useEffect(() => {
+    if (isEditMode && boardDetail) {
+      setTitle(boardDetail.title || "");
+      setContents(boardDetail.contents || "");
+      if (boardDetail.filename) {
+        setPreview(`${BASE_URL}/file/${boardDetail.filename}`);
+      }
+    }
+  }, [isEditMode, boardDetail]);
 
   /* 이미지 처리 */
   const handleImageChange = (e) => {
@@ -47,6 +94,78 @@ function NoticeWrite() {
     fileInputRef.current?.click();
   };
 
+  /* 공지사항 저장/수정 (board_type = 2 고정) */
+  const handleSave = async () => {
+    if (!title.trim()) {
+      alert("제목을 입력해주세요.");
+      return;
+    }
+    if (!contents.trim()) {
+      alert("내용을 입력해주세요.");
+      return;
+    }
+    if (!clubId) {
+      alert("공지사항을 등록할 클럽이 없습니다.");
+      return;
+    }
+    if (!user?.id) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("title", title.trim());
+      formData.append("contents", contents.trim());
+      // BoardsData 매핑에 맞춰 boardType 사용, 공지사항이므로 항상 2
+      formData.append("boardType", "2");
+
+      // 파일이 있으면 추가 (수정 모드에서 새 파일로 교체)
+      if (imageFile) {
+        formData.append("file", imageFile);
+      }
+
+      let response;
+      if (isEditMode && boardId) {
+        // 수정 모드
+        response = await updateBoard(boardId, formData);
+        alert("수정이 완료되었습니다.");
+        resetPagination("cm-join-list"); // 페이지네이션 초기화
+        navigate("/CMManagement/noticemanagement");
+      } else {
+        // 작성 모드
+        formData.append("clubId", clubId);
+        formData.append("memberName", user.name || "");
+        response = await createBoard(formData);
+        alert("작성이 완료되었습니다.");
+        resetPagination("cm-join-list"); // 페이지네이션 초기화
+        navigate("/CMManagement/noticemanagement");
+      }
+    } catch (err) {
+      console.error(isEditMode ? "공지사항 수정 실패:" : "공지사항 저장 실패:", err);
+      alert(
+        err?.response?.data?.message || (isEditMode ? "공지사항 수정에 실패했습니다." : "공지사항 저장에 실패했습니다.")
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //취소
+  const handleCsl = () => {
+    if (isEditMode && boardId && clubId) {
+      // 수정 모드: 원래 게시글 상세 페이지로 이동
+      alert("수정이 취소되었습니다.");
+      navigate(`/club/detail/${clubId}/postlist/posting/${boardId}`);
+    } else {
+      // 작성 모드: 공지사항 관리 페이지로 이동
+      alert("작성이 취소되었습니다.");
+      navigate("/CMManagement/noticemanagement");
+    }
+  };
+
   return (
     <>
       <div className="wrap !mt-0 !bg-light-02">
@@ -54,10 +173,10 @@ function NoticeWrite() {
           {/* write title */}
           <section className="wr_tit text-black py-[10px] mt-[50px] border-b border-b-[1px] border-b-deep">
             <div className="flex flex-row  items-center text-deep">
-              <i class="fa-solid fa-file-pen"></i>
-              <span>{clubName} 모임</span>
+              <i className="fa-solid fa-file-pen"></i>
+              <span className="ml-1">{clubName} 모임</span>
             </div>
-            <h3>공지사항 작성</h3>
+            <h3>{isEditMode ? "공지사항 수정" : "공지사항 작성"}</h3>
           </section>
 
           {/* 입력 폼 */}
@@ -65,7 +184,13 @@ function NoticeWrite() {
             {/* 제목 */}
             <div className="mb-6">
               <label className="block mb-2 font-semibold">제목</label>
-              <input className="w-full border  border-deep rounded px-3 h-[35px] bg-white" />
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full border  border-deep rounded px-3 h-[35px] bg-white"
+                placeholder="제목을 입력하세요"
+              />
             </div>
 
             {/* 작성일자 */}
@@ -102,6 +227,7 @@ function NoticeWrite() {
                     variant="primary"
                     className="mt-0 !h-[35px] w-full "
                     onClick={handleFileButtonClick}
+                    disabled={loading}
                   >
                     파일 선택
                   </BtnComp>
@@ -120,7 +246,13 @@ function NoticeWrite() {
             {/* 내용 */}
             <div className="mb-8">
               <label className="block mb-2 font-semibold">내용</label>
-              <textarea className="w-full h-100 border  border-deep rounded p-3 bg-white" />
+              <textarea
+                value={contents}
+                onChange={(e) => setContents(e.target.value)}
+                className="w-full h-100 border  border-deep rounded p-3 bg-white"
+                placeholder="내용을 입력하세요"
+                rows={10}
+              />
             </div>
 
             {/* 버튼 */}
@@ -130,8 +262,9 @@ function NoticeWrite() {
                 size="short"
                 className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
                 onClick={handleSave}
+                disabled={loading}
               >
-                저장
+                {loading ? (isEditMode ? "수정 중..." : "저장 중...") : (isEditMode ? "수정" : "저장")}
               </BtnComp>
 
               <BtnComp
@@ -139,6 +272,7 @@ function NoticeWrite() {
                 size="short"
                 className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
                 onClick={handleCsl}
+                disabled={loading}
               >
                 취소
               </BtnComp>

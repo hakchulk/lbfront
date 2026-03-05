@@ -47,7 +47,10 @@ function Home() {
         <div className="swiper home-swiper">
           <div className="swiper-wrapper">
             <div className="swiper-slide">
-              <div className="w-full h-[60vw] md:h-[45vw] lg:h-[50vw] overflow-hidden cursor-pointer">
+              <div 
+                className="w-full h-[60vw] md:h-[45vw] lg:h-[50vw] overflow-hidden cursor-pointer"
+                onClick={() => navigate("/event/detail/1")}
+              >
                 <img
                   src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ev01_bn_1920.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9ldjAxX2JuXzE5MjAucG5nIiwiaWF0IjoxNzY5NzUzOTIxLCJleHAiOjE4MDEyODk5MjF9.XioFTH9uhrs4OO42hJWSS9XG0fe-Pg-DBWwKFLGTG9Q"
                   alt="img"
@@ -57,7 +60,10 @@ function Home() {
             </div>
 
             <div className="swiper-slide">
-              <div className="w-full h-[60vw] md:h-[45vw] lg:h-[50vw] overflow-hidden cursor-pointer">
+              <div 
+                className="w-full h-[60vw] md:h-[45vw] lg:h-[50vw] overflow-hidden cursor-pointer"
+                onClick={() => navigate("/event/detail/2")}
+              >
                 <img
                   src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ev02_bn_1920.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9ldjAyX2JuXzE5MjAucG5nIiwiaWF0IjoxNzY5NzUzOTc3LCJleHAiOjE4MDEyODk5Nzd9._pVFpC_HEea3OAwbEjJowlzyElLsEdZ5tDrdANb84a8"
                   alt="img"
@@ -67,7 +73,10 @@ function Home() {
             </div>
 
             <div className="swiper-slide">
-              <div className="w-full h-[60vw] md:h-[45vw] lg:h-[50vw] overflow-hidden cursor-pointer">
+              <div 
+                className="w-full h-[60vw] md:h-[45vw] lg:h-[50vw] overflow-hidden cursor-pointer"
+                onClick={() => navigate("/event/detail/3")}
+              >
                 <img
                   src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ev03_bn_1920.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9ldjAzX2JuXzE5MjAucG5nIiwiaWF0IjoxNzY5NzUzOTg0LCJleHAiOjE4MDEyODk5ODR9.Bvji5OyxnNdmHVYxhRPNJJMTWptuHyRB4G_1ulZCupU"
                   alt="img"
@@ -77,7 +86,10 @@ function Home() {
             </div>
 
             <div className="swiper-slide">
-              <div className="w-full h-[60vw] md:h-[45vw] lg:h-[50vw] overflow-hidden cursor-pointer">
+              <div 
+                className="w-full h-[60vw] md:h-[45vw] lg:h-[50vw] overflow-hidden cursor-pointer"
+                onClick={() => navigate("/event/detail/4")}
+              >
                 <img
                   src="https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/ev04_bn_1920.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9ldjA0X2JuXzE5MjAucG5nIiwiaWF0IjoxNzY5NzUzOTkyLCJleHAiOjE4MDEyODk5OTJ9.SFDM1QxSlJzUidHPE99SuCS8dtVfD4sgGHQ0AXC1GZM"
                   alt="img"

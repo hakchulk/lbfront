@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
 import BtnComp from "../../../components/BtnComp";
 import { useNavigate } from "react-router-dom";
+import { useClubDetailStore } from "../../../api/ClubDetailData";
+import { useAuthStore } from "../../../stores/authStore";
+import { useMyClubStore } from "../../../api/MyClubData";
 
 function CMopen() {
-  // 샘플 데이터 - 실제로는 API에서 받아올 데이터
-  const clubName = "고기고기"; // 클럽 이름
-
   // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
   const today = new Date();
   const year = today.getFullYear();
@@ -13,16 +13,69 @@ function CMopen() {
   const day = String(today.getDate()).padStart(2, "0");
   const todayString = `${year}-${month}-${day}`;
 
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [keywords, setKeywords] = useState([]);
   const [keywordInput, setKeywordInput] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const { createClub } = useClubDetailStore();
+  const user = useAuthStore((state) => state.user);
+  const { fetchMyClubs } = useMyClubStore();
 
-  //이동
-  const handleSave = () => {
-    navigate("/CMmanagement");
+  // 클럽 생성
+  const handleSave = async () => {
+    // 유효성 검사
+    if (!name.trim()) {
+      alert("클럽 이름을 입력해주세요.");
+      return;
+    }
+    if (!description.trim()) {
+      alert("소개글을 입력해주세요.");
+      return;
+    }
+    if (keywords.length < 1 || keywords.length > 5) {
+      alert("키워드는 1개 이상 5개 이하로 입력해주세요.");
+      return;
+    }
+    if (!imageFile) {
+      alert("배경 이미지를 선택해주세요.");
+      return;
+    }
+    if (!user?.id) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // FormData로 모든 데이터를 함께 전송
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("description", description.trim());
+      formData.append("keywords", keywords.join(","));
+      formData.append("file", imageFile);
+      formData.append("manager_id", user.id);
+
+      await createClub(formData);
+      // 클럽 생성 성공 후 마이클럽 데이터 다시 조회
+      await fetchMyClubs();
+      alert("클럽이 개설되었습니다");
+      navigate("/CMmanagement");
+    } catch (err) {
+      console.error("클럽 생성 실패:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "클럽 생성에 실패했습니다.";
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   /* 키워드 처리 */
@@ -68,17 +121,22 @@ function CMopen() {
           <section className="wr_tit text-black py-[10px] mt-[50px] border-b border-b-[1px] border-b-deep">
             <div className="flex flex-row  items-center text-deep">
               <i class="fa-solid fa-file-pen"></i>
-              <span>{clubName} 모임</span>
+              <span>커뮤니티 개설</span>
             </div>
             <h3>커뮤니티 개설</h3>
           </section>
 
           {/* 입력 폼 */}
           <section className=" w-full py-8">
-            {/* 제목 */}
+            {/* 클럽 이름 */}
             <div className="mb-6">
-              <label className="block mb-2 font-semibold">제목</label>
-              <input className="w-full border  border-deep rounded px-3 h-[35px] bg-white" />
+              <label className="block mb-2 font-semibold">클럽 이름</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full border  border-deep rounded px-3 h-[35px] bg-white"
+                placeholder="클럽 이름을 입력해주세요"
+              />
             </div>
 
             {/* 작성일자 */}
@@ -166,7 +224,7 @@ function CMopen() {
                     {keyword}
                     <button
                       onClick={() => removeKeyword(index)}
-                      className="text-xs ml-1"
+                      className="text-xs ml-1 cursor-pointer"
                     >
                       ✕
                     </button>
@@ -182,7 +240,12 @@ function CMopen() {
             {/* 소개글 */}
             <div className="mb-8">
               <label className="block mb-2 font-semibold">소개글</label>
-              <textarea className="w-full h-40 border  border-deep rounded p-3 bg-white" />
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full h-40 border  border-deep rounded p-3 bg-white"
+                placeholder="클럽 소개글을 입력해주세요"
+              />
             </div>
 
             {/* 버튼 */}
@@ -192,14 +255,17 @@ function CMopen() {
                 size="short"
                 className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
                 onClick={handleSave}
+                disabled={loading}
               >
-                저장
+                {loading ? "저장 중..." : "저장"}
               </BtnComp>
 
               <BtnComp
                 variant="point"
                 size="short"
                 className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+                onClick={() => navigate("/CMmanagement")}
+                disabled={loading}
               >
                 취소
               </BtnComp>

@@ -69,6 +69,14 @@ function NavComp() {
     navigate("/member");
   };
 
+  // 밸런스 체크 링크 클릭 핸들러
+  const handleBalanceCheckClick = (e) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      alert("로그인 시 이용 가능합니다");
+    }
+  };
+
   return (
     <nav className="bg-main-02 text-white fixed w-full top-0 left-0 z-50 shadow-lg">
       <div className="w-full md:w-[90%] mx-auto px-4">
@@ -119,6 +127,7 @@ function NavComp() {
                 <Link
                   key={link.name}
                   to={link.to}
+                  onClick={link.to === "/mypage" ? handleBalanceCheckClick : undefined}
                   className="relative text-white hover:text-light-01 transition-colors duration-300 py-2 group"
                 >
                   {link.name}
@@ -150,6 +159,7 @@ function NavComp() {
           <div className="flex items-center gap-2 md:hidden">
             <Link
               to={isLoggedIn ? "/mypage" : "/mypage"}
+              onClick={handleBalanceCheckClick}
               //나중에 멤버
               className="w-10 h-10 flex items-center justify-center text-white hover:text-main-01 transition-colors duration-300"
             >
@@ -180,7 +190,15 @@ function NavComp() {
               key={link.name}
               to={link.to}
               className="block py-3 px-4 text-deep hover:bg-main-02/20 hover:text-deep transition-all duration-300 border-b border-main-02"
-              onClick={() => setIsOpen(false)}
+              onClick={(e) => {
+                if (link.to === "/mypage" && !isLoggedIn) {
+                  e.preventDefault();
+                  alert("로그인 시 이용 가능합니다");
+                  setIsOpen(false);
+                } else {
+                  setIsOpen(false);
+                }
+              }}
             >
               {index === 0 && isLoggedIn ? (
                 <>{user?.name + "님의 밸런스 체크"}</>

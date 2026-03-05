@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import BtnComp from "../../../components/BtnComp";
 import PageNatation from "./../../../components/PageNatation";
 import usePaginationStore from "../../../stores/paginationStore";
+import { useApplicationStore } from "../../../api/ApplicationData";
+import { useClubStore } from "../../../api/ClubData";
+import { useAuthStore } from "../../../stores/authStore";
 
 function CMjoinlist() {
   // 반응형 pageSize 상태
@@ -13,6 +16,21 @@ function CMjoinlist() {
   const pagination = usePaginationStore((state) => state.paginations[storeKey]);
   const currentPage = pagination?.currentPage ?? 0;
   const setPageSizeStore = usePaginationStore((state) => state.setPageSize);
+
+  // API 및 상태 관리
+  const { fetchPendingApplications, loadingPending, approveApplication, rejectApplication } = useApplicationStore();
+  const { clubs, fetchClubs } = useClubStore();
+  const user = useAuthStore((state) => state.user);
+
+  // 가입 신청 리스트 상태
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [clubName, setClubName] = useState("");
+
+  // 내가 매니저인 클럽들 필터링
+  const myManagedClubs = useMemo(() => {
+    if (!user?.id || !Array.isArray(clubs)) return [];
+    return clubs.filter((club) => club.managerId === user.id);
+  }, [clubs, user]);
 
   // 화면 크기에 따라 pageSize 설정 (PC: 9개, 태블릿: 6개, 모바일: 4개)
   useEffect(() => {
@@ -47,24 +65,65 @@ function CMjoinlist() {
     setPageSizeStore(storeKey, pageSize);
   }, [pageSize, storeKey, setPageSizeStore]);
 
-  // 샘플 데이터 - 실제로는 API에서 받아올 데이터
-  const clubName = "고기고기"; // 클럽 이름
-  const joinRequests = [
-    { id: 1, userName: "이하늘" },
-    { id: 2, userName: "장희란" },
-    { id: 3, userName: "이지은" },
-    { id: 4, userName: "홍지승" },
-    { id: 5, userName: "이유정" },
-    { id: 6, userName: "삼하늘" },
-    { id: 7, userName: "이영호" },
-    { id: 8, userName: "김미영" },
-    { id: 9, userName: "박준호" },
-    { id: 10, userName: "김하늘" },
-    { id: 11, userName: "강유진" },
-    { id: 12, userName: "임윤섭" },
-    { id: 13, userName: "이윤섭" },
-    { id: 14, userName: "삼윤섭" },
-  ];
+  // 클럽 리스트 및 가입 신청 리스트 가져오기
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // 클럽 리스트 가져오기
+        await fetchClubs();
+      } catch (err) {
+        console.error("클럽 리스트 로드 실패:", err);
+      }
+    };
+    loadData();
+  }, [fetchClubs]);
+
+  // 매니저인 클럽의 가입 신청 리스트 가져오기
+  useEffect(() => {
+    const loadPendingApplications = async () => {
+      if (myManagedClubs.length === 0) {
+        setJoinRequests([]);
+        setClubName("");
+        return;
+      }
+
+      try {
+        // 모든 매니저 클럽의 가입 신청을 합쳐서 가져오기
+        const allRequests = [];
+        for (const club of myManagedClubs) {
+          const requests = await fetchPendingApplications(club.id);
+          // 클럽 정보를 포함하여 저장
+          const requestsWithClub = requests.map((req) => ({
+            ...req,
+            clubId: club.id,
+            clubName: club.name,
+          }));
+          allRequests.push(...requestsWithClub);
+        }
+
+        // 최신순 정렬 (createdAt 또는 applicationId 기준)
+        const sortedRequests = allRequests.sort((a, b) => {
+          // createdAt이 있으면 그것을 기준으로 정렬
+          if (a.createdAt && b.createdAt) {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          }
+          // createdAt이 없으면 applicationId 기준으로 정렬 (큰 값이 최신)
+          return (b.applicationId || 0) - (a.applicationId || 0);
+        });
+
+        setJoinRequests(sortedRequests);
+        // 첫 번째 클럽 이름을 기본값으로 설정 (여러 클럽이 있을 경우)
+        if (myManagedClubs.length > 0) {
+          setClubName(myManagedClubs[0].name);
+        }
+      } catch (err) {
+        console.error("가입 신청 리스트 로드 실패:", err);
+        setJoinRequests([]);
+      }
+    };
+
+    loadPendingApplications();
+  }, [myManagedClubs, fetchPendingApplications]);
 
   // 페이지네이션된 데이터
   const paginatedRequests = useMemo(() => {
@@ -72,6 +131,76 @@ function CMjoinlist() {
     const endIndex = startIndex + pageSize;
     return joinRequests.slice(startIndex, endIndex);
   }, [joinRequests, currentPage, pageSize]);
+
+  // 가입 승인 핸들러
+  const handleApprove = async (applicationId, clubId) => {
+    if (!applicationId) {
+      alert("신청 정보를 찾을 수 없습니다.");
+      return;
+    }
+    
+    try {
+      await approveApplication(applicationId);
+      alert("가입 승인이 처리되었습니다.");
+      // 승인 후 리스트 새로고침
+      const allRequests = [];
+      for (const club of myManagedClubs) {
+        const requests = await fetchPendingApplications(club.id);
+        const requestsWithClub = requests.map((req) => ({
+          ...req,
+          clubId: club.id,
+          clubName: club.name,
+        }));
+        allRequests.push(...requestsWithClub);
+      }
+      // 최신순 정렬
+      const sortedRequests = allRequests.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        return (b.applicationId || 0) - (a.applicationId || 0);
+      });
+      setJoinRequests(sortedRequests);
+    } catch (error) {
+      console.error("가입 승인 실패:", error);
+      alert("가입 승인 처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 가입 거절 핸들러
+  const handleReject = async (applicationId, clubId) => {
+    if (!applicationId) {
+      alert("신청 정보를 찾을 수 없습니다.");
+      return;
+    }
+    
+    try {
+      await rejectApplication(applicationId);
+      alert("가입 승인이 거절되었습니다.");
+      // 거절 후 리스트 새로고침
+      const allRequests = [];
+      for (const club of myManagedClubs) {
+        const requests = await fetchPendingApplications(club.id);
+        const requestsWithClub = requests.map((req) => ({
+          ...req,
+          clubId: club.id,
+          clubName: club.name,
+        }));
+        allRequests.push(...requestsWithClub);
+      }
+      // 최신순 정렬
+      const sortedRequests = allRequests.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        return (b.applicationId || 0) - (a.applicationId || 0);
+      });
+      setJoinRequests(sortedRequests);
+    } catch (error) {
+      console.error("가입 거절 실패:", error);
+      alert("가입 거절 처리 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <>
@@ -89,24 +218,34 @@ function CMjoinlist() {
 
           {/* list */}
           <section className="ac_list w-[80%] mx-auto my-[5%] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedRequests.map((request) => (
-              <div
-                key={request.id}
-                className="bg-white rounded-xl shadow-sm border border-[#E0F2C9] p-6 flex flex-col items-center justify-center gap-4"
-              >
-                <p className="text-center text-gray-800 leading-relaxed">
-                  {request.userName} 회원님이
-                  <br />
-                  {clubName} 모임에
-                  <br />
-                  가입을 신청하셨습니다
-                </p>
+            {loadingPending ? (
+              <div className="col-span-full text-center py-8 text-gray-600">
+                로딩 중...
+              </div>
+            ) : paginatedRequests.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-gray-600">
+                가입 신청이 없습니다.
+              </div>
+            ) : (
+              paginatedRequests.map((request) => (
+                <div
+                  key={request.applicationId}
+                  className="bg-white rounded-xl shadow-sm border border-[#E0F2C9] p-6 flex flex-col items-center justify-center gap-4"
+                >
+                  <p className="text-center text-gray-800 leading-relaxed">
+                    {request.memberName} 회원님이
+                    <br />
+                    {request.clubName || clubName} 모임에
+                    <br />
+                    가입을 신청하셨습니다
+                  </p>
 
                 <div className="flex gap-2 w-[50%] min-w-[180px] mx-auto ">
                   <BtnComp
                     variant="primary"
                     size="short"
                     className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_save  "
+                    onClick={() => handleApprove(request.applicationId, request.clubId)}
                   >
                     수락
                   </BtnComp>
@@ -115,12 +254,14 @@ function CMjoinlist() {
                     variant="point"
                     size="short"
                     className="!w-[48%] !mt-0 !h-[35px] !text-xs md:!text-sm btn_can"
+                    onClick={() => handleReject(request.applicationId, request.clubId)}
                   >
                     거절
                   </BtnComp>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </section>
 
           {/* 페이지네이션 */}

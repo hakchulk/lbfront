@@ -3,6 +3,10 @@ import { useAuthStore } from "../stores/authStore";
 
 export const BASE_URL = "http://localhost:8080/api/lastlayer";
 
+// 대체 이미지 URL
+export const DEFAULT_POST_IMAGE_URL =
+  "https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/Frame%2068.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9GcmFtZSA2OC5wbmciLCJpYXQiOjE3NzI2NzU0NzAsImV4cCI6MTgwNDIxMTQ3MH0.ErPbcwDA4-KdW-Edr1iVtdJrOjrJQkwLLORgS70TcUA";
+
 // 1. 일반적인 데이터 요청용 (쿠키 X)
 export const apiClient = axios.create({
   baseURL: BASE_URL,
