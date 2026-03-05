@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import apiClient, { BASE_URL } from "./config";
 
+export const DefaultPostImageUrl =
+  "https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/Frame%2068.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9GcmFtZSA2OC5wbmciLCJpYXQiOjE3NzI2NzU0NzAsImV4cCI6MTgwNDIxMTQ3MH0.ErPbcwDA4-KdW-Edr1iVtdJrOjrJQkwLLORgS70TcUA";
+
 export const useClubDetailStore = create((set) => ({
   club: null,
   loading: false,
@@ -17,7 +20,9 @@ export const useClubDetailStore = create((set) => ({
       const clubDetail = {
         id: clubData.id,
         name: clubData.name,
-        title: clubData.description ? clubData.description.split(".")[0] : "클럽",
+        title: clubData.description
+          ? clubData.description.split(".")[0]
+          : "클럽",
         desc: clubData.description || "",
         image: clubData.filename
           ? `${BASE_URL}/file/${clubData.filename}`
@@ -28,7 +33,11 @@ export const useClubDetailStore = create((set) => ({
         memberCount: clubData.memberCount || clubData.membersCount || null,
         postCount: clubData.postCount || 0,
         managerId: clubData.managerId,
-        managerName: clubData.managerName || clubData.manager || clubData.clubManager || null,
+        managerName:
+          clubData.managerName ||
+          clubData.manager ||
+          clubData.clubManager ||
+          null,
         createdAt: clubData.createdAt,
       };
 
