@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import NavComp from "./components/NavComp";
 import FooterComp from "./components/FooterComp";
@@ -9,8 +9,14 @@ import Club from "./assets/page/club/Club";
 import Event from "./assets/page/event/Event";
 import MyPage from "./assets/page/mypage/MyPage";
 import CMManagement from "./assets/page/CM/CMManagement";
+import ChatbotPanel from "./components/chatbot/ChatbotPanel";
+import ChatbotButton from "./components/chatbot/ChatbotButton";
+import { useAuthStore } from "./stores/authStore";
 
 function App() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const { accessToken } = useAuthStore();
   return (
     <>
       <NavComp />
@@ -29,6 +35,14 @@ function App() {
         </Routes>
       </div>
       <FooterComp />
+
+      {/* 로그인 상태일 때만 챗봇 보여주기 */}
+      {accessToken && (
+        <>
+          <ChatbotButton onClick={() => setIsChatOpen(true)} />
+          {isChatOpen && <ChatbotPanel onClose={() => setIsChatOpen(false)} />}
+        </>
+      )}
     </>
   );
 }
