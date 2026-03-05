@@ -150,7 +150,15 @@ function ClubPostWrite() {
 
   /* 취소 */
   const handleCancel = () => {
-    navigate(`../postlist`);
+    if (isEditMode && boardId) {
+      // 수정 모드: 원래 게시글 상세 페이지로 이동
+      alert("수정이 취소되었습니다.");
+      navigate(`/club/detail/${id}/postlist/posting/${boardId}`);
+    } else {
+      // 작성 모드: 게시글 리스트로 이동
+      alert("작성이 취소되었습니다.");
+      navigate(`/club/detail/${id}/postlist`);
+    }
   };
 
   return (

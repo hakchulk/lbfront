@@ -174,6 +174,22 @@ export const useBoardsStore = create((set) => ({
     }
   },
 
+  // 게시글 삭제 (deleted_at에 시간 기록)
+  deleteBoard: async (boardId) => {
+    if (!boardId) {
+      throw new Error("boardId가 없습니다.");
+    }
+
+    try {
+      const response = await apiClient.delete(`/boards/${boardId}`);
+      console.log("게시글 삭제 API 응답:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("게시글 삭제 중 오류 발생:", error);
+      throw error;
+    }
+  },
+
   resetBoards: () => set({ boards: [], error: null }),
   resetNormalBoards: () => set({ normalBoards: [], normalBoardsError: null }),
   resetBoardDetail: () => set({ boardDetail: null, boardDetailError: null }),

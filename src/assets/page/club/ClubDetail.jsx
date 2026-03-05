@@ -5,7 +5,7 @@ import BtnComp from "../../../components/BtnComp";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
 import { useBoardsStore } from "../../../api/BoardsData";
 import { useApplicationStore } from "../../../api/ApplicationData";
-import { BASE_URL } from "../../../api/config";
+import { BASE_URL, DEFAULT_POST_IMAGE_URL } from "../../../api/config";
 import { useAuthStore } from "../../../stores/authStore";
 
 function ClubDetailMain() {
@@ -86,7 +86,13 @@ function ClubDetailMain() {
 
   // 모임 가입 신청 핸들러
   const handleJoinClub = async () => {
-    if (!id || !user?.id || isSubmitting) {
+    if (!id || isSubmitting) {
+      return;
+    }
+
+    // 로그인하지 않은 유저인 경우 알림 표시하고 종료
+    if (!user?.id) {
+      alert("로그인 시 이용 가능합니다");
       return;
     }
 
@@ -370,7 +376,7 @@ function ClubDetailMain() {
                         ? `${BASE_URL}/file/${post.filename}`
                         : post.fileId
                         ? `${BASE_URL}/file/${post.fileId}`
-                        : "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image1.png"
+                        : DEFAULT_POST_IMAGE_URL
                     }
                     alt={post.title}
                     className="w-full h-60 object-cover rounded-lg"

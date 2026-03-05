@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Route, Routes, Link } from "react-router-dom";
 import ClubDetail from "./ClubDetail";
 import PageNatation from "../../../components/PageNatation";
-import { useClubStore } from "../../../api/ClubData";
+import { useClubStore, DefaultPostImageUrl } from "../../../api/ClubData";
 import usePaginationStore from "../../../stores/paginationStore";
 
 function ClubMain() {
   const [sort, setSort] = useState("latest");
   const [searchKeyword, setSearchKeyword] = useState("");
-  const { clubs, fetchClubs, fetchClubsBySort, searchClubs, loading, error } = useClubStore();
+  const { clubs, fetchClubs, fetchClubsBySort, searchClubs, loading, error } =
+    useClubStore();
 
   // 검색어와 정렬에 따라 데이터 로드
   useEffect(() => {
@@ -71,7 +72,7 @@ function ClubMain() {
   // 검색 결과를 정렬하여 필터링
   const sortedClubs = useMemo(() => {
     if (!clubs || clubs.length === 0) return [];
-    
+
     // 검색 결과가 있을 때만 정렬 적용
     if (searchKeyword.trim()) {
       const sorted = [...clubs];
@@ -262,6 +263,9 @@ function ClubMain() {
                       src={club.image}
                       alt={club.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = DefaultPostImageUrl;
+                      }}
                     />
                   </div>
 

@@ -68,7 +68,10 @@ function CMopen() {
       navigate("/CMmanagement");
     } catch (err) {
       console.error("클럽 생성 실패:", err);
-      const errorMessage = err.response?.data?.message || err.message || "클럽 생성에 실패했습니다.";
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "클럽 생성에 실패했습니다.";
       alert(errorMessage);
     } finally {
       setLoading(false);
@@ -128,10 +131,10 @@ function CMopen() {
             {/* 클럽 이름 */}
             <div className="mb-6">
               <label className="block mb-2 font-semibold">클럽 이름</label>
-              <input 
+              <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full border  border-deep rounded px-3 h-[35px] bg-white" 
+                className="w-full border  border-deep rounded px-3 h-[35px] bg-white"
                 placeholder="클럽 이름을 입력해주세요"
               />
             </div>
@@ -221,7 +224,7 @@ function CMopen() {
                     {keyword}
                     <button
                       onClick={() => removeKeyword(index)}
-                      className="text-xs ml-1"
+                      className="text-xs ml-1 cursor-pointer"
                     >
                       ✕
                     </button>
@@ -237,7 +240,7 @@ function CMopen() {
             {/* 소개글 */}
             <div className="mb-8">
               <label className="block mb-2 font-semibold">소개글</label>
-              <textarea 
+              <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full h-40 border  border-deep rounded p-3 bg-white"
