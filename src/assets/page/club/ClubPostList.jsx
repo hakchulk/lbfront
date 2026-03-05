@@ -122,11 +122,19 @@ function ClubPostListMain() {
         </h3>
 
         <div className="border border-main-02 rounded-lg overflow-hidden">
-          <div className="grid grid-cols-12 bg-gray-100 px-4 py-2 text-[13px] text-gray-600 font-semibold">
-            <span className="col-span-1">번호</span>
-            <span className="col-span-5">제목</span>
-            <span className="col-span-3">작성자</span>
-            <span className="col-span-3">작성일</span>
+          <div className="grid grid-cols-12 bg-gray-100 px-4 py-2 text-center font-semibold text-gray-600">
+            <span className="col-span-1 text-left sm:text-center !text-sm !sm:text-md !md:text-lg">
+              번호
+            </span>
+            <span className="col-span-5 text-left sm:text-center !text-sm !sm:text-md !md:text-lg">
+              제목
+            </span>
+            <span className="col-span-3 !text-sm !sm:text-md !md:text-lg">
+              작성자
+            </span>
+            <span className="col-span-3 !text-sm !sm:text-md !md:text-lg">
+              작성일
+            </span>
           </div>
 
           {(() => {
@@ -172,12 +180,20 @@ function ClubPostListMain() {
               <Link
                 key={notice.id}
                 to={`posting/${notice.id}`}
-                className="grid grid-cols-12 px-4 py-3 text-[13px] border-b last:border-b-0 border-gray-mid hover:bg-gray-50"
+                className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50"
               >
-                <span className="col-span-1">{startIndex + idx + 1}</span>
-                <span className="col-span-5 truncate text-point-hov">{notice.title}</span>
-                <span className="col-span-3">{notice.author || "정보 없음"}</span>
-                <span className="col-span-3">{notice.date || "정보 없음"}</span>
+                <span className="col-span-1 text-left sm:text-center !text-xs !sm:text-md !md:text-lg">
+                  {startIndex + idx + 1}
+                </span>
+                <span className="col-span-5 text-left sm:text-center text-point-hov !text-sm !sm:text-md !md:text-lg truncate">
+                  {notice.title}
+                </span>
+                <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">
+                  {notice.author || "정보 없음"}
+                </span>
+                <span className="col-span-3 !text-xs !sm:text-md !md:text-lg">
+                  {notice.date || "정보 없음"}
+                </span>
               </Link>
             ));
           })()}

@@ -155,8 +155,15 @@ function NoticeWrite() {
 
   //취소
   const handleCsl = () => {
-    alert("작성이 취소되었습니다.");
-    navigate("/CMManagement/noticemanagement");
+    if (isEditMode && boardId && clubId) {
+      // 수정 모드: 원래 게시글 상세 페이지로 이동
+      alert("수정이 취소되었습니다.");
+      navigate(`/club/detail/${clubId}/postlist/posting/${boardId}`);
+    } else {
+      // 작성 모드: 공지사항 관리 페이지로 이동
+      alert("작성이 취소되었습니다.");
+      navigate("/CMManagement/noticemanagement");
+    }
   };
 
   return (
