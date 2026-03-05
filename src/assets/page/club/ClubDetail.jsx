@@ -86,7 +86,13 @@ function ClubDetailMain() {
 
   // 모임 가입 신청 핸들러
   const handleJoinClub = async () => {
-    if (!id || !user?.id || isSubmitting) {
+    if (!id || isSubmitting) {
+      return;
+    }
+
+    // 로그인하지 않은 유저인 경우 알림 표시하고 종료
+    if (!user?.id) {
+      alert("로그인 시 이용 가능합니다");
       return;
     }
 
