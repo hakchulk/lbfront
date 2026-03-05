@@ -5,7 +5,7 @@ import ClubPostWrite from "./ClubPostWrite";
 import PageNatation from "../../../components/PageNatation";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
 import { useBoardsStore } from "../../../api/BoardsData";
-import { BASE_URL } from "../../../api/config";
+import { BASE_URL, DEFAULT_POST_IMAGE_URL } from "../../../api/config";
 import usePaginationStore from "../../../stores/paginationStore";
 
 function ClubPostListMain() {
@@ -23,8 +23,12 @@ function ClubPostListMain() {
     normalBoardsError,
   } = useBoardsStore();
   const resetPagination = usePaginationStore((state) => state.resetPagination);
-  const noticePagination = usePaginationStore((state) => state.paginations["notice-list"]);
-  const postPagination = usePaginationStore((state) => state.paginations["post-list"]);
+  const noticePagination = usePaginationStore(
+    (state) => state.paginations["notice-list"],
+  );
+  const postPagination = usePaginationStore(
+    (state) => state.paginations["post-list"],
+  );
 
   // 페이지네이션 리셋 (컴포넌트 마운트 시 또는 id 변경 시)
   useEffect(() => {
@@ -105,11 +109,16 @@ function ClubPostListMain() {
         <div className="absolute inset-0 bg-black/50" />
 
         <div className="relative z-10 h-full flex flex-col justify-center items-center text-white text-center px-4">
-          <h2 className="text-2xl lg:text-3xl font-bold">{club.name}에 오신걸 환영합니다</h2>
+          <h2 className="text-2xl lg:text-3xl font-bold">
+            {club.name}에 오신걸 환영합니다
+          </h2>
           <div className="w-[520px] max-w-[90vw] h-[2px] bg-main-02 my-4" />
-          <p className="text-xs lg:text-sm opacity-80">{club.desc || "자유로운 소통 공간"}</p>
           <p className="text-xs lg:text-sm opacity-80">
-            공지사항을 꼭 확인해 주세요. 자유게시판에서는 편하게 이야기 나누세요!
+            {club.desc || "자유로운 소통 공간"}
+          </p>
+          <p className="text-xs lg:text-sm opacity-80">
+            공지사항을 꼭 확인해 주세요. 자유게시판에서는 편하게 이야기
+            나누세요!
           </p>
         </div>
       </section>
@@ -207,7 +216,7 @@ function ClubPostListMain() {
               boards
                 ? boards.filter(
                     (board, index, self) =>
-                      index === self.findIndex((b) => b.id === board.id)
+                      index === self.findIndex((b) => b.id === board.id),
                   ).length
                 : 0
             }
@@ -220,8 +229,12 @@ function ClubPostListMain() {
       <div className="w-full  lg:w-[80%] mx-auto mt-24 px-4 relative">
         {/* 타이틀 */}
         <div className="flex justify-center items-center text-main-02 mb-4">
-          <span className="material-icons mr-2 text-[20px] lg:text-[26px]">article</span>
-          <h3 className="!text-[20px] lg:!text-[28px]">{club.name} 자유게시판</h3>
+          <span className="material-icons mr-2 text-[20px] lg:text-[26px]">
+            article
+          </span>
+          <h3 className="!text-[20px] lg:!text-[28px]">
+            {club.name} 자유게시판
+          </h3>
         </div>
 
         {/* 정렬 */}
@@ -250,7 +263,7 @@ function ClubPostListMain() {
             const uniqueNormalBoards = normalBoards
               ? normalBoards.filter(
                   (board, index, self) =>
-                    index === self.findIndex((b) => b.id === board.id)
+                    index === self.findIndex((b) => b.id === board.id),
                 )
               : [];
 
@@ -287,9 +300,13 @@ function ClubPostListMain() {
                 return dateB - dateA;
               });
             } else if (sort === "likes") {
-              sortedBoards.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+              sortedBoards.sort(
+                (a, b) => (b.likeCount || 0) - (a.likeCount || 0),
+              );
             } else if (sort === "views") {
-              sortedBoards.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+              sortedBoards.sort(
+                (a, b) => (b.viewCount || 0) - (a.viewCount || 0),
+              );
             }
 
             // 페이지네이션 적용 (6개씩)
@@ -306,7 +323,9 @@ function ClubPostListMain() {
                 className="border border-main-02 rounded-xl hover:shadow-md transition bg-white"
               >
                 <div className="flex justify-between px-4 pt-3 text-[10px] text-gray-400">
-                  <span className="font-medium text-deep">{post.author || "정보 없음"}</span>
+                  <span className="font-medium text-deep">
+                    {post.author || "정보 없음"}
+                  </span>
                   <span>{post.date || "정보 없음"}</span>
                 </div>
 
@@ -316,8 +335,8 @@ function ClubPostListMain() {
                       post.filename
                         ? `${BASE_URL}/file/${post.filename}`
                         : post.fileId
-                        ? `${BASE_URL}/file/${post.fileId}`
-                        : "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image3.png"
+                          ? `${BASE_URL}/file/${post.fileId}`
+                          : DEFAULT_POST_IMAGE_URL
                     }
                     alt={post.title}
                     className="w-full h-[200px] rounded-md object-cover"
@@ -325,16 +344,24 @@ function ClubPostListMain() {
                 </div>
 
                 <div className="px-4 pb-4">
-                  <h4 className="text-[14px] font-semibold line-clamp-2">{post.title}</h4>
-                  <p className="text-[12px] text-gray-600 line-clamp-2">{post.contents || ""}</p>
+                  <h4 className="text-[14px] font-semibold line-clamp-2">
+                    {post.title}
+                  </h4>
+                  <p className="text-[12px] text-gray-600 line-clamp-2">
+                    {post.contents || ""}
+                  </p>
 
                   <div className="flex justify-end gap-3 text-[9px] text-gray-400 mt-2">
                     <span className="flex items-center gap-0.5">
-                      <span className="material-icons text-[10px]">visibility</span>
+                      <span className="material-icons text-[10px]">
+                        visibility
+                      </span>
                       {post.viewCount || 0}
                     </span>
                     <span className="flex items-center gap-0.5">
-                      <span className="material-icons text-[10px]">favorite</span>
+                      <span className="material-icons text-[10px]">
+                        favorite
+                      </span>
                       {post.likeCount || 0}
                     </span>
                   </div>
@@ -363,7 +390,7 @@ function ClubPostListMain() {
               normalBoards
                 ? normalBoards.filter(
                     (board, index, self) =>
-                      index === self.findIndex((b) => b.id === board.id)
+                      index === self.findIndex((b) => b.id === board.id),
                   ).length
                 : 0
             }

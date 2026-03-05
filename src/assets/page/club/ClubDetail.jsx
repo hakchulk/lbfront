@@ -5,7 +5,7 @@ import BtnComp from "../../../components/BtnComp";
 import { useClubDetailStore } from "../../../api/ClubDetailData";
 import { useBoardsStore } from "../../../api/BoardsData";
 import { useApplicationStore } from "../../../api/ApplicationData";
-import { BASE_URL } from "../../../api/config";
+import { BASE_URL, DEFAULT_POST_IMAGE_URL } from "../../../api/config";
 import { useAuthStore } from "../../../stores/authStore";
 
 function ClubDetailMain() {
@@ -370,7 +370,7 @@ function ClubDetailMain() {
                         ? `${BASE_URL}/file/${post.filename}`
                         : post.fileId
                         ? `${BASE_URL}/file/${post.fileId}`
-                        : "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image1.png"
+                        : DEFAULT_POST_IMAGE_URL
                     }
                     alt={post.title}
                     className="w-full h-60 object-cover rounded-lg"
