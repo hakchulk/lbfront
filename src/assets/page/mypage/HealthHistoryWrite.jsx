@@ -127,11 +127,13 @@ function HealthHistoryWrite() {
   }, [record, exercises]);
 
   const handleChange = (exerciseId, value) => {
-    console.log("✏️ 입력 변경:", exerciseId, value);
+    console.log(" 입력 변경:", exerciseId, value);
     setExerciseInputs((prev) => ({
       ...prev,
       [String(exerciseId)]: value,
     }));
+
+    setTotalCalories(0);
   };
 
   //  계산
@@ -184,10 +186,10 @@ function HealthHistoryWrite() {
     }
 
     try {
-      // 🔹 1. 기존 날짜 기록 조회
+      //  1. 기존 날짜 기록 조회
       const existingData = await getWorkoutByDate(selectedDate);
 
-      // 🔹 2. 기존 기록 삭제
+      //  2. 기존 기록 삭제
       if (existingData && existingData.length > 0) {
         await Promise.all(
           existingData.map((item) => {
@@ -197,7 +199,7 @@ function HealthHistoryWrite() {
         );
       }
 
-      // 🔹 3. 새로 입력된 값으로 생성
+      //  3. 새로 입력된 값으로 생성
       for (const [exerciseId, duration] of Object.entries(exerciseInputs)) {
         const durationNum = Number(duration);
 
