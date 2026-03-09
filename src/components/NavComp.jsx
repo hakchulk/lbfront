@@ -17,15 +17,30 @@ function NavComp() {
       to: "/mypage",
     },
     { name: "커뮤니티 관리", to: "/CMmanagement", requireRole: "CLUBMANAGER" },
+    { name: "어드민", to: "/admin", requireRole: "ADMIN" },
     { name: "라스트밸런스", to: "/about" },
     { name: "커뮤니티", to: "/club" },
     { name: "이벤트", to: "/event" },
   ];
 
+  // 어드민 유저인지 확인
+  const isAdmin = user?.role === 2 || user?.roles?.includes("ADMIN");
+
   // 권한에 따라 링크 필터링
   const navLinks = allNavLinks.filter((link) => {
+    // 어드민 유저인 경우: 어드민 메뉴만 표시
+    if (isAdmin) {
+      return link.requireRole === "ADMIN";
+    }
+
+    // 일반 유저인 경우: 기존 로직대로 필터링
     // 요구하는 권한이 없는 링크는 통과
     if (!link.requireRole) return true;
+
+    // 어드민 권한 체크: role이 2이거나 roles에 "ADMIN"이 있는 경우
+    if (link.requireRole === "ADMIN") {
+      return user?.role === 2 || user?.roles?.includes("ADMIN");
+    }
 
     // 요구하는 권한이 있는 경우, 사용자의 roles에 포함되어 있는지 확인
     return user?.roles?.includes(link.requireRole);
@@ -123,11 +138,19 @@ function NavComp() {
           {/* PC 메뉴 */}
           <div className="hidden md:block">
             <div className="flex items-center space-x-6">
+              {/* 어드민 유저인 경우 유저 이름 표시 */}
+              {isAdmin && isLoggedIn && (
+                <span className="text-white font-medium">
+                  {user?.name} 관리자님
+                </span>
+              )}
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.to}
-                  onClick={link.to === "/mypage" ? handleBalanceCheckClick : undefined}
+                  onClick={
+                    link.to === "/mypage" ? handleBalanceCheckClick : undefined
+                  }
                   className="relative text-white hover:text-light-01 transition-colors duration-300 py-2 group"
                 >
                   {link.name}
@@ -184,6 +207,12 @@ function NavComp() {
         }`}
       >
         <div className="h-full overflow-y-auto">
+          {/* 어드민 유저인 경우 유저 이름 표시 */}
+          {isAdmin && isLoggedIn && (
+            <div className="py-3 px-4 text-deep font-medium border-b border-main-02">
+              {user?.name} 관리자님
+            </div>
+          )}
           {/* 모바일 메뉴 모든 항목 */}
           {navLinks.map((link, index) => (
             <Link

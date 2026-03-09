@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Chart from "../../../components/ChartComp";
 import { cmChartOptions } from "../../../api/TestChartData";
 import { getMyClubChartData } from "../../../api/MyClubChartData";
@@ -14,6 +14,7 @@ const PAGE_SIZE = 5; // 테이블 페이지 크기
 const CLUB_PAGE_SIZE = 3; // 카드 리스트 페이지 크기
 
 function CMHistory() {
+  const navigate = useNavigate();
   // PageNatation에서 0-based page를 넘겨주므로 이에 맞춤
   const [page, setPage] = useState(0);
   const [clubPage, setClubPage] = useState(0);
@@ -285,6 +286,7 @@ function CMHistory() {
                 currentPageItems.map((notice, idx) => (
                   <div
                     key={notice.id}
+                    onClick={() => navigate(`/club/detail/${notice.clubId}/postlist/posting/${notice.id}`)}
                     className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
                   >
                     <span className="col-span-1">
