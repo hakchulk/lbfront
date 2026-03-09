@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
+import { askChatbot } from "../../api/Chatbot";
 
 function ChatbotPanel({ onClose }) {
   const [messages, setMessages] = useState([
     { from: "bot", text: "안녕하세요! 밸런스봇이에요. 체력, 식단, 운동 중 무엇을 도와드릴까요?" },
   ]);
   const [userInput, setUserInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
   // 스크롤 자동 아래로
@@ -12,28 +14,45 @@ function ChatbotPanel({ onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleOptionClick = (option) => {
+  // 옵션 버튼 클릭
+  const handleOptionClick = async (option) => {
     setMessages((prev) => [...prev, { from: "user", text: option }]);
+    setLoading(true);
 
-    let botReply = "";
-    if (option === "체력관리") botReply = "체력 관리를 도와드릴게요!";
-    if (option === "식단관리") botReply = "식단 관리를 시작해볼까요?";
-    if (option === "운동추천") botReply = "오늘의 운동을 추천해드릴게요!";
+    try {
+      const res = await askChatbot(option);
 
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { from: "bot", text: botReply }]);
-    }, 300);
+      setMessages((prev) => [...prev, { from: "bot", text: res.answer }]);
+    } catch (err) {
+      console.error("챗봇 오류:", err);
+
+      setMessages((prev) => [...prev, { from: "bot", text: "서버 오류가 발생했습니다." }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSend = () => {
+  // 메시지 전송
+  const handleSend = async () => {
     if (!userInput.trim()) return;
 
-    setMessages((prev) => [...prev, { from: "user", text: userInput }]);
-    setUserInput("");
+    const input = userInput;
 
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { from: "bot", text: `"${userInput}" 라고 하셨군요!` }]);
-    }, 300);
+    setMessages((prev) => [...prev, { from: "user", text: input }]);
+    setUserInput("");
+    setLoading(true);
+
+    try {
+      const res = await askChatbot(input);
+
+      setMessages((prev) => [...prev, { from: "bot", text: res.answer }]);
+    } catch (err) {
+      console.error("챗봇 오류:", err);
+
+      setMessages((prev) => [...prev, { from: "bot", text: "서버 오류가 발생했습니다." }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -73,7 +92,7 @@ function ChatbotPanel({ onClose }) {
 
               {/* 메시지 텍스트 */}
               <div
-                className={`p-2 rounded-lg text-xs bg-white text-black`}
+                className="p-2 rounded-lg text-xs bg-white text-black"
                 style={{
                   maxWidth: "85vw",
                   whiteSpace: "pre-wrap",
@@ -86,6 +105,13 @@ function ChatbotPanel({ onClose }) {
             </div>
           </div>
         ))}
+
+        {/* 로딩 메시지 */}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="text-xs text-gray-500">밸런스봇이 답변을 생성중입니다...</div>
+          </div>
+        )}
 
         <div ref={messagesEndRef}></div>
 

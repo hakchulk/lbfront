@@ -22,6 +22,7 @@ function ChatbotButton() {
             src="https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/chatbot.png"
             alt="Chatbot"
             className="w-full h-full rounded-full object-cover"
+            z
           />
         )}
       </button>
