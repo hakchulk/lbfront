@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link, Route, Routes, useParams, useNavigate } from "react-router-dom";
 import ClubPostList from "./ClubPostList";
 import BtnComp from "../../../components/BtnComp";
-import { useClubDetailStore } from "../../../api/ClubDetailData";
+import {
+  DefaultPostImageUrl,
+  useClubDetailStore,
+} from "../../../api/ClubDetailData";
 import { useBoardsStore } from "../../../api/BoardsData";
 import { useApplicationStore } from "../../../api/ApplicationData";
 import { BASE_URL, DEFAULT_POST_IMAGE_URL } from "../../../api/config";
@@ -29,7 +32,7 @@ function ClubDetailMain() {
     getApplication,
     loading: applicationLoading,
   } = useApplicationStore();
-  
+
   // store에서 application 상태 구독
   const application = useApplicationStore((state) => {
     if (!id || !user?.id) return null;
@@ -103,8 +106,7 @@ function ClubDetailMain() {
     } catch (err) {
       console.error("모임 가입 신청 실패:", err);
       alert(
-        err.response?.data?.message ||
-          "모임 가입 신청 중 오류가 발생했습니다."
+        err.response?.data?.message || "모임 가입 신청 중 오류가 발생했습니다.",
       );
     } finally {
       setIsSubmitting(false);
@@ -140,9 +142,12 @@ function ClubDetailMain() {
       {/* 상단 배너 */}
       <section className="relative w-full h-[450px] overflow-hidden">
         <img
-          src={club.image}
+          src={club.image || DefaultPostImageUrl}
           alt="club banner"
           className="absolute inset-0 w-full h-full object-cover"
+          onError={(e) => {
+            e.target.src = DefaultPostImageUrl;
+          }}
         />
 
         <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center px-4">
@@ -204,18 +209,18 @@ function ClubDetailMain() {
             console.log("status 원본:", status);
             console.log("status 타입:", typeof status);
             console.log("status JSON:", JSON.stringify(status));
-            
+
             // status를 문자열로 변환하고 대소문자 무시하고 비교
             const statusStr = String(status || "").trim();
             const statusUpper = statusStr.toUpperCase();
-            
+
             console.log("statusStr:", statusStr);
             console.log("statusUpper:", statusUpper);
             console.log("PENDING 비교 (원본):", statusStr === "PENDING");
             console.log("APPROVED 비교 (원본):", statusStr === "APPROVED");
             console.log("PENDING 비교 (대문자):", statusUpper === "PENDING");
             console.log("APPROVED 비교 (대문자):", statusUpper === "APPROVED");
-            
+
             // 대소문자 무시하고 비교
             if (statusUpper === "PENDING" || statusUpper === "APPROVED") {
               console.log("버튼 숨김 - status:", statusStr);
@@ -300,7 +305,9 @@ function ClubDetailMain() {
             return uniqueBoards.slice(0, 3).map((notice, idx) => (
               <div
                 key={notice.id}
-                onClick={() => navigate(`/club/detail/${id}/postlist/posting/${notice.id}`)}
+                onClick={() =>
+                  navigate(`/club/detail/${id}/postlist/posting/${notice.id}`)
+                }
                 className="grid grid-cols-12 px-4 py-3 text-center border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
               >
                 <span className="col-span-1 text-left sm:text-center !text-xs !sm:text-md !md:text-lg">
@@ -334,7 +341,7 @@ function ClubDetailMain() {
             const uniqueNormalBoards = normalBoards
               ? normalBoards.filter(
                   (board, index, self) =>
-                    index === self.findIndex((b) => b.id === board.id)
+                    index === self.findIndex((b) => b.id === board.id),
                 )
               : [];
 
@@ -365,7 +372,9 @@ function ClubDetailMain() {
             return uniqueNormalBoards.slice(0, 4).map((post) => (
               <div
                 key={post.id}
-                onClick={() => navigate(`/club/detail/${id}/postlist/posting/${post.id}`)}
+                onClick={() =>
+                  navigate(`/club/detail/${id}/postlist/posting/${post.id}`)
+                }
                 className="border border-main-02 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer bg-white overflow-hidden"
               >
                 {/* 이미지 */}
@@ -375,11 +384,14 @@ function ClubDetailMain() {
                       post.filename
                         ? `${BASE_URL}/file/${post.filename}`
                         : post.fileId
-                        ? `${BASE_URL}/file/${post.fileId}`
-                        : DEFAULT_POST_IMAGE_URL
+                          ? `${BASE_URL}/file/${post.fileId}`
+                          : DEFAULT_POST_IMAGE_URL
                     }
                     alt={post.title}
                     className="w-full h-60 object-cover rounded-lg"
+                    onError={(e) => {
+                      e.target.src = DefaultPostImageUrl;
+                    }}
                   />
                 </div>
 

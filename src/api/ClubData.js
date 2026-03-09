@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import apiClient, { BASE_URL } from "./config";
 
+export const DefaultPostImageUrl =
+  "https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/Frame%2068.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9GcmFtZSA2OC5wbmciLCJpYXQiOjE3NzI2NzU0NzAsImV4cCI6MTgwNDIxMTQ3MH0.ErPbcwDA4-KdW-Edr1iVtdJrOjrJQkwLLORgS70TcUA";
+
 export const useClubStore = create((set) => ({
   clubs: [],
   loading: false,
@@ -10,7 +13,7 @@ export const useClubStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await apiClient.get("/clubs");
-      console.log("API 응답:", response.data);
+      console.log("fetchClubs API 응답:", response.data);
       const rawData = Array.isArray(response.data)
         ? response.data
         : response.data?.data || response.data?.content || [];
@@ -34,6 +37,7 @@ export const useClubStore = create((set) => ({
       }));
 
       set({ clubs: clubsData, loading: false });
+      console.log("클럽 데이터:", clubsData);
       return clubsData;
     } catch (error) {
       console.error("클럽 데이터 가져오기 중 오류 발생:", error);
@@ -61,7 +65,7 @@ export const useClubStore = create((set) => ({
       }
 
       const response = await apiClient.get(endpoint);
-      console.log("API 응답:", response.data);
+      console.log("fetchClubsBySort API 응답:", response.data);
       const rawData = Array.isArray(response.data)
         ? response.data
         : response.data?.data || response.data?.content || [];
@@ -72,9 +76,7 @@ export const useClubStore = create((set) => ({
         name: club.name,
         title: club.description ? club.description.split(".")[0] : "클럽",
         desc: club.description || "",
-        image: club.filename
-          ? `${BASE_URL}/file/${club.filename}`
-          : "https://yjpmigedokqexuclsapm.supabase.co/storage/v1/object/public/images/Image2.png",
+        image: `${BASE_URL}/file/${club.filename}`,
         tags: club.keywords
           ? club.keywords.split(",").map((k) => k.trim())
           : [],

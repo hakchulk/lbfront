@@ -1,7 +1,11 @@
 import axios from "axios";
 import { useAuthStore } from "../stores/authStore";
 
-export const BASE_URL = "http://localhost:8080/api/lastlayer";
+// import.meta.env.VITE_APIBASE_URL이 존재(truthy)하면 그 값을 쓰고,
+// 없으면 뒤의 "http://localhost:8080..."을 기본값으로 사용합니다.
+export const BASE_URL =
+  import.meta.env.VITE_APIBASE_URL || "http://localhost:8080/api/lastlayer";
+console.log("BASE_URL:", BASE_URL);
 
 // 대체 이미지 URL
 export const DEFAULT_POST_IMAGE_URL =
