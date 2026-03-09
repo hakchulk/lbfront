@@ -3,7 +3,10 @@ import { askChatbot } from "../../api/Chatbot";
 
 function ChatbotPanel({ onClose }) {
   const [messages, setMessages] = useState([
-    { from: "bot", text: "안녕하세요! 밸런스봇이에요. 체력, 식단, 운동 중 무엇을 도와드릴까요?" },
+    {
+      from: "bot",
+      text: "안녕하세요! 밸런스봇이에요. 체력, 식단, 운동 중 무엇을 도와드릴까요?",
+    },
   ]);
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +29,10 @@ function ChatbotPanel({ onClose }) {
     } catch (err) {
       console.error("챗봇 오류:", err);
 
-      setMessages((prev) => [...prev, { from: "bot", text: "서버 오류가 발생했습니다." }]);
+      setMessages((prev) => [
+        ...prev,
+        { from: "bot", text: "서버 오류가 발생했습니다." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -49,7 +55,10 @@ function ChatbotPanel({ onClose }) {
     } catch (err) {
       console.error("챗봇 오류:", err);
 
-      setMessages((prev) => [...prev, { from: "bot", text: "서버 오류가 발생했습니다." }]);
+      setMessages((prev) => [
+        ...prev,
+        { from: "bot", text: "서버 오류가 발생했습니다." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -60,7 +69,7 @@ function ChatbotPanel({ onClose }) {
   };
 
   return (
-    <div className="fixed bottom-20 right-6 w-[320px] h-[450px] bg-light-02 border border-gray-300 rounded-xl shadow-lg flex flex-col overflow-hidden">
+    <div className="fixed bottom-22 right-6 w-[320px] h-[450px] bg-light-02 border border-gray-300 rounded-xl shadow-lg flex flex-col overflow-hidden">
       {/* 상단 로고 */}
       <div className="flex items-center justify-start px-4 py-2">
         <img
@@ -76,7 +85,9 @@ function ChatbotPanel({ onClose }) {
           <div
             key={idx}
             className="w-full flex"
-            style={{ justifyContent: msg.from === "bot" ? "flex-start" : "flex-end" }}
+            style={{
+              justifyContent: msg.from === "bot" ? "flex-start" : "flex-end",
+            }}
           >
             <div className="flex flex-col">
               <span className="!text-xs text-black mb-1 flex items-center gap-1">
@@ -109,7 +120,9 @@ function ChatbotPanel({ onClose }) {
         {/* 로딩 메시지 */}
         {loading && (
           <div className="flex justify-start">
-            <div className="text-xs text-gray-500">밸런스봇이 답변을 생성중입니다...</div>
+            <div className="text-xs text-gray-500">
+              밸런스봇이 답변을 생성중입니다...
+            </div>
           </div>
         )}
 
