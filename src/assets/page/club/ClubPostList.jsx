@@ -7,6 +7,7 @@ import { useClubDetailStore } from "../../../api/ClubDetailData";
 import { useBoardsStore } from "../../../api/BoardsData";
 import { BASE_URL, DEFAULT_POST_IMAGE_URL } from "../../../api/config";
 import usePaginationStore from "../../../stores/paginationStore";
+import { useAuthStore } from "../../../stores/authStore";
 
 function ClubPostListMain() {
   const { id } = useParams();
@@ -29,6 +30,7 @@ function ClubPostListMain() {
   const postPagination = usePaginationStore(
     (state) => state.paginations["post-list"],
   );
+  const user = useAuthStore((state) => state.user);
 
   // 페이지네이션 리셋 (컴포넌트 마운트 시 또는 id 변경 시)
   useEffect(() => {
@@ -376,6 +378,12 @@ function ClubPostListMain() {
           <Link
             to="postwrite"
             className="flex items-center gap-1 bg-main-02 text-white px-4 py-2 rounded-[4px] text-sm shadow hover:bg-main-01 transition"
+          onClick={(e) => {
+            if (!user?.id) {
+              e.preventDefault();
+              alert("로그인 시 이용 가능합니다");
+            }
+          }}
           >
             <span className="material-icons text-[18px]">edit</span>
             게시물 작성
