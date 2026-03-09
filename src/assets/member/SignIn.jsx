@@ -39,7 +39,9 @@ function SignIn() {
       }
 
       setLogin(response);
-      navigate("/");
+      // 어드민 유저인 경우 /admin으로 리다이렉트
+      const isAdmin = response.role === 2 || response.roles?.includes("ADMIN");
+      navigate(isAdmin ? "/admin" : "/");
     } catch (err) {
       setError(err.response?.data?.message || "로그인 중 오류가 발생했습니다.");
     } finally {

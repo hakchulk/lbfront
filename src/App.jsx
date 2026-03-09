@@ -9,6 +9,7 @@ import Club from "./assets/page/club/Club";
 import Event from "./assets/page/event/Event";
 import MyPage from "./assets/page/mypage/MyPage";
 import CMManagement from "./assets/page/CM/CMManagement";
+import Admin from "./assets/page/admin/Admin";
 
 function App() {
   return (
@@ -26,6 +27,9 @@ function App() {
 
           {/* CM 라우터 */}
           <Route path="/CMmanagement/*" element={<CMManagement />} />
+
+          {/* 어드민 라우터 */}
+          <Route path="/admin/*" element={<Admin />} />
         </Routes>
       </div>
       <FooterComp />
