@@ -18,7 +18,6 @@ const products = [
 ];
 
 function EventMain() {
-  const [submittedIds, setSubmittedIds] = useState({});
   const [insufficientIds, setInsufficientIds] = useState({});
   const [userPoint, setUserPoint] = useState(0);
   const navigate = useNavigate();
@@ -51,13 +50,11 @@ function EventMain() {
   const handleSubmit = async (product) => {
     if (!isLogin) {
       alert("로그인이 필요합니다.");
-      navigate("/member");
       return;
     }
 
     // ✅ 2. 포인트 부족 체크
     if (userPoint < product.point) {
-      setInsufficientIds((prev) => ({ ...prev, [product.id]: true }));
       alert("포인트가 부족합니다.");
       return;
     }
@@ -72,8 +69,6 @@ function EventMain() {
       const remainingPoint = response.data.remainingPoint;
 
       setUserPoint(remainingPoint);
-      setSubmittedIds((prev) => ({ ...prev, [product.id]: true }));
-      setInsufficientIds((prev) => ({ ...prev, [product.id]: false }));
 
       alert(`${product.name} 응모 완료! 잔여 포인트: ${remainingPoint}`);
 
@@ -158,9 +153,6 @@ function EventMain() {
       <div className="mx-auto w-full sm:w-21/21 md:w-19/21 lg:w-19/21 mb-10 px-4 sm:px-6 md:px-8 lg:px-10">
         <div className="mx-auto w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-20 sm:gap-8 md:gap-12 lg:gap-16 xl:gap-20 2xl:gap-24">
           {products.map((product) => {
-            const isSubmitted = submittedIds[product.id];
-            const isInsufficient = insufficientIds[product.id];
-
             return (
               <div key={product.id} className="flex flex-col items-center text-center w-full">
                 <div className="w-full h-[32vh] sm:h-[36vh] md:h-[40vh] lg:h-[44vh] xl:h-[45vh] 2xl:h-[60vh] overflow-hidden mb-2 sm:mb-10 md:mb-12 lg:mb-14">
@@ -171,13 +163,12 @@ function EventMain() {
                 <p className="!text-black text-[6vw] sm:text-[4.5vw] md:text-[3vw] lg:text-[2.5vw] ml-2 mt-1">{product.point?.toLocaleString()} Point</p>
 
                 <BtnComp
-                  className={`mb-10 whitespace-nowrap px-4 min-w-[120px] ${isSubmitted ? "bg-gray-400 cursor-not-allowed" : isInsufficient ? "bg-red-500" : ""}`}
+                  className="mb-10 whitespace-nowrap px-4 min-w-[120px]"
                   size="short"
                   variant="primary"
-                  disabled={isSubmitted}
                   onClick={() => handleSubmit(product)}
                 >
-                  {isSubmitted ? "응모완료" : isInsufficient ? "포인트 부족" : "응모하기"}
+                  응모하기
                 </BtnComp>
               </div>
             );
