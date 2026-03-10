@@ -129,7 +129,7 @@ function ClubPostListMain() {
       <div className="w-full lg:w-[70%] mx-auto mt-16 px-4">
         <h3 className="!text-main-02 mb-5 !text-[20px] lg:!text-[28px] flex justify-center items-center">
           <span className="material-icons mr-2">campaign</span>
-          {club.name} 대표 공지사항
+          {club.name} 전체 공지사항
         </h3>
 
         <div className="border border-main-02 rounded-lg overflow-hidden">
@@ -378,12 +378,12 @@ function ClubPostListMain() {
           <Link
             to="postwrite"
             className="flex items-center gap-1 bg-main-02 text-white px-4 py-2 rounded-[4px] text-sm shadow hover:bg-main-01 transition"
-          onClick={(e) => {
-            if (!user?.id) {
-              e.preventDefault();
-              alert("로그인 시 이용 가능합니다");
-            }
-          }}
+            onClick={(e) => {
+              if (!user?.id) {
+                e.preventDefault();
+                alert("로그인 시 이용 가능합니다");
+              }
+            }}
           >
             <span className="material-icons text-[18px]">edit</span>
             게시물 작성
