@@ -13,7 +13,6 @@ import MyInfoTitle from './MyInfoTitle';
 import Chart from '../../../components/ChartComp';
 import {
   getPieChartData2,
-  WeightChart,
   getDonutChartData1,
 } from '../../../api/TestChartData';
 import { cmChartOptions } from '../../../api/TestChartData';
