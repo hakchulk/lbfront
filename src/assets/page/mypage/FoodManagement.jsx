@@ -284,7 +284,7 @@ function FoodManagement() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-gray-600 border-b">
+                        <tr className="text-main-02 border-b">
                           <th className="py-2 pr-2 text-left">식사</th>
                           <th className="py-2 px-2 text-right">칼로리</th>
                           <th className="py-2 px-2 text-right">탄수</th>
@@ -315,7 +315,7 @@ function FoodManagement() {
                     </table>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t flex justify-between items-center">
+                  <div className=" pt-7 border-t flex justify-between items-center">
                     <p className="font-semibold text-main-02">총 칼로리</p>
                     <p className="font-semibold text-main-02">
                       {totalCalories}kcal

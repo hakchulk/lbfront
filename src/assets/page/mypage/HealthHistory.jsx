@@ -16,7 +16,8 @@ import { getWorkouts, deleteWorkout } from "../../../api/Workout";
 
 function HealthHistoryMain() {
   const [sort, setSort] = useState("latest");
-  const [pageSize, setPageSize] = useState(4);
+  // 한 페이지에 8개(4개씩 2줄) 고정
+  const [pageSize] = useState(8);
   const [exerciseRecords, setExerciseRecords] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
   const navigate = useNavigate();
@@ -27,16 +28,6 @@ function HealthHistoryMain() {
   const currentPage = pagination?.currentPage ?? 0;
   const setPageSizeStore = usePaginationStore((state) => state.setPageSize);
   const setCurrentPage = usePaginationStore((state) => state.setCurrentPage);
-
-  // 반응형 페이지 사이즈
-  useEffect(() => {
-    const handleResize = () => {
-      setPageSize(window.innerWidth >= 1024 ? 8 : 4);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     setPageSizeStore(storeKey, pageSize);
@@ -311,7 +302,7 @@ function HealthHistoryMain() {
 
             <div className="hel_list w-full mt-6">
               <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                {exerciseRecords.map((record) => (
+                {pagedRecords.map((record) => (
                   <li
                     key={record.date}
                     className="bg-white border-[0.5px] border-main-02 rounded-lg p-4 md:p-5 flex flex-col gap-4 lg:min-w-[230px]"
