@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import BtnComp from '../../../components/BtnComp';
-import DonutChart from '../../../components/charts/DonutChart';
+import React, { useState, useEffect, useCallback } from "react";
+import BtnComp from "../../../components/BtnComp";
+import DonutChart from "../../../components/charts/DonutChart";
 import {
   getTodayMealPlans,
   replaceTodayRecommendations,
   acceptTodayMealPlans,
-} from '../../../api/MealPlanData';
-import { getMealItemsByMealId } from '../../../api/MealItemData';
-import { useAuthStore } from '../../../stores/authStore';
+} from "../../../api/MealPlanData";
+import { getMealItemsByMealId } from "../../../api/MealItemData";
+import { useAuthStore } from "../../../stores/authStore";
 
 const DEFAULT_COMMENT =
-  '현재 체중과 활동량을 반영하여 영양 균형이 맞는 식단으로 자동 추천되었습니다. 목표 달성을 위해 이 식단을 추천합니다.';
+  "현재 체중과 활동량을 반영하여 영양 균형이 맞는 식단으로 자동 추천되었습니다. 목표 달성을 위해 이 식단을 추천합니다.";
 
 function FoodManagement() {
   const { user } = useAuthStore();
@@ -29,7 +29,7 @@ function FoodManagement() {
       setMealPlans(Array.isArray(data) ? data : []);
     } catch (e) {
       setError(
-        e.response?.data?.message || e.message || '식단을 불러오지 못했습니다.',
+        e.response?.data?.message || e.message || "식단을 불러오지 못했습니다.",
       );
       setMealPlans([]);
     } finally {
@@ -65,7 +65,7 @@ function FoodManagement() {
         setError(
           e.response?.data?.message ||
             e.message ||
-            '식단 재료를 불러오지 못했습니다.',
+            "식단 재료를 불러오지 못했습니다.",
         );
       }
     })();
@@ -80,13 +80,13 @@ function FoodManagement() {
     setError(null);
     try {
       const res = await replaceTodayRecommendations();
-      if (res.comment != null && res.comment !== '') {
+      if (res.comment != null && res.comment !== "") {
         setRecommendComment(res.comment);
       }
       await fetchTodayPlans();
     } catch (e) {
       setError(
-        e.response?.data?.message || e.message || '추천을 받지 못했습니다.',
+        e.response?.data?.message || e.message || "추천을 받지 못했습니다.",
       );
     } finally {
       setRecommendLoading(false);
@@ -98,11 +98,11 @@ function FoodManagement() {
     setError(null);
     try {
       await acceptTodayMealPlans();
-      window.alert('저장되었습니다.');
+      window.alert("저장되었습니다.");
       await fetchTodayPlans();
     } catch (e) {
       setError(
-        e.response?.data?.message || e.message || '저장에 실패했습니다.',
+        e.response?.data?.message || e.message || "저장에 실패했습니다.",
       );
     } finally {
       setAcceptLoading(false);
@@ -110,9 +110,9 @@ function FoodManagement() {
   };
 
   const mealsForDisplay = [
-    { label: '아침', type: 'B' },
-    { label: '점심', type: 'L' },
-    { label: '저녁', type: 'D' },
+    { label: "아침", type: "B" },
+    { label: "점심", type: "L" },
+    { label: "저녁", type: "D" },
   ].map(({ label, type }) => ({
     label,
     plan: mealPlans.find((p) => p.mealType === type),
@@ -121,13 +121,13 @@ function FoodManagement() {
   const safeParseIngredients = (ingredientsRaw) => {
     if (!ingredientsRaw) return [];
     if (Array.isArray(ingredientsRaw)) return ingredientsRaw;
-    if (typeof ingredientsRaw !== 'string') return [];
+    if (typeof ingredientsRaw !== "string") return [];
     try {
       const parsed = JSON.parse(ingredientsRaw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
       return ingredientsRaw
-        .split(',')
+        .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
     }
@@ -158,16 +158,16 @@ function FoodManagement() {
   );
 
   const macroDonutData = {
-    labels: ['탄수화물', '단백질', '지방'],
+    labels: ["탄수화물", "단백질", "지방"],
     datasets: [
       {
         data: [macroTotals.carbohydrate, macroTotals.protein, macroTotals.fat],
         backgroundColor: [
-          'rgba(75, 192, 192, 0.6)', // carb
-          'rgba(255, 99, 132, 0.6)', // protein
-          'rgba(255, 206, 86, 0.6)', // fat
+          "rgba(75, 192, 192, 0.6)", // carb
+          "rgba(255, 99, 132, 0.6)", // protein
+          "rgba(255, 206, 86, 0.6)", // fat
         ],
-        borderColor: 'rgba(0, 0, 0, 0)',
+        borderColor: "rgba(0, 0, 0, 0)",
         borderWidth: 1,
       },
     ],
@@ -179,23 +179,23 @@ function FoodManagement() {
   );
 
   const displayComment =
-    recommendComment != null && recommendComment !== ''
+    recommendComment != null && recommendComment !== ""
       ? recommendComment
       : DEFAULT_COMMENT;
   const todayStr = new Date().toISOString().slice(0, 10);
-  const userName = user?.name ?? '';
+  const userName = user?.name ?? "";
 
   return (
-    <section className="wrap  py-16">
+    <section className="wrap  ">
       <div className="containers mx-auto text-main-02 text-center">
         {/* 상단 타이틀 */}
         <h3 className="mb-4 text-base md:text-lg lg:text-xl xl:text-2xl">
           <i className="fa-solid fa-utensils mr-2" />
-          {userName ? `${userName}님을 위한 AI 식단 추천` : 'AI 식단 추천'}
+          {userName ? `${userName}님을 위한 AI 식단 추천` : "AI 식단 추천"}
         </h3>
         <hr className="border-t-10 border-main-02 my-6" />
         <h2 className="mb-8 text-lg font-semibold">오늘의 식단</h2>
-        <div className=" myBg bg-light-02">
+        <div className="myBg bg-light-02">
           {/* 날짜 배지 */}
           <div className="  flex justify-center mb-10">
             <span className=" mt-[5%] inline-flex items-center gap-2 bg-green-600 text-white text-sm px-4 py-1 rounded-full">
@@ -210,7 +210,7 @@ function FoodManagement() {
           )}
 
           {/* 식단 카드 영역 */}
-          <div className="grid grid-cols-1  lg:grid-cols-3 gap-10 max-w-[1100px] mx-auto mb-10">
+          <div className="grid grid-cols-1  lg:grid-cols-3 gap-10 lg:max-w-[1000px] w-[80%] mx-auto mb-10">
             {loading ? (
               <p className="col-span-full text-main-02 text-sm">
                 식단을 불러오는 중...
@@ -225,7 +225,7 @@ function FoodManagement() {
                         <div className="flex flex-col items-center bg-white rounded-lg border px-3 py-2 w-full">
                           <div className="text-2xl">🍽️</div>
                           <p className="text-xs mt-1 font-medium">
-                            {plan.menu || '(메뉴 없음)'}
+                            {plan.menu || "(메뉴 없음)"}
                           </p>
                           {plan.totalCalories != null && (
                             <p className="text-xs text-gray-500">
@@ -246,39 +246,41 @@ function FoodManagement() {
           </div>
 
           {/* 설명 문구 — /meal-plans/recommend/today 응답의 comment 표시 */}
-          <p className="text-main-02 text-sm max-w-[520px] mx-auto mb-8">
+          <p className="text-main-02 text-sm w-[90%] md:w-[70%] lg:w-[40%] mx-auto mb-8">
             {displayComment}
           </p>
 
           {/* CTA 버튼 */}
-          <div className=" mb-[2%] flex flex-col  gap-3 items-center ">
+          <div className=" mb-[2%] flex flex-col gap-3 items-center ">
             <BtnComp
               size="short"
               variant="primary"
               onClick={handleRecommend}
               disabled={recommendLoading}
+              className="!min-w-[250px]"
             >
-              {recommendLoading ? '추천 받는 중...' : '오늘의 식단 새로 받기'}
+              {recommendLoading ? "추천 받는 중..." : "오늘의 식단 새로 받기"}
             </BtnComp>
             <BtnComp
               size="short"
               variant="primary"
               onClick={handleAccept}
               disabled={acceptLoading || mealPlans.length === 0}
+              className="!min-w-[250px]"
             >
-              {acceptLoading ? '저장 중...' : '저장하기'}
+              {acceptLoading ? "저장 중..." : "저장하기"}
             </BtnComp>
           </div>
 
           {/* 오늘의 식단 성분 분석 — 같은 영역에서 바로 노출 */}
-          <section className="pb-[5%]">
-            <section className="myBg my-[5%]  bg-light-02">
-              <h3 className="mt-[2%] text-base md:text-lg lg:text-xl xl:text-2xl">
+          <section className="pb-[5%] ">
+            <section className=" bg-light-02 w-[90%] mx-auto ">
+              <h3 className="!mt-[70px] text-base md:text-lg lg:text-xl xl:text-2xl">
                 <i className="fa-solid fa-utensils mr-2" />
                 오늘의 식단 영양소 분석
               </h3>
-              <article className="w-full max-w-[520px] mx-auto mt-6 rounded-xl border border-main-02 p-6 shadow-sm">
-                <div className="text-left">
+              <article className="w-full  max-w-[520px] mx-auto mt-6 rounded-xl border border-main-02 p-6 shadow-sm bg-white">
+                <div className="text-left ">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
@@ -322,11 +324,11 @@ function FoodManagement() {
                 </div>
               </article>
             </section>
-            <h3 className="mb-4 text-base md:text-lg lg:text-xl xl:text-2xl text-main-02">
+            <h3 className="mb-4  !mt-[70px] text-base md:text-lg lg:text-xl xl:text-2xl text-main-02 ">
               <i className="fa-solid fa-utensils mr-2" />
               오늘의 식단 정밀 분석
             </h3>
-            <article className="w-full max-w-[520px] mx-auto rounded-xl border border-main-02 p-6 shadow-sm bg-white">
+            <article className="w-[90%] mx-auto  max-w-[520px] mx-auto rounded-xl border border-main-02 p-6 shadow-sm bg-white">
               <DonutChart data={macroDonutData} />
               <div className="mt-6 text-left">
                 <p className="text-main-02 font-semibold mb-3">
@@ -360,8 +362,8 @@ function FoodManagement() {
                                     {item.name}
                                   </p>
                                   <p className="text-gray-600 mt-1">
-                                    칼로리 {item.calories ?? 0}kcal · 탄수{' '}
-                                    {item.carbohydrate ?? 0}g · 단백{' '}
+                                    칼로리 {item.calories ?? 0}kcal · 탄수{" "}
+                                    {item.carbohydrate ?? 0}g · 단백{" "}
                                     {item.protein ?? 0}g · 지방 {item.fat ?? 0}g
                                     {item.amount != null &&
                                       item.amount > 0 &&
