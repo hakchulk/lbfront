@@ -273,13 +273,13 @@ function SignUp() {
           </div>
 
           <div className="space-y-1">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <input
                 type="text"
                 name="birthYear"
                 placeholder="년(4자)"
                 onChange={handleChange}
-                className={`flex-1 p-3 border rounded-md bg-white ${
+                className={`flex-1 min-w-[120px] p-3 border rounded-md bg-white ${
                   errors.birthYear || errors.birthMonth || errors.birthDay
                     ? "border-red-500"
                     : "border-main-02"
@@ -290,7 +290,7 @@ function SignUp() {
                 name="birthMonth"
                 placeholder="월"
                 onChange={handleChange}
-                className={`w-24 p-3 border rounded-md bg-white ${
+                className={`w-20 sm:w-24 p-3 border rounded-md bg-white ${
                   errors.birthYear || errors.birthMonth || errors.birthDay
                     ? "border-red-500"
                     : "border-main-02"
@@ -301,7 +301,7 @@ function SignUp() {
                 name="birthDay"
                 placeholder="일"
                 onChange={handleChange}
-                className={`w-24 p-3 border rounded-md bg-white ${
+                className={`w-20 sm:w-24 p-3 border rounded-md bg-white ${
                   errors.birthYear || errors.birthMonth || errors.birthDay
                     ? "border-red-500"
                     : "border-main-02"

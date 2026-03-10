@@ -111,11 +111,24 @@ function ClubPostWrite() {
       const formData = new FormData();
       formData.append("title", title.trim());
       formData.append("contents", contents.trim());
-      formData.append("boardType", boardDetail?.boardType || "1");
+      // 일반 게시글은 항상 boardType 1 (작성/수정 모두)
+      // 백엔드 호환성을 위해 둘 다 전송
+      formData.append("boardType", "1");
+      formData.append("board_type", "1");
 
       // 파일이 있으면 추가 (수정 모드에서 새 파일로 교체)
       if (imageFile) {
         formData.append("file", imageFile);
+      }
+
+      // 디버깅: FormData 내용 확인
+      if (isEditMode) {
+        console.log("수정 모드 - boardId:", boardId);
+        console.log("수정 모드 - boardDetail:", boardDetail);
+        console.log("수정 모드 - FormData 필드:");
+        for (let [key, value] of formData.entries()) {
+          console.log(`  ${key}:`, value instanceof File ? `[File: ${value.name}]` : value);
+        }
       }
 
       let response;
@@ -142,6 +155,12 @@ function ClubPostWrite() {
       }
     } catch (err) {
       console.error(isEditMode ? "게시글 수정 실패:" : "게시글 저장 실패:", err);
+      console.error("에러 상세:", {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        message: err.response?.data?.message,
+      });
       alert(err.response?.data?.message || (isEditMode ? "게시글 수정에 실패했습니다." : "게시글 저장에 실패했습니다."));
     } finally {
       setLoading(false);

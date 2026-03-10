@@ -210,9 +210,9 @@ function MyInfo() {
   }
 
   return (
-    <div className="wrap bg-light-03 min-h-screen mt-0">
-      <div className="containers">
-        <div className="w-full max-w-lg mx-auto py-10">
+    <div className="wrap min-h-screen !mt-0  !bg-light-02">
+      <div className="containers ">
+        <div className="w-full max-w-lg mx-auto py-20">
           <div className="flex flex-row items-center justify-center gap-2 mb-10">
             <ProfileImage />
             <h4 className="text-2xl font-bold leading-none text-deep m-0">
@@ -220,259 +220,259 @@ function MyInfo() {
             </h4>
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            className="w-full space-y-5"
-          >
-          {errors.submit && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
-              {errors.submit}
-            </div>
-          )}
-
-          <div className="space-y-1">
-            <input
-              type="text"
-              name="name"
-              placeholder="이름"
-              value={formData.name}
-              onChange={handleChange}
-              className={`w-full p-3 border rounded-md bg-white text-black ${
-                errors.name ? "border-red-500" : "border-main-02"
-              }`}
-            />
-            {errors.name && (
-              <p className="text-red-500 text-xs px-1">{errors.name}</p>
+          <form onSubmit={handleSubmit} noValidate className="w-full space-y-5">
+            {errors.submit && (
+              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
+                {errors.submit}
+              </div>
             )}
-          </div>
 
-          <div className="space-y-1">
-            <div className="flex gap-2">
+            <div className="space-y-1">
               <input
                 type="text"
-                name="birthYear"
-                placeholder="년(4자)"
-                value={formData.birthYear}
+                name="name"
+                placeholder="이름"
+                value={formData.name}
                 onChange={handleChange}
-                className={`flex-1 p-3 border rounded-md bg-white ${
-                  errors.birthYear || errors.birthMonth || errors.birthDay
-                    ? "border-red-500"
-                    : "border-main-02"
+                className={`w-full p-3 border rounded-md bg-white text-black ${
+                  errors.name ? "border-red-500" : "border-main-02"
                 }`}
               />
-              <input
-                type="text"
-                name="birthMonth"
-                placeholder="월"
-                value={formData.birthMonth}
-                onChange={handleChange}
-                className={`w-24 p-3 border rounded-md bg-white ${
-                  errors.birthYear || errors.birthMonth || errors.birthDay
-                    ? "border-red-500"
-                    : "border-main-02"
-                }`}
-              />
-              <input
-                type="text"
-                name="birthDay"
-                placeholder="일"
-                value={formData.birthDay}
-                onChange={handleChange}
-                className={`w-24 p-3 border rounded-md bg-white ${
-                  errors.birthYear || errors.birthMonth || errors.birthDay
-                    ? "border-red-500"
-                    : "border-main-02"
-                }`}
-              />
+              {errors.name && (
+                <p className="text-red-500 text-xs px-1">{errors.name}</p>
+              )}
             </div>
-            {(errors.birthYear || errors.birthMonth || errors.birthDay) && (
-              <p className="text-red-500 text-xs px-1">
-                {errors.birthYear || errors.birthMonth || errors.birthDay}
-              </p>
-            )}
-          </div>
 
-          <div className="space-y-1">
-            <input
-              type="text"
-              name="phone"
-              placeholder="휴대폰번호"
-              value={formData.phone}
-              onChange={handleChange}
-              className={`w-full p-3 border rounded-md bg-white ${
-                errors.phone ? "border-red-500" : "border-main-02"
-              }`}
-            />
-            {errors.phone && (
-              <p className="text-red-500 text-xs px-1">{errors.phone}</p>
-            )}
-          </div>
-
-          <div className="flex items-center gap-6 py-2 text-deep font-bold">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="gender"
-                value="M"
-                checked={formData.gender === "M"}
-                onChange={handleChange}
-                className="accent-main-02"
-              />
-              남
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="gender"
-                value="F"
-                checked={formData.gender === "F"}
-                onChange={handleChange}
-                className="accent-main-02"
-              />
-              여
-            </label>
-          </div>
-
-          <div className="space-y-1">
-            <div className="grid grid-cols-3 gap-2">
-              <input
-                type="number"
-                name="height"
-                placeholder="키(cm)"
-                value={formData.height}
-                onChange={handleChange}
-                className={`p-3 border rounded-md bg-white ${
-                  errors.height ? "border-red-500" : "border-main-02"
-                }`}
-              />
-              <input
-                type="number"
-                name="weight"
-                placeholder="몸무게(kg)"
-                value={formData.weight}
-                onChange={handleChange}
-                className={`p-3 border rounded-md bg-white ${
-                  errors.weight ? "border-red-500" : "border-main-02"
-                }`}
-              />
-              <input
-                type="number"
-                name="goal_weight"
-                placeholder="목표(kg)"
-                value={formData.goal_weight}
-                onChange={handleChange}
-                className={`p-3 border rounded-md bg-white ${
-                  errors.goal_weight ? "border-red-500" : "border-main-02"
-                }`}
-              />
-            </div>
-            {(errors.height || errors.weight || errors.goal_weight) && (
-              <p className="text-red-500 text-xs px-1">
-                {errors.height || errors.weight || errors.goal_weight}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <p className="font-bold text-deep mb-3 flex items-center gap-1">
-              가입 목적 ✓
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {GOAL_OPTIONS.map((g) => (
-                <BtnComp
-                  key={g}
-                  type="button"
-                  size="short"
-                  variant={formData.goal === g ? "primary" : "line"}
-                  className={`mt-0 h-[36px] w-auto px-2 sm:px-4 border-none text-xs sm:text-sm ${
-                    formData.goal === g
-                      ? "bg-deep"
-                      : "bg-main-02 text-white hover:bg-main-01"
+            <div className="space-y-1">
+              <div className="flex gap-2 flex-wrap">
+                <input
+                  type="text"
+                  name="birthYear"
+                  placeholder="년(4자)"
+                  value={formData.birthYear}
+                  onChange={handleChange}
+                  className={`flex-1 min-w-[120px] p-3 border rounded-md bg-white ${
+                    errors.birthYear || errors.birthMonth || errors.birthDay
+                      ? "border-red-500"
+                      : "border-main-02"
                   }`}
-                  onClick={() => setFormData((p) => ({ ...p, goal: g }))}
-                >
-                  {g}
-                </BtnComp>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <p className="font-bold text-deep mb-2 flex items-center gap-1">
-              목표 기간{" "}
-              <span className="material-icons text-sm">calendar_today</span>
-            </p>
-            <input
-              min="30"
-              max="180"
-              type="number"
-              name="target_date"
-              value={formData.target_date}
-              placeholder="목표 기간 (30~180일)"
-              onChange={handleChange}
-              className={`w-full p-3 border rounded-md bg-white ${
-                errors.target_date ? "border-red-500" : "border-main-02"
-              }`}
-            />
-            {errors.target_date && (
-              <p className="text-red-500 text-xs px-1">{errors.target_date}</p>
-            )}
-          </div>
-
-          <div>
-            <p className="font-bold text-deep mb-3 flex items-center gap-1">
-              알러지 여부 체크 ✓
-            </p>
-            <div className="grid grid-cols-4 gap-2">
-              {ALLERGY_OPTIONS.map((a) => (
-                <BtnComp
-                  key={a}
-                  type="button"
-                  size="short"
-                  variant={
-                    formData.selectedAllergies.includes(a) ? "primary" : "line"
-                  }
-                  className={`mt-0 h-[36px] w-full border-none ${
-                    formData.selectedAllergies.includes(a)
-                      ? "bg-deep"
-                      : "bg-main-02 text-white hover:bg-main-01"
+                />
+                <input
+                  type="text"
+                  name="birthMonth"
+                  placeholder="월"
+                  value={formData.birthMonth}
+                  onChange={handleChange}
+                  className={`w-20 sm:w-24 p-3 border rounded-md bg-white ${
+                    errors.birthYear || errors.birthMonth || errors.birthDay
+                      ? "border-red-500"
+                      : "border-main-02"
                   }`}
-                  onClick={() => handleAllergyClick(a)}
-                >
-                  {a}
-                </BtnComp>
-              ))}
+                />
+                <input
+                  type="text"
+                  name="birthDay"
+                  placeholder="일"
+                  value={formData.birthDay}
+                  onChange={handleChange}
+                  className={`w-20 sm:w-24 p-3 border rounded-md bg-white ${
+                    errors.birthYear || errors.birthMonth || errors.birthDay
+                      ? "border-red-500"
+                      : "border-main-02"
+                  }`}
+                />
+              </div>
+              {(errors.birthYear || errors.birthMonth || errors.birthDay) && (
+                <p className="text-red-500 text-xs px-1">
+                  {errors.birthYear || errors.birthMonth || errors.birthDay}
+                </p>
+              )}
             </div>
-          </div>
 
-          <textarea
-            name="special_notes"
-            placeholder="특이사항"
-            value={formData.special_notes}
-            onChange={handleChange}
-            className="w-full p-3 border border-main-02 rounded-md h-24 bg-white"
-          />
+            <div className="space-y-1">
+              <input
+                type="text"
+                name="phone"
+                placeholder="휴대폰번호"
+                value={formData.phone}
+                onChange={handleChange}
+                className={`w-full p-3 border rounded-md bg-white ${
+                  errors.phone ? "border-red-500" : "border-main-02"
+                }`}
+              />
+              {errors.phone && (
+                <p className="text-red-500 text-xs px-1">{errors.phone}</p>
+              )}
+            </div>
 
-          <div className="mt-1!important flex gap-2">
-            <BtnComp
-              type="button"
-              size="long"
-              variant="line"
-              className="flex-1"
-              onClick={() => navigate("/mypage")}
-            >
-              취소
-            </BtnComp>
-            <BtnComp
-              size="long"
-              variant="primary"
-              type="submit"
-              className="flex-1"
-            >
-              저장
-            </BtnComp>
-          </div>
+            <div className="flex items-center gap-6 py-2 text-deep font-bold">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="M"
+                  checked={formData.gender === "M"}
+                  onChange={handleChange}
+                  className="accent-main-02"
+                />
+                남
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="F"
+                  checked={formData.gender === "F"}
+                  onChange={handleChange}
+                  className="accent-main-02"
+                />
+                여
+              </label>
+            </div>
+
+            <div className="space-y-1">
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="number"
+                  name="height"
+                  placeholder="키(cm)"
+                  value={formData.height}
+                  onChange={handleChange}
+                  className={`p-3 border rounded-md bg-white ${
+                    errors.height ? "border-red-500" : "border-main-02"
+                  }`}
+                />
+                <input
+                  type="number"
+                  name="weight"
+                  placeholder="몸무게(kg)"
+                  value={formData.weight}
+                  onChange={handleChange}
+                  className={`p-3 border rounded-md bg-white ${
+                    errors.weight ? "border-red-500" : "border-main-02"
+                  }`}
+                />
+                <input
+                  type="number"
+                  name="goal_weight"
+                  placeholder="목표(kg)"
+                  value={formData.goal_weight}
+                  onChange={handleChange}
+                  className={`p-3 border rounded-md bg-white ${
+                    errors.goal_weight ? "border-red-500" : "border-main-02"
+                  }`}
+                />
+              </div>
+              {(errors.height || errors.weight || errors.goal_weight) && (
+                <p className="text-red-500 text-xs px-1">
+                  {errors.height || errors.weight || errors.goal_weight}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="font-bold text-deep mb-3 flex items-center gap-1">
+                가입 목적 ✓
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {GOAL_OPTIONS.map((g) => (
+                  <BtnComp
+                    key={g}
+                    type="button"
+                    size="short"
+                    variant={formData.goal === g ? "primary" : "line"}
+                    className={`mt-0 h-[36px] w-auto px-2 sm:px-4 border-none text-xs sm:text-sm ${
+                      formData.goal === g
+                        ? "bg-deep"
+                        : "bg-main-02 text-white hover:bg-main-01"
+                    }`}
+                    onClick={() => setFormData((p) => ({ ...p, goal: g }))}
+                  >
+                    {g}
+                  </BtnComp>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="font-bold text-deep mb-2 flex items-center gap-1">
+                목표 기간{" "}
+                <span className="material-icons text-sm">calendar_today</span>
+              </p>
+              <input
+                min="30"
+                max="180"
+                type="number"
+                name="target_date"
+                value={formData.target_date}
+                placeholder="목표 기간 (30~180일)"
+                onChange={handleChange}
+                className={`w-full p-3 border rounded-md bg-white ${
+                  errors.target_date ? "border-red-500" : "border-main-02"
+                }`}
+              />
+              {errors.target_date && (
+                <p className="text-red-500 text-xs px-1">
+                  {errors.target_date}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="font-bold text-deep mb-3 flex items-center gap-1">
+                알러지 여부 체크 ✓
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {ALLERGY_OPTIONS.map((a) => (
+                  <BtnComp
+                    key={a}
+                    type="button"
+                    size="short"
+                    variant={
+                      formData.selectedAllergies.includes(a)
+                        ? "primary"
+                        : "line"
+                    }
+                    className={`mt-0 h-[36px] w-full border-none ${
+                      formData.selectedAllergies.includes(a)
+                        ? "bg-deep"
+                        : "bg-main-02 text-white hover:bg-main-01"
+                    }`}
+                    onClick={() => handleAllergyClick(a)}
+                  >
+                    {a}
+                  </BtnComp>
+                ))}
+              </div>
+            </div>
+
+            <textarea
+              name="special_notes"
+              placeholder="특이사항"
+              value={formData.special_notes}
+              onChange={handleChange}
+              className="w-full p-3 border border-main-02 rounded-md h-24 bg-white"
+            />
+
+            <div className="mt-1!important flex gap-2">
+              <BtnComp
+                type="button"
+                size="long"
+                variant="line"
+                className="flex-1"
+                onClick={() => navigate("/mypage")}
+              >
+                취소
+              </BtnComp>
+              <BtnComp
+                size="long"
+                variant="primary"
+                type="submit"
+                className="flex-1"
+              >
+                저장
+              </BtnComp>
+            </div>
           </form>
 
           <div className="w-full max-w-lg mx-auto pt-4 mb-10">
