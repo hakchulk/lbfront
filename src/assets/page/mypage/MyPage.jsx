@@ -11,9 +11,50 @@ import Food_HistoryWrite from "./Food_HistoryWrite";
 import MyInfoTitle from "./MyInfoTitle";
 
 import Chart from "../../../components/ChartComp";
-import { getPieChartData2, WeightChart, getDonutChartData1, CmChart } from "../../../api/TestChartData";
+import DonutChart from "../../../components/charts/DonutChart";
+import { WeightChart, CmChart, getMacroDonutData } from "../../../api/TestChartData";
 import { getWeekHistoryAll } from "../../../api/WeekHistory";
 import { getWorkouts } from "../../../api/Workout";
+import { getDietLogsByDate } from "../../../api/DietLogData";
+import { getMealItemsByMealId } from "../../../api/MealItemData";
+
+// 재료 필드 파싱 (JSON 배열 또는 쉼표 구분 문자열)
+function parseIngredients(ingredientsRaw) {
+  if (!ingredientsRaw) return [];
+  if (Array.isArray(ingredientsRaw)) return ingredientsRaw.map((s) => String(s).trim()).filter(Boolean);
+  if (typeof ingredientsRaw !== "string") return [];
+  try {
+    const parsed = JSON.parse(ingredientsRaw);
+    return Array.isArray(parsed) ? parsed.map((s) => String(s).trim()).filter(Boolean) : [];
+  } catch {
+    return ingredientsRaw.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+}
+
+const PIE_COLORS = [
+  "#d6cdea",
+  "#e9b1f7",
+  "#fcd0d0",
+  "#cdebcf",
+  "#f9cd9e",
+  "#a8e6cf",
+  "#ffd3b6",
+  "#dcb5ff",
+  "#9bf6ff",
+  "#b4e7ce",
+];
+
+// 식단/재료가 없을 때 차트를 한 덩어리로 보여주기 위한 데이터
+const EMPTY_INGREDIENT_CHART = {
+  labels: ["기록 없음"],
+  datasets: [
+    {
+      data: [1],
+      backgroundColor: ["#e5e7eb"],
+      borderWidth: 1,
+    },
+  ],
+};
 
 // 마이페이지 메인 화면 컴포넌트
 function MyPageMain() {
@@ -22,6 +63,7 @@ function MyPageMain() {
 
   const [weekHistoryData, setWeekHistoryData] = useState([]);
   const [exerciseRecords, setExerciseRecords] = useState([]);
+  const [ingredientChartData, setIngredientChartData] = useState(EMPTY_INGREDIENT_CHART);
 
   // 주간 체중 기록 API 호출
   useEffect(() => {
@@ -193,6 +235,83 @@ function MyPageMain() {
     }
   };
 
+  // 오늘 날짜 기준 식단 재료 파이 차트 데이터 (FoodHistory 상단 차트와 동일 로직)
+  useEffect(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const logs = await getDietLogsByDate(todayStr);
+        const safeLogs = Array.isArray(logs) ? logs : [];
+        const mealIds = [...new Set(safeLogs.map((log) => log.mealId).filter((id) => id != null))];
+
+        if (mealIds.length === 0) {
+          if (!cancelled) setIngredientChartData(EMPTY_INGREDIENT_CHART);
+          return;
+        }
+
+        const allItems = await Promise.all(
+          mealIds.map((mealId) =>
+            getMealItemsByMealId(mealId).then((items) => (Array.isArray(items) ? items : [])),
+          ),
+        );
+        if (cancelled) return;
+
+        const flatItems = allItems.flat();
+        const countByIngredient = {};
+
+        flatItems.forEach((item) => {
+          const ingredients = parseIngredients(item.ingredients);
+          ingredients.forEach((ing) => {
+            const key = String(ing).trim();
+            if (!key) return;
+            countByIngredient[key] = (countByIngredient[key] || 0) + 1;
+          });
+        });
+
+        const entries = Object.entries(countByIngredient).sort((a, b) => b[1] - a[1]);
+        if (entries.length === 0) {
+          if (!cancelled) setIngredientChartData(EMPTY_INGREDIENT_CHART);
+          return;
+        }
+
+        const maxSlices = 10;
+        const top = entries.slice(0, maxSlices);
+        const rest = entries.slice(maxSlices);
+        const restCount = rest.reduce((s, [, n]) => s + n, 0);
+
+        const labels = top.map(([name]) => name);
+        const data = top.map(([, n]) => n);
+        if (restCount > 0) {
+          labels.push("기타");
+          data.push(restCount);
+        }
+
+        if (!cancelled) {
+          setIngredientChartData({
+            labels,
+            datasets: [
+              {
+                data,
+                backgroundColor: labels.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]),
+                borderWidth: 1,
+              },
+            ],
+          });
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setIngredientChartData(EMPTY_INGREDIENT_CHART);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="wrap !bg-light-02 !mt-0 md:min-h-[calc(100vh-180px)] flex justify-center items-center">
       <header className="relative w-full h-[300px] overflow-hidden">
@@ -224,7 +343,7 @@ function MyPageMain() {
                   <div className="w-[70%] m-5">
                     <Chart
                       type="pie"
-                      data={getPieChartData2()}
+                      data={ingredientChartData}
                       options={{ responsive: true, maintainAspectRatio: false }}
                     />
                   </div>
@@ -290,11 +409,7 @@ function MyPageMain() {
                 <h4 className="text-deep mb-[3%]">오늘의 식단 추천</h4>
                 <div className="border border-main-02 w-[100%] h-[100%] overflow-hidden rounded-[20px] flex justify-center items-center bg-white">
                   <div className="w-[70%] m-5">
-                    <Chart
-                      type="donut"
-                      data={getDonutChartData1()}
-                      options={{ responsive: true, maintainAspectRatio: false }}
-                    />
+                    <DonutChart data={getMacroDonutData()} />
                   </div>
                 </div>
               </Link>
