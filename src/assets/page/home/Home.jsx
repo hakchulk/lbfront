@@ -164,7 +164,7 @@ function Home() {
             backgroundRepeat: "no-repeat",
           }}
         >
-          <MealAnal />
+          <MealAnal showDetails={false} />
         </section>
 
         {/* sect3 */}

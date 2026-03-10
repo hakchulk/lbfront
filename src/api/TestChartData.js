@@ -116,7 +116,7 @@ export const barChartOptions = {
   scales: {
     y: {
       min: 0,
-      max: 1500,
+      max: 2500,
       ticks: {
         stepSize: 500,
       },
@@ -143,6 +143,23 @@ export const getDonutChartData1 = () => {
     ],
   };
 };
+
+/** 탄수화물/단백질/지방 매크로 도넛 차트용 데이터 (FoodManagement와 동일 구조, 미리보기용 기본값) */
+export const getMacroDonutData = () => ({
+  labels: ['탄수화물', '단백질', '지방'],
+  datasets: [
+    {
+      data: [40, 30, 30],
+      backgroundColor: [
+        'rgba(75, 192, 192, 0.6)',
+        'rgba(255, 99, 132, 0.6)',
+        'rgba(255, 206, 86, 0.6)',
+      ],
+      borderColor: 'rgba(0, 0, 0, 0)',
+      borderWidth: 1,
+    },
+  ],
+});
 
 export const WeightChart = () => {
   return {
