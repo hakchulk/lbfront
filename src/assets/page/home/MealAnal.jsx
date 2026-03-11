@@ -8,6 +8,7 @@ function MealAnal({
   resultTextClassName = "text-white",
   showResult = true,
   showDetails = true,
+  onFileSelected,
   onAnalyzeSuccess,
   onImageChange,
 } = {}) {
@@ -37,6 +38,9 @@ function MealAnal({
       setImagePreview(reader.result);
       if (typeof onImageChange === "function") {
         onImageChange(reader.result);
+      }
+      if (typeof onFileSelected === "function") {
+        onFileSelected(file);
       }
     };
     reader.readAsDataURL(file);

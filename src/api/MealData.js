@@ -13,7 +13,7 @@ export async function calculateMealCalories(body) {
 /**
  * 직접 식사 기록 생성 (meal + meal_item + diet_log 생성)
  * POST /meals/with-items
- * body: { mealType: 'B'|'L'|'D'|'S', date: 'yyyy-MM-dd', comment?: string, items: [{ name, amount, calories, carbohydrate, protein, fat }] }
+ * body: { mealType: 'B'|'L'|'D'|'S', date: 'yyyy-MM-dd', imageFileId?: number, comment?: string, items: [{ name, amount, calories, carbohydrate, protein, fat }] }
  */
 export async function createMealWithItems(body) {
   const { data } = await apiClient.post('/meals/with-items', body);

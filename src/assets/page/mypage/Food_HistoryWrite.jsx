@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BtnComp from '../../../components/BtnComp';
 import MealAnal from '../home/MealAnal';
-import { getDietLogsByDate } from '../../../api/DietLogData';
+import { getDietLogsByDate, deleteDietLog } from '../../../api/DietLogData';
 import {
   getMealItemsByMealId,
   createMealItem,
@@ -10,6 +10,7 @@ import {
   updateMealItem,
 } from '../../../api/MealItemData';
 import { calculateMealCalories, createMealWithItems } from '../../../api/MealData';
+import { uploadSingleFile } from '../../../api/FileUploadData';
 
 const MEAL_TYPE_MAP = [
   { type: 'B', value: 'breakfast', label: '아침' },
@@ -18,12 +19,21 @@ const MEAL_TYPE_MAP = [
   { type: 'S', value: 'snack', label: '간식' },
 ];
 
+// 로컬 타임존 기준 오늘 날짜(yyyy-MM-dd)
+function getTodayLocalDateStr() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const date = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${date}`;
+}
+
 function FoodHistoryWrite() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const editDate =
-    location.state?.editDate || new Date().toISOString().slice(0, 10);
+    location.state?.editDate || getTodayLocalDateStr();
   const initialMealType = location.state?.mealType;
   const mode = location.state?.mode || 'edit'; // 'edit' | 'create'
 
@@ -39,7 +49,6 @@ function FoodHistoryWrite() {
   }, [initialMealType]);
 
   const handleSave = async () => {
-    // edit 모드: 로컬에서 추가/삭제한 내용을 이때만 서버에 반영
     if (mode === 'create') {
       // create 모드: meal + meal_item + diet_log 생성
       setSaving(true);
@@ -61,11 +70,18 @@ function FoodHistoryWrite() {
         const invalid = items.find((it) => !Number.isFinite(it.amount) || it.amount < 1);
         if (invalid) throw new Error('저장하려면 모든 음식의 섭취량(g)을 1 이상으로 입력해주세요.');
 
+        // 사진이 있으면 먼저 업로드해서 imageFileId를 받아 meal 생성에 연결
+        let imageFileId = null;
+        if (mealImageFile) {
+          const uploaded = await uploadSingleFile(mealImageFile);
+          imageFileId = uploaded?.id ?? null;
+        }
+
         await createMealWithItems({
           mealType,
           date: writeDate,
           items,
-          imageData: mealImageData,
+          imageFileId,
         });
 
         navigate('../foodhistory', {
@@ -79,34 +95,53 @@ function FoodHistoryWrite() {
       return;
     }
 
-    // edit 모드: 추가된 항목 생성, 삭제된 항목 삭제 후 이동
+    // edit 모드: 기존 meal을 수정하지 않고,
+    // 현재 editItems로 "새 meal + meal_item + diet_log"를 생성한 뒤
+    // 이 날짜의 기존 diet_log만 삭제하는 방식으로 분리 저장
     setSaving(true);
     setError(null);
     try {
-      const mealId = currentMeal?.mealId;
-      if (!mealId) {
+      const baseMealType = MEAL_TYPE_MAP.find((m) => m.value === selectedMealValue)?.type;
+      if (!baseMealType) {
         navigate('../foodhistory', { state: { date: editDate } });
         return;
       }
-      const toCreate = editItems.filter(
-        (it) => typeof it.id === 'string' && (it.id.startsWith('temp-') || it.id.startsWith('analyze-')),
-      );
-      const toDelete = Array.from(deletedIdsRef.current);
 
-      await Promise.all(toDelete.map((id) => deleteMealItem(id)));
-      await Promise.all(
-        toCreate.map((it) =>
-          createMealItem(mealId, {
-            name: String(it.name ?? '').trim() || '새 음식',
-            amount: Number(it.amount ?? 0) || 1,
-            calories: Number(it.calories ?? 0) || 0,
-            carbohydrate: Number(it.carbohydrate ?? 0) || 0,
-            protein: Number(it.protein ?? 0) || 0,
-            fat: Number(it.fat ?? 0) || 0,
-          }),
-        ),
-      );
-      deletedIdsRef.current = new Set();
+      const items = editItems
+        .map((it) => ({
+          name: String(it.name ?? '').trim(),
+          amount: Number(it.amount ?? 0),
+          calories: Number(it.calories ?? 0),
+          carbohydrate: Number(it.carbohydrate ?? 0),
+          protein: Number(it.protein ?? 0),
+          fat: Number(it.fat ?? 0),
+        }))
+        .filter((it) => it.name.length > 0);
+      if (items.length === 0) throw new Error('최소 1개 이상의 음식명을 입력해주세요.');
+      const invalid = items.find((it) => !Number.isFinite(it.amount) || it.amount < 1);
+      if (invalid) throw new Error('저장하려면 모든 음식의 섭취량(g)을 1 이상으로 입력해주세요.');
+
+      // 사진이 있으면 새 파일 업로드, 없으면 기존 imageFileId를 그대로 사용
+      let imageFileId = currentMeal?.imageFileId ?? null;
+      if (mealImageFile) {
+        const uploaded = await uploadSingleFile(mealImageFile);
+        imageFileId = uploaded?.id ?? null;
+      }
+
+      // 새 meal + meal_item + diet_log 생성 (이 날짜 전용)
+      await createMealWithItems({
+        mealType: baseMealType,
+        date: editDate,
+        items,
+        imageFileId,
+      });
+
+      // 이 날짜에 연결된 기존 diet_log만 삭제 (다른 날짜의 diet_log는 그대로 둠)
+      const toDeleteDietLogs = Array.isArray(currentMeal?.dietLogIds) ? currentMeal.dietLogIds : [];
+      if (toDeleteDietLogs.length > 0) {
+        await Promise.all(toDeleteDietLogs.map((id) => deleteDietLog(id)));
+      }
+
       navigate('../foodhistory', {
         state: { successMessage: '저장되었습니다.', date: editDate },
       });
@@ -126,6 +161,7 @@ function FoodHistoryWrite() {
   const [calcLoading, setCalcLoading] = useState(false);
   const [calcMessage, setCalcMessage] = useState(null);
   const [mealImageData, setMealImageData] = useState(null);
+  const [mealImageFile, setMealImageFile] = useState(null);
 
   // UI 편집용(이름/그램수/계산 결과) 상태: 계산 요청은 이 값을 사용
   const [editItems, setEditItems] = useState([]);
@@ -141,10 +177,14 @@ function FoodHistoryWrite() {
     try {
       const logs = await getDietLogsByDate(dateStr);
       const list = Array.isArray(logs) ? logs : [];
-      const byMealId = {};
+
+      // 끼니 타입(B/L/D/S)별로, 여러 mealId를 하나의 "편집용 식단"으로 합치기
+      const byType = {};
 
       list.forEach((log) => {
         if (!log.meal) return;
+
+        const mealType = String(log.meal.mealType);
 
         // 백엔드가 mealId를 어디에 넣어주었는지에 따라 유연하게 처리
         const rawMealId =
@@ -153,29 +193,62 @@ function FoodHistoryWrite() {
           log.meal?.mealId ??
           log.meal?.mealID;
 
-        if (!rawMealId) return;
-
         const mealId = Number(rawMealId);
         if (!Number.isFinite(mealId)) return;
 
-        byMealId[mealId] = {
-          mealType: String(log.meal.mealType),
-          mealId,
-          menu: log.meal.menu || '',
-          totalCalories: log.meal.totalCalories ?? 0,
-          items: [],
-        };
+        const imageFileId =
+          log.meal?.imageFileId ??
+          log.meal?.image_file_id ??
+          null;
+
+        if (!byType[mealType]) {
+          byType[mealType] = {
+            mealType,
+            mealId, // 대표 mealId (첫 번째)
+            menu: log.meal.menu || '',
+            totalCalories: log.meal.totalCalories ?? 0,
+            items: [],
+            imageFileId,
+            dietLogIds: [log.id],
+            _mealIds: [mealId],
+          };
+        } else {
+          byType[mealType].totalCalories += log.meal.totalCalories ?? 0;
+          byType[mealType].dietLogIds.push(log.id);
+          if (!byType[mealType].imageFileId && imageFileId) {
+            byType[mealType].imageFileId = imageFileId;
+          }
+          if (!byType[mealType]._mealIds.includes(mealId)) {
+            byType[mealType]._mealIds.push(mealId);
+          }
+        }
       });
 
-      const mealIds = Object.keys(byMealId);
+      // 각 끼니 타입별로, 연결된 모든 mealId의 meal_item을 합쳐서 하나의 items 배열로 구성
+      const allMealIds = Array.from(
+        new Set(
+          Object.values(byType).flatMap((m) => m._mealIds || []),
+        ),
+      );
+
+      const itemsByMealId = {};
       await Promise.all(
-        mealIds.map(async (id) => {
+        allMealIds.map(async (id) => {
           const items = await getMealItemsByMealId(Number(id));
-          byMealId[id].items = Array.isArray(items) ? items : [];
+          itemsByMealId[id] = Array.isArray(items) ? items : [];
         }),
       );
 
-      const mealList = Object.values(byMealId);
+      const mealList = Object.values(byType).map((m) => ({
+        mealType: m.mealType,
+        mealId: m.mealId,
+        menu: m.menu,
+        totalCalories: m.totalCalories,
+        imageFileId: m.imageFileId,
+        dietLogIds: m.dietLogIds,
+        items: (m._mealIds || []).flatMap((id) => itemsByMealId[id] || []),
+      }));
+
       setMeals(mealList);
     } catch (e) {
       setError(
@@ -341,30 +414,8 @@ function FoodHistoryWrite() {
       });
 
       if (mode === 'edit') {
-        if (Array.isArray(res?.items)) {
-          await Promise.all(
-            res.items.map((r, idx) => {
-              const target = payloadItems[idx];
-              if (!target?.id) return Promise.resolve();
-              const isServerId = typeof target.id === 'number' || (typeof target.id === 'string' && !target.id.startsWith('temp-') && !target.id.startsWith('analyze-'));
-              if (!isServerId) return Promise.resolve();
-              const original = currentItems.find((it) => it.id === target.id);
-              const originalCalories = Number(original?.calories ?? 0);
-              if (originalCalories !== 0) return Promise.resolve();
-              const carbs = r?.nutrients?.carbohydrates;
-              const protein = r?.nutrients?.protein;
-              const fat = r?.nutrients?.fat;
-              return updateMealItem(target.id, {
-                name: target.name,
-                amount: target.amount_grams,
-                calories: r?.estimated_calories ?? 0,
-                carbohydrate: carbs != null ? Math.round(carbs) : 0,
-                protein: protein != null ? Math.round(protein) : 0,
-                fat: fat != null ? Math.round(fat) : 0,
-              });
-            }),
-          );
-        }
+        // edit 모드에서는 "계산"을 눌렀을 때 서버를 즉시 수정하지 않습니다.
+        // (같은 meal을 다른 날짜가 참조하는 경우가 있어, 저장 전 변경이 다른 날짜에도 보일 수 있음)
         setEditItems((prev) =>
           prev.map((it) => {
             const idx = payloadItems.findIndex((p) => p.id === it.id);
@@ -460,6 +511,7 @@ function FoodHistoryWrite() {
               resultTextClassName="text-deep"
               showResult={false}
               onImageChange={(dataUrl) => setMealImageData(dataUrl)}
+              onFileSelected={(file) => setMealImageFile(file)}
               onAnalyzeSuccess={async (data) => {
                 const analyzedItems = Array.isArray(data?.items) ? data.items : [];
                 const nextName = String(data?.food_name ?? '').trim();
