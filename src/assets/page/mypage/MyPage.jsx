@@ -30,26 +30,14 @@ import { getWeekHistoryAll } from '../../../api/WeekHistory';
 import { getWorkouts } from '../../../api/Workout';
 import { getDietLogsByDate } from '../../../api/DietLogData';
 import { getMealItemsByMealId } from '../../../api/MealItemData';
+import {
+  buildIngredientChartData,
+  EMPTY_INGREDIENT_CHART as SHARED_EMPTY_INGREDIENT_CHART,
+} from './ingredientChartUtils';
 
 // 재료 필드 파싱 (JSON 배열 또는 쉼표 구분 문자열)
-function parseIngredients(ingredientsRaw) {
-  if (!ingredientsRaw) return [];
-  if (Array.isArray(ingredientsRaw))
-    return ingredientsRaw.map((s) => String(s).trim()).filter(Boolean);
-  if (typeof ingredientsRaw !== 'string') return [];
-  try {
-    const parsed = JSON.parse(ingredientsRaw);
-    return Array.isArray(parsed)
-      ? parsed.map((s) => String(s).trim()).filter(Boolean)
-      : [];
-  } catch {
-    return ingredientsRaw
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-}
 
+// 식단/재료가 없을 때 차트를 한 덩어리로 보여주기 위한 데이터
 const PIE_COLORS = [
   '#d6cdea',
   '#e9b1f7',
@@ -63,7 +51,6 @@ const PIE_COLORS = [
   '#b4e7ce',
 ];
 
-// 식단/재료가 없을 때 차트를 한 덩어리로 보여주기 위한 데이터
 const EMPTY_INGREDIENT_CHART = {
   labels: ['기록 없음'],
   datasets: [
@@ -83,7 +70,7 @@ function MyPageMain() {
   const [weekHistoryData, setWeekHistoryData] = useState([]);
   const [exerciseRecords, setExerciseRecords] = useState([]);
   const [ingredientChartData, setIngredientChartData] = useState(
-    EMPTY_INGREDIENT_CHART,
+    SHARED_EMPTY_INGREDIENT_CHART,
   );
 
   const { myClubs, fetchMyClubs } = useMyClubStore();
@@ -371,7 +358,9 @@ function MyPageMain() {
         ];
 
         if (mealIds.length === 0) {
-          if (!cancelled) setIngredientChartData(EMPTY_INGREDIENT_CHART);
+          if (!cancelled) {
+            setIngredientChartData(SHARED_EMPTY_INGREDIENT_CHART);
+          }
           return;
         }
 
@@ -386,15 +375,10 @@ function MyPageMain() {
 
         const flatItems = allItems.flat();
         const countByIngredient = {};
-
-        flatItems.forEach((item) => {
-          const ingredients = parseIngredients(item.ingredients);
-          ingredients.forEach((ing) => {
-            const key = String(ing).trim();
-            if (!key) return;
-            countByIngredient[key] = (countByIngredient[key] || 0) + 1;
-          });
-        });
+        if (!cancelled) {
+          setIngredientChartData(buildIngredientChartData(flatItems));
+        }
+        return;
 
         const entries = Object.entries(countByIngredient).sort(
           (a, b) => b[1] - a[1],
@@ -432,7 +416,7 @@ function MyPageMain() {
         }
       } catch (e) {
         if (!cancelled) {
-          setIngredientChartData(EMPTY_INGREDIENT_CHART);
+          setIngredientChartData(SHARED_EMPTY_INGREDIENT_CHART);
         }
       }
     })();
