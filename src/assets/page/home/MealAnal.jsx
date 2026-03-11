@@ -2,16 +2,7 @@ import React, { useState, useRef } from "react";
 import BtnComp from "../../../components/BtnComp";
 import { apiClient } from "../../../api/config";
 
-function MealAnal({
-  containerClassName = "sect2_cont w-[50%] flex flex-col justifycenter items-center",
-  titleClassName = "!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white",
-  resultTextClassName = "text-white",
-  showResult = true,
-  showDetails = true,
-  onFileSelected,
-  onAnalyzeSuccess,
-  onImageChange,
-} = {}) {
+function MealAnal() {
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -34,15 +25,7 @@ function MealAnal({
     setResult(null);
 
     const reader = new FileReader();
-    reader.onload = () => {
-      setImagePreview(reader.result);
-      if (typeof onImageChange === "function") {
-        onImageChange(reader.result);
-      }
-      if (typeof onFileSelected === "function") {
-        onFileSelected(file);
-      }
-    };
+    reader.onload = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
 
     setLoading(true);
@@ -54,9 +37,6 @@ function MealAnal({
         formData,
       );
       setResult(data);
-      if (data?.status === "SUCCESS" && typeof onAnalyzeSuccess === "function") {
-        onAnalyzeSuccess(data);
-      }
     } catch (err) {
       setError(err.response?.data?.message || "분석에 실패했습니다.");
     } finally {
@@ -66,8 +46,8 @@ function MealAnal({
   };
 
   return (
-    <div className={containerClassName}>
-      <h2 className={titleClassName}>
+    <div className="sect2_cont w-[50%] flex flex-col justify-center items-center">
+      <h2 className="!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white">
         오늘 먹은 음식은 몇 칼로리일까요?
       </h2>
 
@@ -106,38 +86,19 @@ function MealAnal({
 
       {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
 
-      {showResult && result && result.status === "SUCCESS" && (
-        <div className={`mt-4 ${resultTextClassName} text-center`}>
-          {result.food_name && (
-            <p className="text-base font-semibold opacity-90">
-              {result.food_name}
-            </p>
-          )}
-          <p className="text-lg font-semibold mt-1">
+      {result && result.status === "SUCCESS" && (
+        <div className="mt-4 text-white text-center">
+          <p className="text-lg font-semibold">
             총 칼로리:{" "}
             <span className="text-main-02">{result.calories ?? 0}</span> kcal
           </p>
-
-          {showDetails && result.nutrients && (
-            <p className="text-sm mt-2 opacity-80">
-              탄수화물 {result.nutrients.carbohydrates ?? 0} g · 단백질{" "}
-              {result.nutrients.protein ?? 0} g · 지방{" "}
-              {result.nutrients.fat ?? 0} g
-            </p>
+          {result.food_name && (
+            <p className="text-sm mt-1 opacity-90">{result.food_name}</p>
           )}
-
-          {showDetails && Array.isArray(result.items) && result.items.length > 0 && (
-            <div className="mt-3 text-xs opacity-80">
-              <p className="mb-1">세부 음식 정보</p>
-              <ul className="space-y-1">
-                {result.items.map((item, idx) => (
-                  <li key={`${item.name}-${idx}`}>
-                    {item.name} — {item.weight_gram ?? 0} g /{" "}
-                    {item.calories ?? 0} kcal
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {result.evaluation && (
+            <p className="text-sm mt-2 opacity-80 max-w-md">
+              {result.evaluation}
+            </p>
           )}
         </div>
       )}
