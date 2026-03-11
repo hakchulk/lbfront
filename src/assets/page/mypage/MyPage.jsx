@@ -18,6 +18,7 @@ import {
 import { cmChartOptions } from '../../../api/TestChartData';
 import { getMyClubChartData } from '../../../api/MyClubChartData';
 import { useMyClubStore } from '../../../api/MyClubData';
+import { useClubStore } from '../../../api/ClubData';
 import { useMyBoardsStore } from '../../../api/MyBoardsData';
 import DonutChart from '../../../components/charts/DonutChart';
 import {
@@ -86,6 +87,9 @@ function MyPageMain() {
   );
 
   const { myClubs, fetchMyClubs } = useMyClubStore();
+
+  // 전체 클럽 리스트에서 내가 매니저(개설자)인 클럽을 가져오기
+  const { clubs, fetchClubs } = useClubStore();
 
   const { myBoards, fetchMyBoards } = useMyBoardsStore();
 
@@ -160,6 +164,18 @@ function MyPageMain() {
     };
     loadMyClubs();
   }, [fetchMyClubs]);
+
+  // 전체 클럽 리스트 로드 (내가 개설한 커뮤니티 판별용)
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        await fetchClubs();
+      } catch (err) {
+        console.error('클럽 리스트 로드 실패:', err);
+      }
+    };
+    loadClubs();
+  }, [fetchClubs]);
 
   // 내 게시글 데이터 로드
   useEffect(() => {
@@ -243,10 +259,34 @@ function MyPageMain() {
     };
   }, [weekHistoryData]);
 
+  // 내가 매니저(개설자)인 클럽들만 필터링
+  const myManagedClubs = useMemo(() => {
+    if (!user?.id || !Array.isArray(clubs)) return [];
+    return clubs.filter((club) => club.managerId === user.id);
+  }, [clubs, user]);
+
+  // 가입한 커뮤니티(myClubs) + 내가 개설한 커뮤니티(myManagedClubs)를 합친 목록 (id 기준 중복 제거)
+  const joinedAndManagedClubs = useMemo(() => {
+    const map = new Map();
+    // 가입한 커뮤니티 우선
+    myClubs.forEach((club) => {
+      if (club && club.id != null) {
+        map.set(club.id, club);
+      }
+    });
+    // 내가 개설한 커뮤니티 추가 (이미 있으면 중복 방지)
+    myManagedClubs.forEach((club) => {
+      if (club && club.id != null && !map.has(club.id)) {
+        map.set(club.id, club);
+      }
+    });
+    return Array.from(map.values());
+  }, [myClubs, myManagedClubs]);
+
   // 커뮤니티 활동 차트 데이터
   const cmChartData = useMemo(() => {
-    return getMyClubChartData(myClubs, myBoards);
-  }, [myClubs, myBoards]);
+    return getMyClubChartData(joinedAndManagedClubs, myBoards);
+  }, [joinedAndManagedClubs, myBoards]);
 
   // 요일별 운동 칼로리 차트 데이터
   const fetchWorkouts = async () => {
