@@ -4,45 +4,45 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Chart from '../../../components/ChartComp';
-import BtnComp from '../../../components/BtnComp';
-import { barChartOptions } from '../../../api/TestChartData';
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Chart from "../../../components/ChartComp";
+import BtnComp from "../../../components/BtnComp";
+import { barChartOptions } from "../../../api/TestChartData";
 import {
   deleteDietLog,
   getDietLogs,
   getDietLogsByDate,
-} from '../../../api/DietLogData';
-import { getMealItemsByMealId } from '../../../api/MealItemData';
-import { apiClient, BASE_URL } from '../../../api/config';
+} from "../../../api/DietLogData";
+import { getMealItemsByMealId } from "../../../api/MealItemData";
+import { apiClient, BASE_URL } from "../../../api/config";
 
 const MEAL_TYPE_LABEL = {
-  B: '아침',
-  L: '점심',
-  D: '저녁',
-  S: '간식',
+  B: "아침",
+  L: "점심",
+  D: "저녁",
+  S: "간식",
 };
 
 const PIE_COLORS = [
-  '#d6cdea',
-  '#e9b1f7',
-  '#fcd0d0',
-  '#cdebcf',
-  '#f9cd9e',
-  '#a8e6cf',
-  '#ffd3b6',
-  '#dcb5ff',
-  '#9bf6ff',
-  '#b4e7ce',
+  "#d6cdea",
+  "#e9b1f7",
+  "#fcd0d0",
+  "#cdebcf",
+  "#f9cd9e",
+  "#a8e6cf",
+  "#ffd3b6",
+  "#dcb5ff",
+  "#9bf6ff",
+  "#b4e7ce",
 ];
 
 const DEFAULT_MEAL_IMAGE =
-  'https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/Frame%2068.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9GcmFtZSA2OC5wbmciLCJpYXQiOjE3NzI2NzU0NzAsImV4cCI6MTgwNDIxMTQ3MH0.ErPbcwDA4-KdW-Edr1iVtdJrOjrJQkwLLORgS70TcUA';
+  "https://ynczwbybtbjftkatmcxg.supabase.co/storage/v1/object/sign/LB/Frame%2068.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83MjY5YTJlMy0zNGQxLTRkNTMtYWYzMC0wOWM5OTZhMzE0ODMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMQi9GcmFtZSA2OC5wbmciLCJpYXQiOjE3NzI2NzU0NzAsImV4cCI6MTgwNDIxMTQ3MH0.ErPbcwDA4-KdW-Edr1iVtdJrOjrJQkwLLORgS70TcUA";
 
 const EMPTY_INGREDIENT_CHART = {
-  labels: ['기록 없음'],
-  datasets: [{ data: [1], backgroundColor: ['#e5e7eb'], borderWidth: 1 }],
+  labels: ["기록 없음"],
+  datasets: [{ data: [1], backgroundColor: ["#e5e7eb"], borderWidth: 1 }],
 };
 
 const EMPTY_WEEKLY_BAR_DATA = [0, 0, 0, 0, 0, 0, 0];
@@ -50,21 +50,21 @@ const EMPTY_WEEKLY_BAR_DATA = [0, 0, 0, 0, 0, 0, 0];
 function getTodayLocalDateStr() {
   const today = new Date();
   const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const date = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const date = String(today.getDate()).padStart(2, "0");
   return `${year}-${month}-${date}`;
 }
 
 function formatLocalDate(date) {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
 function parseLocalDate(dateStr) {
   if (!dateStr) return null;
-  const [year, month, day] = String(dateStr).split('-').map(Number);
+  const [year, month, day] = String(dateStr).split("-").map(Number);
   if (!year || !month || !day) return null;
 
   const date = new Date(year, month - 1, day);
@@ -77,7 +77,7 @@ function parseIngredients(ingredientsRaw) {
   if (Array.isArray(ingredientsRaw)) {
     return ingredientsRaw.map((value) => String(value).trim()).filter(Boolean);
   }
-  if (typeof ingredientsRaw !== 'string') return [];
+  if (typeof ingredientsRaw !== "string") return [];
 
   try {
     const parsed = JSON.parse(ingredientsRaw);
@@ -86,7 +86,7 @@ function parseIngredients(ingredientsRaw) {
       : [];
   } catch {
     return ingredientsRaw
-      .split(',')
+      .split(",")
       .map((value) => value.trim())
       .filter(Boolean);
   }
@@ -98,8 +98,8 @@ function buildWeeklyBarData(labels, data) {
     datasets: [
       {
         data,
-        backgroundColor: 'rgba(177, 239, 102, 0.6)',
-        borderColor: '#b1ef66',
+        backgroundColor: "rgba(177, 239, 102, 0.6)",
+        borderColor: "#b1ef66",
         borderWidth: 1,
       },
     ],
@@ -107,7 +107,7 @@ function buildWeeklyBarData(labels, data) {
 }
 
 function getDateOnly(value) {
-  if (!value) return '';
+  if (!value) return "";
   if (value instanceof Date) return formatLocalDate(value);
 
   const raw = String(value);
@@ -149,7 +149,7 @@ function buildIngredientChartData(items) {
     let ingredients = parseIngredients(item.ingredients);
 
     if (!ingredients.length) {
-      const fallbackName = String(item.name ?? '').trim();
+      const fallbackName = String(item.name ?? "").trim();
       if (fallbackName) ingredients = [fallbackName];
     }
 
@@ -173,7 +173,7 @@ function buildIngredientChartData(items) {
   const data = topEntries.map(([, count]) => count);
 
   if (restCount > 0) {
-    labels.push('기타');
+    labels.push("기타");
     data.push(restCount);
   }
 
@@ -228,7 +228,7 @@ function getMealImageUrl(logs) {
 
 function getDisplayItems(items) {
   return items.filter(
-    (item) => Number(item.kcal) > 0 && String(item.name ?? '').trim() !== '',
+    (item) => Number(item.kcal) > 0 && String(item.name ?? "").trim() !== "",
   );
 }
 
@@ -254,7 +254,7 @@ function FoodHistory() {
     recordedDays: 0,
     noRecordDays: 7,
     barData: buildWeeklyBarData(
-      ['월', '화', '수', '목', '금', '토', '일'],
+      ["월", "화", "수", "목", "금", "토", "일"],
       EMPTY_WEEKLY_BAR_DATA,
     ),
   });
@@ -276,7 +276,7 @@ function FoodHistory() {
 
     const fetchGoalCalories = async () => {
       try {
-        const response = await apiClient.get('/me');
+        const response = await apiClient.get("/me");
         const rawCalories =
           response?.data?.daily_calories ?? response?.data?.dailyCalories;
 
@@ -284,7 +284,7 @@ function FoodHistory() {
           setGoalCalories(Number(rawCalories) || 2000);
         }
       } catch (fetchError) {
-        console.error('일일 목표 칼로리 조회 실패:', fetchError);
+        console.error("일일 목표 칼로리 조회 실패:", fetchError);
       }
     };
 
@@ -307,7 +307,7 @@ function FoodHistory() {
       setError(
         fetchError.response?.data?.message ||
           fetchError.message ||
-          '식사 기록을 불러오지 못했습니다.',
+          "식사 기록을 불러오지 못했습니다.",
       );
       setDietLogs([]);
     } finally {
@@ -323,7 +323,7 @@ function FoodHistory() {
     if (!logIds?.length) return;
 
     const confirmed = window.confirm(
-      '해당 끼니의 기록을 삭제할까요? 식단 전체가 삭제됩니다.',
+      "해당 끼니의 기록을 삭제할까요? 식단 전체가 삭제됩니다.",
     );
     if (!confirmed) return;
 
@@ -334,7 +334,7 @@ function FoodHistory() {
       setError(
         deleteError.response?.data?.message ||
           deleteError.message ||
-          '삭제에 실패했습니다.',
+          "삭제에 실패했습니다.",
       );
     }
   };
@@ -439,7 +439,7 @@ function FoodHistory() {
   const mealLogsByType = useMemo(
     () =>
       dietLogs.reduce((acc, log) => {
-        const mealType = String(log?.meal?.mealType ?? '');
+        const mealType = String(log?.meal?.mealType ?? "");
         if (!mealType) return acc;
 
         if (!acc[mealType]) acc[mealType] = [];
@@ -455,7 +455,7 @@ function FoodHistory() {
         const logs = mealLogsByType[type] ?? [];
         const items = logs.map((log) => ({
           id: log.id,
-          name: log.meal?.menu ?? '(메뉴 없음)',
+          name: log.meal?.menu ?? "(메뉴 없음)",
           kcal: log.meal?.totalCalories ?? 0,
         }));
 
@@ -494,7 +494,7 @@ function FoodHistory() {
 
           try {
             const response = await apiClient.get(`/file/id/${imageFileId}`, {
-              responseType: 'blob',
+              responseType: "blob",
             });
             const objectUrl = URL.createObjectURL(response.data);
             objectUrlsToRevoke.push(objectUrl);
@@ -523,6 +523,12 @@ function FoodHistory() {
 
   return (
     <>
+      <style>{`
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+          cursor: pointer;
+        }
+      `}</style>
       <section className="wrap bg-white pt-[2%] py-10">
         <div className="containers mx-auto text-center">
           <h3 className="text-deep text-base md:text-lg lg:text-xl xl:text-2xl">
@@ -536,7 +542,7 @@ function FoodHistory() {
             <p className="text-green-600 text-sm mt-3">{successMessage}</p>
           )}
 
-          <h3 className="mt-[5%] text-deep text-base md:text-lg lg:text-xl xl:text-2xl">
+          <h3 className="mt-[5%] text-deep !text-[20px] ">
             오늘의 섭취량 : {totalIntake} kcal / 목표 : {goalCalories} kcal
           </h3>
 
@@ -544,13 +550,13 @@ function FoodHistory() {
             오늘의 재료 구성
           </h3>
 
-          <div className="w-full max-w-[520px] mx-auto mt-6 border border-main-02 rounded-xl p-6 shadow-sm">
+          <div className="w-[90%] md:w-full max-w-[520px] mx-auto mt-6 border border-main-02 rounded-xl p-6 shadow-sm">
             <Chart type="pie" data={ingredientChartData} />
           </div>
 
           <p className="mt-6 text-main-02 text-base md:text-lg max-w-[520px] mx-auto">
-            오늘 섭취량이 목표 대비 {Math.abs(calorieDiff)} kcal{' '}
-            {calorieDiff >= 0 ? '부족' : '초과'} 했습니다.
+            오늘 섭취량이 목표 대비 {Math.abs(calorieDiff)} kcal{" "}
+            {calorieDiff >= 0 ? "부족" : "초과"} 했습니다.
           </p>
 
           <div className="w-full max-w-[520px] mx-auto mt-6">
@@ -558,8 +564,8 @@ function FoodHistory() {
               size="long"
               variant="primary"
               onClick={() =>
-                navigate('../food_historywrite', {
-                  state: { editDate: selectedDate, mode: 'create' },
+                navigate("../food_historywrite", {
+                  state: { editDate: selectedDate, mode: "create" },
                 })
               }
             >
@@ -572,15 +578,18 @@ function FoodHistory() {
       <section className="wrap !bg-light-02 py-10">
         <div className="containers mx-auto px-4">
           <header className="text-center mb-8">
-            <h3 className="text-main-02 flex justify-center items-center gap-2">
-              <i className="fa-solid fa-utensils mr-3" />
-              일별 식사 기록 리스트
-            </h3>
+            <div>
+              <h3 className="text-main-02 flex justify-center items-center gap-2">
+                <i className="fa-solid fa-utensils mr-3" />
+                일별 식사 기록 리스트
+              </h3>
+            </div>
+
             <input
               type="date"
               value={selectedDate}
               onChange={(event) => setSelectedDate(event.target.value)}
-              className="inline-block bg-green-500 text-white text-sm md:text-base px-4 py-2 rounded-full mt-3 border-0 cursor-pointer min-w-[170px]"
+              className="inline-block bg-green-500 text-white text-sm md:text-base px-4 py-2 rounded-full mt-1 border-0 cursor-pointer min-w-[170px] "
             />
           </header>
 
@@ -641,10 +650,10 @@ function FoodHistory() {
                           variant="primary"
                           className="px-6 py-3 text-base md:text-lg rounded-lg"
                           onClick={() =>
-                            navigate('../food_historywrite', {
+                            navigate("../food_historywrite", {
                               state: {
                                 editDate: selectedDate,
-                                mode: 'create',
+                                mode: "create",
                                 mealType: meal.type,
                               },
                             })
@@ -660,7 +669,7 @@ function FoodHistory() {
                           variant="primary"
                           className="px-6 py-3 text-base md:text-lg rounded-lg"
                           onClick={() =>
-                            navigate('../food_historywrite', {
+                            navigate("../food_historywrite", {
                               state: {
                                 editDate: selectedDate,
                                 mealType: meal.type,
@@ -689,7 +698,7 @@ function FoodHistory() {
       </section>
 
       <section className="wrap bg-white mb-[10%] py-10">
-        <div className="w-full max-w-[1040px] mx-auto rounded-xl p-6 shadow-sm">
+        <div className="w-[90%] md:w-full max-w-[1040px] mx-auto rounded-xl p-6 shadow-sm">
           <div className="flex flex-col items-center mb-6">
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
               <span className="w-12 h-5 bg-main-01" />
@@ -701,7 +710,7 @@ function FoodHistory() {
             </h2>
 
             <p className="text-xs text-gray-500 mt-1">
-              기록 {weeklySummary.recordedDays}일 / 미기록{' '}
+              기록 {weeklySummary.recordedDays}일 / 미기록{" "}
               {weeklySummary.noRecordDays}일
             </p>
           </div>
