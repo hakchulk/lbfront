@@ -572,7 +572,7 @@ function FoodHistoryWrite() {
           <div className="flex justify-center">
             <MealAnal
               containerClassName="w-full max-w-[520px] flex flex-col justify-center items-center"
-              titleClassName="!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-deep"
+              titleClassName="!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-main-02"
               resultTextClassName="text-deep"
               showResult={false}
               onImageChange={(dataUrl) => setMealImageData(dataUrl)}

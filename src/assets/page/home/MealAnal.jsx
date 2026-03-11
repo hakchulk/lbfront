@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import BtnComp from "../../../components/BtnComp";
 import { apiClient } from "../../../api/config";
 
-function MealAnal({ resultTextClassName }) {
+function MealAnal({ resultTextClassName, titleClassName }) {
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -47,7 +47,7 @@ function MealAnal({ resultTextClassName }) {
 
   return (
     <div className="sect2_cont w-[50%] flex flex-col justify-center items-center">
-      <h2 className="!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white">
+      <h2 className={titleClassName || "!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white"}>
         오늘 먹은 음식은 몇 칼로리일까요?
       </h2>
 
