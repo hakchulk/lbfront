@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import BtnComp from "../../../components/BtnComp";
 import { apiClient } from "../../../api/config";
 
-function MealAnal() {
+function MealAnal({ resultTextClassName }) {
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -87,7 +87,7 @@ function MealAnal() {
       {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
 
       {result && result.status === "SUCCESS" && (
-        <div className="mt-4 text-white text-center">
+        <div className={`mt-4 text-center ${resultTextClassName || "text-white"}`}>
           <p className="text-lg font-semibold">
             총 칼로리:{" "}
             <span className="text-main-02">{result.calories ?? 0}</span> kcal
