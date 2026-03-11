@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BtnComp from '../../../components/BtnComp';
-import { getExercises } from '../../../api/exercise';
+import { getExercises } from '../../../api/Exercise';
 import {
   calculateWorkout,
   createWorkout,
