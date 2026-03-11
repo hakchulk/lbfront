@@ -542,7 +542,7 @@ function FoodHistory() {
             <p className="text-green-600 text-sm mt-3">{successMessage}</p>
           )}
 
-          <h3 className="mt-[5%] text-deep !text-[20px] ">
+          <h3 className="mt-[5%] text-main-02 !text-lg !sm:text-2xl ">
             오늘의 섭취량 : {totalIntake} kcal / 목표 : {goalCalories} kcal
           </h3>
 
@@ -705,7 +705,7 @@ function FoodHistory() {
               <span>주간 총 섭취 칼로리</span>
             </div>
 
-            <h2 className="text-xl font-bold text-green-600">
+            <h2 className="!text-2xl  font-bold text-green-600">
               주간 평균 {weeklySummary.averageKcal} kcal
             </h2>
 

@@ -184,6 +184,7 @@ function FoodHistoryWrite() {
   const [deletingId, setDeletingId] = useState(null);
   const [calcLoading, setCalcLoading] = useState(false);
   const [calcMessage, setCalcMessage] = useState(null);
+  const [analyzedFoodName, setAnalyzedFoodName] = useState(null);
   const [mealImageData, setMealImageData] = useState(null);
   const [mealImageFile, setMealImageFile] = useState(null);
 
@@ -544,9 +545,7 @@ function FoodHistoryWrite() {
           </span>
           <h3 className="text-main-02 flex justify-center items-center gap-2 text-lg md:text-xl lg:text-2xl">
             <i className="fa-solid fa-utensils" />
-            {mode === "create"
-              ? "식사 기록 작성"
-              : "저장한 식단 — MealItem 추가/삭제"}
+            {mode === "create" ? "식사 기록 작성" : "저장한 식단 수정"}
           </h3>
           <div className="text-sm text-gray-600 mt-2 flex justify-center items-center gap-2">
             <span>날짜:</span>
@@ -576,7 +575,11 @@ function FoodHistoryWrite() {
               resultTextClassName="text-deep"
               showResult={false}
               onImageChange={(dataUrl) => setMealImageData(dataUrl)}
-              onFileSelected={(file) => setMealImageFile(file)}
+              onFileSelected={(file) => {
+                setMealImageFile(file);
+                setAnalyzedFoodName(null);
+                setCalcMessage(null);
+              }}
               onAnalyzeSuccess={async (data) => {
                 const analyzedItems = Array.isArray(data?.items)
                   ? data.items
@@ -648,14 +651,31 @@ function FoodHistoryWrite() {
 
                 // 사진으로 입력하면 기존 MealItem을 지우고 분석 결과만 남김
                 setEditItems(mappedItems);
+
+                // 분석 결과 식단 이름 표시
+                if (data?.food_name) {
+                  setAnalyzedFoodName(data.food_name);
+                }
+
+                // 분석 결과 평가 표시
+                if (data?.evaluation) {
+                  setCalcMessage(data.evaluation);
+                }
               }}
             />
           </div>
         </section>
 
         {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+        {analyzedFoodName && (
+          <p className="text-main-02 !text-xl !font-bold mb-2 text-center font-semibold">
+            {analyzedFoodName}
+          </p>
+        )}
         {calcMessage && (
-          <p className="text-green-600 text-sm mb-4">{calcMessage}</p>
+          <p className="text-green-600 text-sm mb-4 w-full xs:w-[50%] lg:w-[30%] mx-auto">
+            {calcMessage}
+          </p>
         )}
         {saving && <p className="text-main-02 text-sm mb-4">저장 중...</p>}
 
@@ -668,7 +688,7 @@ function FoodHistoryWrite() {
           </p>
         ) : (
           <>
-            <section className="mb-8">
+            <section className="mb-8 mt-8">
               <h3 className="font-semibold mb-3">식사 구분</h3>
               <div className="w-full max-w-[500px] mx-auto flex justify-center gap-6 flex-wrap">
                 {MEAL_TYPE_MAP.map((item) => {
@@ -714,9 +734,11 @@ function FoodHistoryWrite() {
                     MEAL_TYPE_MAP.find((m) => m.value === selectedMealValue)
                       ?.label
                   }
-                  {mode === "edit" && currentMeal
-                    ? ` — ${currentMeal.menu || "(메뉴명 없음)"}`
-                    : ""}
+                  {analyzedFoodName
+                    ? ` — ${analyzedFoodName}`
+                    : mode === "edit" && currentMeal
+                      ? ` — ${currentMeal.menu || "(메뉴명 없음)"}`
+                      : ""}
                 </p>
                 <p className="text-sm text-gray-600">
                   끼니 합계:{" "}
@@ -748,7 +770,7 @@ function FoodHistoryWrite() {
                         <div className="flex-1 text-left">
                           <div className="flex gap-2 items-center">
                             <input
-                              className="flex-1 w-[70%] md:max-w-none border rounded px-2 py-1 text-sm"
+                              className="flex-1 w-[70%] min-w-[100px] md:max-w-none border rounded px-2 py-1 text-sm"
                               value={it.name ?? ""}
                               onChange={(e) =>
                                 handleEditItemChange(
@@ -760,7 +782,7 @@ function FoodHistoryWrite() {
                             />
                             <>
                               <input
-                                className="w-[90px] border rounded px-2 py-1 text-sm text-right"
+                                className="flex max-w-[100px] border rounded px-2 py-1 text-sm text-right"
                                 type="number"
                                 min={0}
                                 value={it.amount ?? 0}
@@ -784,7 +806,7 @@ function FoodHistoryWrite() {
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(it.id)}
-                          className="w-[80px] h-10 bg-red-500 text-white rounded text-sm"
+                          className="!w-[80px] h-10 bg-red-500 text-white rounded text-sm"
                         >
                           삭제
                         </button>
@@ -820,7 +842,7 @@ function FoodHistoryWrite() {
                               }
                             />
                             <input
-                              className="border rounded px-2 py-1 text-sm text-right"
+                              className="max-w-[120px] xs:max-w-none border rounded px-2 py-1 text-sm text-right"
                               type="number"
                               min={0}
                               value={

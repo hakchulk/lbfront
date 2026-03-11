@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import BtnComp from "../../../components/BtnComp";
 import { apiClient } from "../../../api/config";
 
-function MealAnal({ resultTextClassName, titleClassName }) {
+function MealAnal({ resultTextClassName, titleClassName, containerClassName, onImageChange, onFileSelected, onAnalyzeSuccess, showResult = true }) {
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -25,8 +25,13 @@ function MealAnal({ resultTextClassName, titleClassName }) {
     setResult(null);
 
     const reader = new FileReader();
-    reader.onload = () => setImagePreview(reader.result);
+    reader.onload = () => {
+      setImagePreview(reader.result);
+      if (onImageChange) onImageChange(reader.result);
+    };
     reader.readAsDataURL(file);
+    
+    if (onFileSelected) onFileSelected(file);
 
     setLoading(true);
     try {
@@ -37,6 +42,9 @@ function MealAnal({ resultTextClassName, titleClassName }) {
         formData,
       );
       setResult(data);
+      if (onAnalyzeSuccess && data) {
+        await onAnalyzeSuccess(data);
+      }
     } catch (err) {
       setError(err.response?.data?.message || "분석에 실패했습니다.");
     } finally {
@@ -46,7 +54,7 @@ function MealAnal({ resultTextClassName, titleClassName }) {
   };
 
   return (
-    <div className="sect2_cont w-[50%] flex flex-col justify-center items-center">
+    <div className={containerClassName || "sect2_cont w-[50%] flex flex-col justify-center items-center"}>
       <h2 className={titleClassName || "!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white"}>
         오늘 먹은 음식은 몇 칼로리일까요?
       </h2>
@@ -86,7 +94,7 @@ function MealAnal({ resultTextClassName, titleClassName }) {
 
       {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
 
-      {result && result.status === "SUCCESS" && (
+      {showResult && result && result.status === "SUCCESS" && (
         <div className={`mt-4 text-center ${resultTextClassName || "text-white"}`}>
           <p className="text-lg font-semibold">
             총 칼로리:{" "}
