@@ -121,7 +121,7 @@ function getDateOnly(value) {
 
 function getWeekRange(dateStr) {
   const base = parseLocalDate(dateStr);
-  if (!base || Number.isNaN(base.getTime())) return null;
+  if (Number.isNaN(base.getTime())) return null;
 
   const diffToMonday = (base.getDay() + 6) % 7;
   const monday = new Date(base);
@@ -622,7 +622,7 @@ function FoodHistory() {
                       {meal.displayItems.length === 0 ? (
                         <li className="text-gray-400">기록 없음</li>
                       ) : (
-                        meal.displayItems.map((item) => (
+                        meal.displayItems.slice(0, 1).map((item) => (
                           <li key={item.id}>
                             {String(item.name).trim()} : {item.kcal} kcal
                           </li>
