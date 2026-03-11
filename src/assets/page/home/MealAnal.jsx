@@ -2,7 +2,15 @@ import React, { useState, useRef } from "react";
 import BtnComp from "../../../components/BtnComp";
 import { apiClient } from "../../../api/config";
 
-function MealAnal({ resultTextClassName, titleClassName, containerClassName, onImageChange, onFileSelected, onAnalyzeSuccess, showResult = true }) {
+function MealAnal({
+  resultTextClassName,
+  titleClassName,
+  containerClassName,
+  onImageChange,
+  onFileSelected,
+  onAnalyzeSuccess,
+  showResult = true,
+}) {
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -30,7 +38,7 @@ function MealAnal({ resultTextClassName, titleClassName, containerClassName, onI
       if (onImageChange) onImageChange(reader.result);
     };
     reader.readAsDataURL(file);
-    
+
     if (onFileSelected) onFileSelected(file);
 
     setLoading(true);
@@ -54,8 +62,18 @@ function MealAnal({ resultTextClassName, titleClassName, containerClassName, onI
   };
 
   return (
-    <div className={containerClassName || "sect2_cont w-[50%] flex flex-col justify-center items-center"}>
-      <h2 className={titleClassName || "!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white"}>
+    <div
+      className={
+        containerClassName ||
+        "sect2_cont w-[50%] flex flex-col justify-center items-center"
+      }
+    >
+      <h2
+        className={
+          titleClassName ||
+          "!text-base md:!text-lg lg:!text-xl xl:!text-2xl text-white"
+        }
+      >
         오늘 먹은 음식은 몇 칼로리일까요?
       </h2>
 
@@ -95,7 +113,9 @@ function MealAnal({ resultTextClassName, titleClassName, containerClassName, onI
       {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
 
       {showResult && result && result.status === "SUCCESS" && (
-        <div className={`mt-4 text-center ${resultTextClassName || "text-white"}`}>
+        <div
+          className={`mt-4 text-center ${resultTextClassName || "text-white"}`}
+        >
           <p className="text-lg font-semibold">
             총 칼로리:{" "}
             <span className="text-main-02">{result.calories ?? 0}</span> kcal
@@ -108,6 +128,16 @@ function MealAnal({ resultTextClassName, titleClassName, containerClassName, onI
               {result.evaluation}
             </p>
           )}
+        </div>
+      )}
+
+      {showResult && result && result.status === "NO_FOOD_DETECTED" && (
+        <div
+          className={`mt-4 text-center ${resultTextClassName || "text-white"}`}
+        >
+          <p className="text-lg font-semibold">
+            사진에서 분석할 음식이 없습니다.
+          </p>
         </div>
       )}
     </div>
