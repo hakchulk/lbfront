@@ -130,7 +130,7 @@ function ChatbotPanel({ onClose }) {
 
         {/* 옵션 버튼 */}
         <div className="flex justify-around p-2 mt-2 bg-light-02">
-          {["체력관리", "식단관리", "운동추천"].map((opt) => (
+          {["라스트밸런스", "체력관리", "식단관리", "운동추천"].map((opt) => (
             <button
               key={opt}
               onClick={() => handleOptionClick(opt)}
