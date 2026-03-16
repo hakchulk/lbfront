@@ -11,19 +11,30 @@ function MealAnal({
   onAnalyzeSuccess,
   showResult = true,
 }) {
-  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);   // 카메라 전용 input
+  const galleryInputRef = useRef(null);  // 앨범 전용 input
+
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
+  const handleCameraClick = () => {
+    if (!loading) {
+      cameraInputRef.current?.click();
+    }
+  };
+
+  const handleGalleryClick = () => {
+    if (!loading) {
+      galleryInputRef.current?.click();
+    }
   };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     if (!file.type.startsWith("image/")) {
       setError("이미지 파일만 선택해 주세요.");
       return;
@@ -57,6 +68,7 @@ function MealAnal({
       setError(err.response?.data?.message || "분석에 실패했습니다.");
     } finally {
       setLoading(false);
+      // 같은 input에서 다시 선택 가능하도록 value 초기화
       e.target.value = "";
     }
   };
@@ -89,8 +101,20 @@ function MealAnal({
         )}
       </div>
 
+      {/* 카메라 전용 input */}
       <input
-        ref={fileInputRef}
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={loading}
+      />
+
+      {/* 앨범(갤러리) 전용 input */}
+      <input
+        ref={galleryInputRef}
         type="file"
         accept="image/*"
         className="hidden"
@@ -98,15 +122,28 @@ function MealAnal({
         disabled={loading}
       />
 
-      <div className="w-full md:w-1/2 mt-2">
+      {/* 버튼 영역: 카메라 / 앨범 선택 - 세로 정렬 */}
+      <div className="w-full md:w-1/2 mt-2 flex flex-col gap-2">
         <BtnComp
           variant="line"
           size="long"
           type="button"
-          onClick={handleButtonClick}
+          onClick={handleCameraClick}
+          className="flex-1 md:hidden"
           disabled={loading}
         >
-          {loading ? "분석 중..." : "클릭해서 음식 사진 업로드"}
+          {loading ? "분석 중..." : "카메라로 음식 촬영"}
+        </BtnComp>
+
+        <BtnComp
+          variant="line"
+          size="long"
+          type="button"
+          onClick={handleGalleryClick}
+          className="flex-1"
+          disabled={loading}
+        >
+          {loading ? "분석 중..." : "앨범에서 음식 사진 선택"}
         </BtnComp>
       </div>
 
